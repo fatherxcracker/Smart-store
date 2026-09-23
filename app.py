@@ -29,7 +29,7 @@ BUZZER_PIN = 22        # failure indicator
 # We try to use the real gpiozero library (works on the Raspberry Pi).
 # If this code is run on a normal laptop (no GPIO hardware), we fall back
 # to a "mock" version that just prints to the console instead of crashing.
-# This lets your whole team develop/test the website on their own laptops,
+# This lets the whole team develop/test the website on their own laptops,
 # and it will automatically use the real hardware once it's run on the Pi.
 try:
     from gpiozero import LED, Buzzer
@@ -266,4 +266,4 @@ if __name__ == "__main__":
     print(f"[hardware] Running in '{HARDWARE_MODE}' mode.")
     # host="0.0.0.0" makes it reachable from other devices on your network
     # (e.g. viewing the Pi's site from your phone/laptop)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
