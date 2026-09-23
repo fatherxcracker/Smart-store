@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Store | Add Customer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="page">
+        <header>
+            <h1>Smart Store</h1>
+            <p class="subtitle">IoT Customer Registration &mdash; Phase 1</p>
+        </header>
+
+        <main class="layout">
+            <!-- Form card -->
+            <section class="card">
+                <h2>Add New Customer</h2>
+                <form id="customer-form">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" placeholder="John Doe" required>
+
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" placeholder="123 Maple Street, Montreal, QC" required>
+
+                    <label for="phone">Telephone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="514-555-0199" required>
+
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="john.doe@email.com" required>
+
+                    <button type="submit" id="submit-btn">Add Customer</button>
+                </form>
+
+                <!-- Notification banner -->
+                <div id="notification" class="notification hidden"></div>
+
+                <!-- Simulated LED / buzzer indicators, mirrors the real hardware state -->
+                <div class="hardware-panel">
+                    <div class="indicator" id="blue-led">
+                        <span class="dot blue"></span> Blue LED
+                    </div>
+                    <div class="indicator" id="red-led">
+                        <span class="dot red"></span> Red LED
+                    </div>
+                    <div class="indicator" id="buzzer-indicator">
+                        <span class="dot yellow"></span> Buzzer
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data presentation card -->
+            <section class="card">
+                <h2>Customers</h2>
+                <table id="customers-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-body">
+                        <!-- filled in by script.js -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
