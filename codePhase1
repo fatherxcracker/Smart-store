@@ -1,0 +1,113 @@
+from flask import Flask, render_template, request
+import sqlite3
+
+from gpiozero import LED, Buzzer
+from time import sleep
+
+
+app = Flask(__name__)
+
+
+# Raspberry Pi hardware
+
+success_led = LED(17)
+
+error_led = LED(27)
+
+error_buzzer = Buzzer(22)
+
+
+@app.route("/", methods=["GET", "POST"])
+
+def customer_page():
+
+    message = ""
+
+    if request.method == "POST":
+
+        full_name = request.form["full_name"]
+
+        address = request.form["address"]
+
+        phone = request.form["phone"]
+
+        email = request.form["email"]
+
+
+        try:
+
+            database = sqlite3.connect("smartstore.db")
+
+            cursor = database.cursor()
+
+
+            cursor.execute(
+
+                """
+                INSERT INTO customers
+                (full_name, address, phone, email)
+
+                VALUES (?, ?, ?, ?)
+                """,
+
+                (full_name, address, phone, email)
+
+            )
+
+
+            database.commit()
+
+            database.close()
+
+
+            message = "Customer added successfully!"
+
+
+            success_led.on()
+
+            sleep(2)
+
+            success_led.off()
+
+
+        except Exception as error:
+
+            print("Database error:", error)
+
+
+            message = "Error: customer could not be added."
+
+
+            error_led.on()
+
+            error_buzzer.on()
+
+
+            sleep(2)
+
+
+            error_led.off()
+
+            error_buzzer.off()
+
+
+    return render_template(
+
+        "customer_form.html",
+
+        message=message
+
+    )
+
+
+if __name__ == "__main__":
+
+    app.run(
+
+        host="0.0.0.0",
+
+        port=5000,
+
+        debug=True
+
+    )
