@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Fridge Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>❄ Smart Fridge Monitor</h1>
+      <p>Store Refrigeration Monitoring System</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="fridge-grid">
+
+      <!-- Refrigerator 1 -->
+      <article class="fridge-card" id="fridge1">
+        <h2>Refrigerator 1</h2>
+        <p class="status" id="status1">Normal</p>
+
+        <div class="gauges">
+          <div class="gauge" id="tempGauge1">
+            <span id="temp1">--°C</span>
+            <small>Temperature</small>
+          </div>
+
+          <div class="gauge humidity" id="humidityGauge1">
+            <span id="humidity1">--%</span>
+            <small>Humidity</small>
+          </div>
+        </div>
+
+        <label for="threshold1">Temperature Threshold (°C)</label>
+        <div class="setting">
+          <input type="number" id="threshold1"
+                 min="0" max="40" step="0.5">
+          <button onclick="saveThreshold(1)">Save</button>
+        </div>
+      </article>
+
+      <!-- Refrigerator 2 -->
+      <article class="fridge-card" id="fridge2">
+        <h2>Refrigerator 2</h2>
+        <p class="status" id="status2">Normal</p>
+
+        <div class="gauges">
+          <div class="gauge" id="tempGauge2">
+            <span id="temp2">--°C</span>
+            <small>Temperature</small>
+          </div>
+
+          <div class="gauge humidity" id="humidityGauge2">
+            <span id="humidity2">--%</span>
+            <small>Humidity</small>
+          </div>
+        </div>
+
+        <label for="threshold2">Temperature Threshold (°C)</label>
+        <div class="setting">
+          <input type="number" id="threshold2"
+                 min="0" max="40" step="0.5">
+          <button onclick="saveThreshold(2)">Save</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- Fan status -->
+  
+<!-- Fan Control Panel -->
+<section class="panel fan-panel">
+
+  <div class="fan-header">
+    <h2>Fan Control</h2>
+    <span id="fanStatus" class="fan-status">OFF</span>
+  </div>
+
+  <!-- Fan icon and RPM -->
+  <div class="fan-display">
+    <div id="fanIcon" class="fan-icon">✣</div>
+
+    <h1>
+      <span id="rpmDisplay">0</span>
+      <small>RPM</small>
+    </h1>
+
+    <p>Fan Speed</p>
+  </div>
+
+  <!-- Power button -->
+  <div class="fan-power">
+    <label>Fan Power</label>
+    <button id="powerButton" onclick="toggleFan()">
+      Turn ON
+    </button>
+  </div>
+
+  <!-- Speed slider -->
+  <div class="fan-speed">
+    <div class="speed-header">
+      <label for="fanSlider">Speed Control</label>
+      <span id="speedValue">1200 RPM</span>
+    </div>
+
+    <input
+      type="range"
+      id="fanSlider"
+      min="0"
+      max="3000"
+      step="100"
+      value="1200"
+      oninput="updateFanSpeed()"
+      disabled
+    >
+
+    <div class="speed-labels">
+      <span>0 RPM</span>
+      <span>3000 RPM</span>
+    </div>
+  </div>
+
+</section>
+
+
+    <!-- Alerts -->
+    <section class="panel">
+      <h2>System Notifications</h2>
+      <div id="notifications" aria-live="polite">
+        No active alerts.
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

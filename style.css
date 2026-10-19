@@ -1,0 +1,301 @@
+
+/* General website appearance */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #172b4d;
+}
+
+/* Top header */
+header {
+  background: #142b49;
+  color: white;
+  padding: 25px 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+header h1 {
+  margin: 0;
+}
+
+header p {
+  color: #cbd5e1;
+}
+
+.connection {
+  background: #334155;
+  padding: 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Main dashboard */
+main {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.fridge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.fridge-card, .panel {
+  background: white;
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px #00000010;
+}
+
+.fridge-card h2 {
+  margin-top: 0;
+}
+
+/* Four circular gauges */
+.gauges {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 25px 0;
+}
+
+
+/* Circular gauges for temperature and humidity */
+.gauge {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    position: relative;
+
+    /* Empty gray circle before data arrives */
+    background: conic-gradient(#e2e8f0 0% 100%);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Creates the inside of the circle */
+.gauge::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    background: #f8fafc;
+    border-radius: 50%;
+}
+
+/* Keeps the text above the circle background */
+.gauge span,
+.gauge small {
+    position: relative;
+    z-index: 1;
+}
+
+
+.gauge span {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.gauge small {
+  color: #64748b;
+}
+
+
+/* Status labels */
+.status {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.status.warning {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Inputs and buttons */
+.setting {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input[type="number"] {
+  padding: 10px;
+  width: 110px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 12px 0 25px;
+}
+
+button {
+  background: #147d89;
+  color: white;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+button:hover {
+  background: #0f5962;
+}
+
+.note {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.alert {
+  background: #fff1f2;
+  color: #9f1239;
+  border-left: 4px solid #e11d48;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+/* Smaller screens */
+@media (max-width: 750px) {
+  .fridge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+/* FAN CONTROL PANEL */
+
+.fan-panel {
+    max-width: 100%;
+}
+
+.fan-header,
+.fan-power,
+.speed-header,
+.speed-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fan-header h2 {
+    margin: 0;
+}
+
+.fan-status {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.fan-status.running {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Fan illustration */
+
+.fan-display {
+    text-align: center;
+    padding: 25px;
+}
+
+.fan-icon {
+    font-size: 110px;
+    color: #94a3b8;
+    line-height: 1.2;
+    display: inline-block;
+}
+
+.fan-icon.spinning {
+    color: #14b8a6;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.fan-display h1 {
+    font-size: 40px;
+    margin: 10px 0;
+}
+
+.fan-display small {
+    font-size: 18px;
+    color: #64748b;
+}
+
+.fan-display p {
+    color: #64748b;
+}
+
+/* Power button */
+
+.fan-power {
+    padding: 18px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.fan-power button {
+    min-width: 110px;
+}
+
+/* Speed slider */
+
+.fan-speed {
+    padding-top: 20px;
+}
+
+.speed-header {
+    margin-bottom: 15px;
+}
+
+#fanSlider {
+    width: 100%;
+    accent-color: #14b8a6;
+    cursor: pointer;
+}
+
+#fanSlider:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.speed-labels {
+    color: #64748b;
+    font-size: 13px;
+}
