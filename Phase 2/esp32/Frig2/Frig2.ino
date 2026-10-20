@@ -1,20 +1,33 @@
+/*
+  Smart Store - Phase 2
+  ESP32 #2 - Refrigerator 2
+
+  Reads a DHT11 temperature/humidity sensor and publishes the readings as
+  JSON to the "Frig2" MQTT topic on the Raspberry Pi's Mosquitto broker.
+
+  Libraries needed (Arduino IDE -> Tools -> Manage Libraries):
+    - PubSubClient (by Nick O'Leary)
+    - DHT sensor library (by Adafruit) + its "Adafruit Unified Sensor" dependency
+*/
 
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
 
-// Wi-Fi credentials
+// --- Wi-Fi credentials (edit for your network) ---
 const char* ssid = "wifi network";
 const char* password = "passwd";
 
-// Raspberry Pi MQTT broker IP address
+// --- Raspberry Pi MQTT broker IP address (edit: run `hostname -I` on the Pi) ---
 const char* mqtt_server = "ip";
 
-// Change these for each ESP32
+// --- Identity for THIS board - do not change between boards except here ---
 const char* mqtt_topic = "Frig2";
 const char* client_id = "ESP32_Frig2";
 
-// DHT11 sensor settings
+// --- DHT11 sensor wiring ---
+// DATA pin -> GPIO4, VCC -> 3V3, GND -> GND (plus a 10k pull-up resistor
+// between DATA and VCC if your DHT11 module doesn't already have one on board)
 #define DHTPIN 4
 #define DHTTYPE DHT11
 
