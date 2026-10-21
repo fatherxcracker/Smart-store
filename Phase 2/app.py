@@ -46,7 +46,7 @@ PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://localhost:5001")
 
 # Minimum time between two alert emails for the SAME fridge, so a fridge
 # sitting above threshold doesn't spam an email every couple of seconds.
-ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "300"))
+ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "60"))
 
 DEFAULT_THRESHOLDS = {1: 8.0, 2: 8.0}  # degrees C, overridden by the DB
 
@@ -144,12 +144,12 @@ def set_threshold(fridge_id, value):
 
 
 def has_recent_pending_alert(fridge_id):
-    """True if there's a still-pending alert for this fridge sent within the cooldown window."""
+    """True if this fridge has an alert within the cooldown window (60s)."""
     conn = get_connection()
     row = conn.execute(
         """
         SELECT created_at FROM alerts
-        WHERE fridge_id = ? AND status = 'pending'
+        WHERE fridge_id = ?
         ORDER BY created_at DESC LIMIT 1
         """,
         (fridge_id,),
@@ -158,7 +158,9 @@ def has_recent_pending_alert(fridge_id):
     if not row:
         return False
     created = datetime.fromisoformat(row["created_at"])
-    return (datetime.now() - created).total_seconds() < ALERT_COOLDOWN_SECONDS
+    
+    now = datetime.utcnow()
+    return (now - created).total_seconds() < ALERT_COOLDOWN_SECONDS
 
 
 def create_alert(fridge_id, temperature):
