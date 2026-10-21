@@ -10,9 +10,7 @@ const NOTIFICATIONS_POLL_MS = 4000;
 
 let fanIsOn = false;
 
-// ---------------------------------------------------------------------------
 // Gauges
-// ---------------------------------------------------------------------------
 function updateGauge(fridgeId, type, value) {
     const gaugeId = type === "temperature" ? "tempGauge" + fridgeId : "humidityGauge" + fridgeId;
     const textId = type === "temperature" ? "temp" + fridgeId : "humidity" + fridgeId;
@@ -35,9 +33,7 @@ function updateGauge(fridgeId, type, value) {
     text.textContent = type === "temperature" ? value.toFixed(1) + "°C" : value.toFixed(1) + "%";
 }
 
-// ---------------------------------------------------------------------------
 // Readings + status + thresholds
-// ---------------------------------------------------------------------------
 async function refreshReadings() {
     try {
         const res = await fetch("/api/readings");
@@ -110,9 +106,7 @@ async function saveThreshold(fridgeId) {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Fan control
-// ---------------------------------------------------------------------------
 function applyFanUi(status) {
     fanIsOn = status === "ON";
 
@@ -165,9 +159,7 @@ async function loadFanStatus() {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Notifications
-// ---------------------------------------------------------------------------
 async function refreshNotifications() {
     try {
         const res = await fetch("/api/notifications");
@@ -192,9 +184,7 @@ async function refreshNotifications() {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Init
-// ---------------------------------------------------------------------------
 loadThresholds();
 refreshReadings();
 loadFanStatus();
