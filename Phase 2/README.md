@@ -6,7 +6,7 @@ IoT fridge-monitoring dashboard.
 - **Data transport:** MQTT (Mosquitto broker running on the Raspberry Pi), topics `Frig1` and `Frig2`
 - **Backend:** Python (Flask) — subscribes to MQTT, stores thresholds, sends alert emails, controls the fan
 - **Frontend:** HTML / CSS / JavaScript dashboard — 4 gauges (temp + humidity x 2 fridges), fan status, notifications feed
-- **Alert flow:** over-threshold temperature → email with "Yes, turn on fan" / "No" links → clicking Yes drives a DC motor (simulated fan) through the Pi's GPIO
+- **Alert flow:** over-threshold temperature → email "The current temperature is … Would you like to turn on the fan?" → user **replies YES** → the Pi reads the reply (IMAP) and drives the DC motor (simulated fan) through its GPIO. Replying NO (or anything else) takes no action.
 - **Database:** SQLite (`phase2.db`, created automatically) — stores per-fridge thresholds and alert history
 
 ## 1. Project structure
@@ -18,11 +18,9 @@ Phase 2/
 ├── requirements.txt
 ├── .env.example             # copy to .env and fill in real values (never commit .env)
 ├── phase2.db                 # created automatically on first run
-├── templates/
-│   └── index.html            # the dashboard page Flask serves
-├── static/
-│   ├── css/style.css
-│   └── js/script.js          # polls the backend and updates gauges/notifications
+├── index.html              # the dashboard page Flask serves
+├── style.css
+├── script.js               # polls the backend: gauges, fan status, notifications
 └── esp32/
     ├── Frig1/Frig1.ino        # ESP32 sketch for refrigerator 1
     └── Frig2/Frig2.ino        # ESP32 sketch for refrigerator 2
@@ -32,9 +30,12 @@ Phase 2/
 
 1. Each ESP32 reads its DHT11 sensor every 2 seconds and publishes `{"temperature": ..., "humidity": ...}` as JSON to its MQTT topic (`Frig1` or `Frig2`) on the Pi's Mosquitto broker.
 2. `app.py` subscribes to both topics. Every time a reading comes in, it updates the dashboard's live gauges and checks it against that fridge's threshold.
-3. If a reading is **above the threshold**, the backend emails you (see `.env`) with the current temperature and two links: **Yes, turn on the fan** / **No**. It won't send another email for the same fridge for `ALERT_COOLDOWN_SECONDS` (default 5 minutes), so a fridge sitting above threshold doesn't spam your inbox.
-4. Clicking **Yes** hits a small Flask route that turns the DC motor on (`motor_control.fan_on()`) and logs a notification. Clicking **No** just logs that no action was taken. Either way, a short confirmation page opens in your browser.
-5. The dashboard also shows a manual fan power button/speed slider, and polls `/api/notifications` every few seconds so the "System Notifications" panel updates live without a page reload.
+3. If a reading is **above the threshold**, the backend emails you (see `.env`): *"The current temperature is X°C … Would you like to turn on the fan?"* and a notification appears on the dashboard. It won't send another email for the same fridge for `ALERT_COOLDOWN_SECONDS` (default 5 minutes), so a fridge sitting above threshold doesn't spam your inbox.
+4. **Reply to the email with `YES`.** Every `IMAP_POLL_SECONDS` (default 10 s) the Pi logs into the same Gmail account over IMAP and reads unread replies. The subject of each alert carries a tag like `[ref:abc123…]`; replies keep the subject, so the Pi knows which alert/fridge the answer is for. Only the text **above** the quoted original is read, and only replies from `ALERT_RECIPIENT_EMAIL` are accepted.
+   - `YES` (or `Y`, `Yes please`, …) → `motor_control.fan_on()` runs the motor, fan status goes to ON, and a notification is logged.
+   - `NO` or anything else → no action (a NO is logged as a notification).
+   - The email also contains backup YES/NO links in case replying isn't possible; they do the same thing.
+5. The dashboard polls the fan status, readings and notifications every few seconds, so when a YES reply turns the motor on, the fan icon starts spinning and the status changes to ON without refreshing the page. There's also a manual power button and a PWM speed slider.
 
 This mirrors the "Data capture → Data communication → Data presentation" flow from the spec: the ESP32 + DHT11 **capture** data, MQTT **communicates** it to the Pi, and the dashboard gauges + email + notifications **present** it and drive the alert/fan response.
 
@@ -108,7 +109,8 @@ nano .env
 You need:
 - `MQTT_BROKER_HOST=localhost` (Mosquitto is running on this same Pi)
 - A **Gmail App Password** for `SMTP_EMAIL` / `SMTP_APP_PASSWORD` — go to your Google Account → Security → turn on 2-Step Verification → App Passwords → create one for "Mail". Use the 16-character password it gives you, not your normal Gmail password.
-- `ALERT_RECIPIENT_EMAIL` — whoever should receive the "fridge is too warm" email.
+- `ALERT_RECIPIENT_EMAIL` — whoever should receive the "fridge is too warm" email. Their **reply** is what turns the fan on, so it must come from this exact address. (It can be the same as `SMTP_EMAIL` if you're emailing yourself.)
+- IMAP is used to read replies with the same App Password — nothing extra to set up on Gmail (`IMAP_HOST=imap.gmail.com` is the default).
 - `PUBLIC_BASE_URL` — must be an address your phone/email client can actually open, e.g. `http://192.168.1.50:5001` (the Pi's LAN IP from `hostname -I`). **Not** `localhost` — the Yes/No links are opened from your email, not from the Pi itself.
 
 Then run it:
@@ -116,11 +118,11 @@ Then run it:
 python app.py
 ```
 
-You should see `gpiozero detected real Raspberry Pi GPIO pins` (not "mock hardware") and `[mqtt] Connected to ...`. Open `http://<pi-ip>:5001` from any device on the same WiFi to see the dashboard.
+You should see `[hardware] PWM motor control initialized.` (not "Using mock motor driver"), `[mqtt] Connected to ...` and `[imap] Checking ... for YES/NO replies`. Open `http://<pi-ip>:5001` from any device on the same WiFi to see the dashboard.
 
 ### Testing without the Pi/hardware
 
-Same as Phase 1 — if `gpiozero` can't find real GPIO pins (e.g. running on a laptop), `motor_control.py` automatically falls back to a mock mode that just prints `[mock-hardware] GPIO22 -> ON` instead of crashing. That means you can build/test the dashboard, MQTT flow, and threshold logic on a laptop with a local Mosquitto broker before ever touching the Pi.
+Same as Phase 1 — if `gpiozero` can't find real GPIO pins (e.g. running on a laptop), `motor_control.py` automatically falls back to a mock motor driver (it prints `Fan duty cycle: 40%` / `Fan ON` instead of crashing). That means you can build/test the dashboard, MQTT flow, and threshold logic on a laptop with a local Mosquitto broker before ever touching the Pi.
 
 ## 6. Wiring
 
@@ -172,11 +174,21 @@ sqlite3 phase2.db "SELECT * FROM alerts ORDER BY id DESC LIMIT 10;"
 | GET | `/api/thresholds` | Current threshold per fridge |
 | POST | `/api/thresholds/<fridge_id>` | Set a fridge's threshold (`{"threshold": 8.0}`) |
 | GET | `/api/notifications` | Recent notification feed (newest first) |
-| GET | `/api/fan/status` | Current fan ON/OFF status |
+| GET | `/api/fan/status` | Current fan ON/OFF status + duty cycle |
 | POST | `/api/fan/toggle` | Manually toggle the fan from the dashboard |
-| GET | `/api/alert/confirm?token=...&action=yes\|no` | The link target from the alert email |
+| POST | `/api/fan/speed` | Set PWM duty cycle (`{"duty_cycle": 0-100}`) |
+| GET | `/api/alert/confirm?token=...&action=yes\|no` | Backup YES/NO link target from the alert email |
 
-## 9. Notes
+## 9. Demo checklist
 
-- The fan speed slider is cosmetic (there's no tachometer feedback from the DC motor) — it sets a target RPM shown on the dashboard while the fan is on, it doesn't change the motor's actual physical speed. If you want the slider to actually change motor speed, the driver needs a PWM-capable enable pin and `motor_control.py` would use `PWMOutputDevice` instead of `OutputDevice`; ask if you want that added.
+1. Start Mosquitto, then `python app.py` on the Pi; open `http://<pi-ip>:5001`.
+2. Both ESP32s publishing → all four gauges show values.
+3. Lower a fridge's threshold below the current temperature and press **Save** → alert email arrives and a notification appears.
+4. Reply **YES** → within ~10 s the motor spins and the dashboard shows the fan ON.
+5. Trigger the other fridge and reply **NO** → nothing happens except a "no action taken" notification.
+
+## 10. Notes
+
+- The speed slider sets the real PWM duty cycle on the L293D enable pin (GPIO22), so it changes the motor's actual speed.
 - `.env` is gitignored — never commit real Gmail credentials. Only `.env.example` (with placeholder values) is committed.
+- Flask runs with `debug=False` so the Werkzeug debug console isn't exposed on the network.

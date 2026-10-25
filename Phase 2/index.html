@@ -10,7 +10,7 @@
 
   <header>
     <div>
-      <h1>❄ Smart Fridge Monitor</h1>
+      <h1 class="brand"><svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><line x1="3.3" y1="7" x2="20.7" y2="17"/><line x1="3.3" y1="17" x2="20.7" y2="7"/><polyline points="9.5 3.5 12 6 14.5 3.5"/><polyline points="9.5 20.5 12 18 14.5 20.5"/></svg>Smart Fridge Monitor</h1>
       <p>Store Refrigeration Monitoring System</p>
     </div>
   </header>
@@ -20,16 +20,18 @@
 
       <!-- Refrigerator 1 -->
       <article class="fridge-card" id="fridge1">
-        <h2>Refrigerator 1</h2>
+        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg>Refrigerator 1</h2>
         <p class="status" id="status1">Normal</p>
 
         <div class="gauges">
           <div class="gauge" id="tempGauge1">
+            <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>
             <span id="temp1">--°C</span>
             <small>Temperature</small>
           </div>
 
           <div class="gauge humidity" id="humidityGauge1">
+            <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7s-6 6.6-6 11.1a6 6 0 0 0 12 0C18 9.3 12 2.7 12 2.7z"/></svg>
             <span id="humidity1">--%</span>
             <small>Humidity</small>
           </div>
@@ -45,16 +47,18 @@
 
       <!-- Refrigerator 2 -->
       <article class="fridge-card" id="fridge2">
-        <h2>Refrigerator 2</h2>
+        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg>Refrigerator 2</h2>
         <p class="status" id="status2">Normal</p>
 
         <div class="gauges">
           <div class="gauge" id="tempGauge2">
+            <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>
             <span id="temp2">--°C</span>
             <small>Temperature</small>
           </div>
 
           <div class="gauge humidity" id="humidityGauge2">
+            <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7s-6 6.6-6 11.1a6 6 0 0 0 12 0C18 9.3 12 2.7 12 2.7z"/></svg>
             <span id="humidity2">--%</span>
             <small>Humidity</small>
           </div>
@@ -80,7 +84,15 @@
 
       <!-- Fan icon and duty-cycle display -->
       <div class="fan-display">
-        <div id="fanIcon" class="fan-icon">✣</div>
+        <svg id="fanIcon" class="fan-icon" viewBox="0 0 100 100" role="img" aria-label="Fan">
+          <circle cx="50" cy="50" r="46" class="fan-ring"/>
+          <g class="fan-blades">
+            <path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z"/>
+            <path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(120 50 50)"/>
+            <path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(240 50 50)"/>
+          </g>
+          <circle cx="50" cy="50" r="7" class="fan-hub"/>
+        </svg>
 
         <h1>
           <span id="rpmDisplay">0%</span>
@@ -139,5 +151,4 @@
 </body>
 </html>
 
-<!-- python3 -m http.server 8000 -->
-<!-- http://localhost:8000 -->
+<!-- Open this through Flask: python app.py, then http://<pi-ip>:5001 -->

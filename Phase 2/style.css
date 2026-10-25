@@ -232,15 +232,39 @@ button:hover {
 }
 
 .fan-icon {
-    font-size: 110px;
-    color: #94a3b8;
-    line-height: 1.2;
+    width: 130px;
+    height: 130px;
     display: inline-block;
 }
 
-.fan-icon.spinning {
-    color: #14b8a6;
-    animation: spin 1s linear infinite;
+.fan-icon .fan-ring {
+    fill: none;
+    stroke: #cbd5e1;
+    stroke-width: 3;
+}
+
+.fan-icon .fan-blades path {
+    fill: #94a3b8;
+}
+
+.fan-icon .fan-hub {
+    fill: #475569;
+}
+
+.fan-icon .fan-blades {
+    transform-origin: 50px 50px;
+}
+
+.fan-icon.spinning .fan-ring {
+    stroke: #99f6e4;
+}
+
+.fan-icon.spinning .fan-blades path {
+    fill: #14b8a6;
+}
+
+.fan-icon.spinning .fan-blades {
+    animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -298,4 +322,52 @@ button:hover {
 .speed-labels {
     color: #64748b;
     font-size: 13px;
+}
+
+
+/* Icons (inline SVG) */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    width: 34px;
+    height: 34px;
+    fill: none;
+    stroke: #7dd3fc;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.fridge-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fridge-icon {
+    width: 28px;
+    height: 28px;
+    fill: #e0f2fe;
+    stroke: #0369a1;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+.gauge-icon {
+    position: relative;
+    z-index: 1;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: #64748b;
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.note.success {
+    color: #166534;
 }

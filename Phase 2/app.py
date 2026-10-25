@@ -3,16 +3,24 @@ Smart Store - Phase 2
 IoT dashboard: two DHT11 sensors (via ESP32) publish temperature/humidity to
 a Mosquitto MQTT broker. This Flask app subscribes to that broker, serves
 the dashboard, stores per-fridge thresholds, and runs the temperature alert
-flow (email with Yes/No links -> fan control via motor_control.py).
+flow: email -> user replies YES/NO -> fan control via motor_control.py.
+The Pi checks the inbox (IMAP) for the reply; Yes/No links in the email
+are kept as a backup in case replying isn't possible.
 """
 
 import os
+import re
 import json
+import time
+import email
+import email.header
+import imaplib
 import sqlite3
 import secrets
 import smtplib
 import threading
 from email.mime.text import MIMEText
+from email.utils import parseaddr
 from datetime import datetime
 
 from flask import Flask, request, jsonify, Response, send_from_directory
@@ -38,6 +46,16 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "")
 SMTP_APP_PASSWORD = os.environ.get("SMTP_APP_PASSWORD", "")
 ALERT_RECIPIENT_EMAIL = os.environ.get("ALERT_RECIPIENT_EMAIL", SMTP_EMAIL)
+
+# Reading the user's YES/NO reply: the Pi logs into the SAME Gmail account it
+# sends from (same App Password) and checks for unread replies every few seconds.
+IMAP_HOST = os.environ.get("IMAP_HOST", "imap.gmail.com")
+IMAP_POLL_SECONDS = int(os.environ.get("IMAP_POLL_SECONDS", "10"))
+
+# Every alert email carries this tag in its subject, e.g. "[ref:abc123]".
+# Replies keep the subject ("Re: ..."), so the tag tells us which alert
+# (and which fridge) the YES/NO answer belongs to.
+REF_PATTERN = re.compile(r"\[ref:([A-Za-z0-9_-]+)\]")
 
 # The base URL the Yes/No links in the email point to. This must be an
 # address your phone/email client can actually reach - usually the Pi's
@@ -214,15 +232,17 @@ def send_alert_email(fridge_id, temperature, token):
     no_link = f"{PUBLIC_BASE_URL}/api/alert/confirm?token={token}&action=no"
 
     body = (
-        f"The current temperature in Refrigerator {fridge_id} is {temperature:.1f}C, "
-        f"above the configured threshold.\n\n"
-        f"Would you like to turn on the fan?\n\n"
-        f"YES, turn on the fan: {yes_link}\n"
-        f"NO, leave it off: {no_link}\n"
+        f"The current temperature is {temperature:.1f}C in Refrigerator {fridge_id} "
+        f"(above the configured threshold). Would you like to turn on the fan?\n\n"
+        f"Reply to this email with YES to turn on the fan, or NO to leave it off.\n\n"
+        f"(Backup if you can't reply: YES {yes_link}  |  NO {no_link})\n"
     )
 
     msg = MIMEText(body)
-    msg["Subject"] = f"Smart Store Alert: Refrigerator {fridge_id} temperature is {temperature:.1f}C"
+    msg["Subject"] = (
+        f"Smart Store Alert: Refrigerator {fridge_id} temperature is "
+        f"{temperature:.1f}C [ref:{token}]"
+    )
     msg["From"] = SMTP_EMAIL
     msg["To"] = ALERT_RECIPIENT_EMAIL
 
@@ -429,16 +449,48 @@ def fan_toggle():
     return jsonify(fan_state)
 
 
+def handle_alert_response(token, action, source):
+    """Apply a YES/NO answer to an alert. Used by both the email-reply reader
+    and the backup links. Returns the alert row (or None if unknown)."""
+    action = "yes" if action == "yes" else "no"
+    row, just_resolved = resolve_alert(token, "confirmed" if action == "yes" else "declined")
+    if row is None or not just_resolved:
+        return row  # unknown token, or this alert was already answered
+
+    fridge_id = row["fridge_id"]
+    temperature = row["temperature"]
+
+    if action == "yes":
+        duty_cycle = fan_state["duty_cycle"]
+        if duty_cycle == 0:
+            duty_cycle = motor_control.DEFAULT_DUTY_CYCLE
+            fan_state["duty_cycle"] = duty_cycle
+
+        motor_control.fan_on(duty_cycle)
+        fan_state["status"] = "ON"
+
+        add_notification(
+            fridge_id,
+            f"User replied YES ({source}) - fan turned ON at {duty_cycle}% "
+            f"(Refrigerator {fridge_id} was {temperature:.1f}C).",
+            level="success",
+        )
+    else:
+        add_notification(
+            fridge_id,
+            f"User replied NO ({source}) - no action taken for "
+            f"Refrigerator {fridge_id} ({temperature:.1f}C).",
+            level="info",
+        )
+    return row
+
+
 @app.route("/api/alert/confirm")
 def alert_confirm():
     token = request.args.get("token", "")
-    action = request.args.get("action", "")
+    action = "yes" if request.args.get("action", "") == "yes" else "no"
 
-    row, just_resolved = resolve_alert(
-        token,
-        "confirmed" if action == "yes" else "declined"
-    )
-
+    row = handle_alert_response(token, action, source="email link")
     if row is None:
         return Response(
             "<h1>This alert link isn't valid or has expired.</h1>",
@@ -446,55 +498,119 @@ def alert_confirm():
         ), 404
 
     fridge_id = row["fridge_id"]
-    temperature = row["temperature"]
-
     if action == "yes":
-        if just_resolved:
-            duty_cycle = fan_state["duty_cycle"]
-
-            # Use the selected duty cycle when the email turns on the fan.
-            if duty_cycle == 0:
-                duty_cycle = motor_control.DEFAULT_DUTY_CYCLE
-                fan_state["duty_cycle"] = duty_cycle
-
-            motor_control.fan_on(duty_cycle)
-            fan_state["status"] = "ON"
-
-            add_notification(
-                fridge_id,
-                f"Fan turned ON by email confirmation at {duty_cycle}% duty cycle "
-                f"(Refrigerator {fridge_id} was {temperature:.1f}C).",
-                level="success",
-            )
-
         html = (
             f"<h1>Fan turned on</h1>"
-            f"<p>The fan is now running for Refrigerator {fridge_id} "
-            f"(was {temperature:.1f}C). You can close this tab.</p>"
+            f"<p>The fan is now running for Refrigerator {fridge_id}. You can close this tab.</p>"
         )
     else:
-        if just_resolved:
-            add_notification(
-                fridge_id,
-                f"No action taken for Refrigerator {fridge_id} ({temperature:.1f}C) - "
-                f"you chose not to turn on the fan.",
-                level="info",
-            )
-
         html = (
             f"<h1>No action taken</h1>"
             f"<p>The fan was left off for Refrigerator {fridge_id}. You can close this tab.</p>"
         )
-
     return Response(html, mimetype="text/html")
+
+
+# ---------------------------------------------------------------------------
+# Email replies (IMAP) - "If the user replies YES, activate the fan"
+# ---------------------------------------------------------------------------
+def get_plain_text(message):
+    """Return the text/plain body of an email (handles multipart replies)."""
+    if message.is_multipart():
+        for part in message.walk():
+            if part.get_content_type() == "text/plain" and not part.get_filename():
+                payload = part.get_payload(decode=True) or b""
+                return payload.decode(part.get_content_charset() or "utf-8", errors="replace")
+        # No plain-text part (HTML-only reply): strip tags from the HTML part.
+        for part in message.walk():
+            if part.get_content_type() == "text/html":
+                payload = part.get_payload(decode=True) or b""
+                html = payload.decode(part.get_content_charset() or "utf-8", errors="replace")
+                return re.sub(r"<[^>]+>", "\n", html)
+        return ""
+    payload = message.get_payload(decode=True) or b""
+    return payload.decode(message.get_content_charset() or "utf-8", errors="replace")
+
+
+def parse_reply_answer(body):
+    """Look only at what the user typed (above the quoted original email) and
+    return "yes", "no", or None if the reply is unclear."""
+    for line in body.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # Stop at the quoted original message.
+        if line.startswith(">") or re.match(r"^On .+wrote:?$", line) or line.startswith("-----"):
+            break
+        first_word = re.sub(r"[^A-Za-z]", "", line.split()[0]).upper()
+        if first_word in ("YES", "Y", "OUI"):
+            return "yes"
+        if first_word in ("NO", "N", "NON"):
+            return "no"
+        return None  # first thing they wrote wasn't YES/NO
+    return None
+
+
+def check_email_replies():
+    """One pass: read unread alert replies from the inbox and act on them."""
+    mail = imaplib.IMAP4_SSL(IMAP_HOST)
+    try:
+        mail.login(SMTP_EMAIL, SMTP_APP_PASSWORD)
+        mail.select("INBOX")
+        status, data = mail.search(None, '(UNSEEN SUBJECT "ref:")')
+        if status != "OK":
+            return
+        for num in data[0].split():
+            status, msg_data = mail.fetch(num, "(RFC822)")  # also marks it as read
+            if status != "OK" or not msg_data or not isinstance(msg_data[0], tuple):
+                continue
+            message = email.message_from_bytes(msg_data[0][1])
+
+            subject = str(email.header.make_header(email.header.decode_header(message.get("Subject", ""))))
+            match = REF_PATTERN.search(subject)
+            if not match:
+                continue
+
+            # Only accept answers from the person the alert was sent to.
+            sender = parseaddr(message.get("From", ""))[1].lower()
+            if sender != ALERT_RECIPIENT_EMAIL.lower():
+                continue
+
+            answer = parse_reply_answer(get_plain_text(message))
+            if answer is None:
+                # e.g. our own alert email (when sending to yourself) or an unclear reply
+                continue
+
+            token = match.group(1)
+            print(f"[imap] Reply '{answer.upper()}' received for alert {token[:6]}...")
+            handle_alert_response(token, answer, source="email reply")
+    finally:
+        try:
+            mail.logout()
+        except Exception:
+            pass
+
+
+def email_reply_loop():
+    if not SMTP_EMAIL or not SMTP_APP_PASSWORD:
+        print("[imap] SMTP_EMAIL / SMTP_APP_PASSWORD not set - not checking for replies.")
+        return
+    print(f"[imap] Checking {SMTP_EMAIL} for YES/NO replies every {IMAP_POLL_SECONDS}s")
+    while True:
+        try:
+            check_email_replies()
+        except Exception as error:
+            print(f"[imap] Could not check replies: {error}")
+        time.sleep(IMAP_POLL_SECONDS)
 
 
 if __name__ == "__main__":
     init_db()
     mqtt_client = start_mqtt()
+    threading.Thread(target=email_reply_loop, daemon=True).start()
 
     try:
-        app.run(host="0.0.0.0", port=5001, debug=True, use_reloader=False)
+        app.run(host="0.0.0.0", port=5001, debug=False, use_reloader=False)
     finally:
         if mqtt_client is not None:
             mqtt_client.loop_stop()

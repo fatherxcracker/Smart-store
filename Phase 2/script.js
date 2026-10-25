@@ -11,8 +11,16 @@ const READINGS_POLL_MS = 3000;
 // How often the dashboard checks for new notifications.
 const NOTIFICATIONS_POLL_MS = 4000;
 
+// How often the dashboard checks the fan status (so an email YES reply
+// shows up as ON without refreshing the page).
+const FAN_POLL_MS = 3000;
+
 // Keeps track of whether the fan is currently ON or OFF.
 let fanIsOn = false;
+
+// True while the user is dragging the speed slider, so polling
+// doesn't snap the slider back mid-drag.
+let sliderBusy = false;
 
 
 // gauges: Temperature and Humidity
@@ -165,7 +173,7 @@ function applyFanUi(status) {
 
     // Synchronize the slider with the duty cycle returned by Flask.
     if (status && typeof status === "object" &&
-        status.duty_cycle !== undefined) {
+        status.duty_cycle !== undefined && !sliderBusy) {
         slider.value = status.duty_cycle;
     }
 
@@ -206,6 +214,7 @@ function updateFanSpeed() {
     const speedValue = document.getElementById("speedValue");
 
     const dutyCycle = Number(slider.value);
+    sliderBusy = true;
 
     // Show 0% when the fan is OFF.
     rpmDisplay.textContent = (fanIsOn ? dutyCycle : 0) + "%";
@@ -218,6 +227,7 @@ function updateFanSpeed() {
 async function saveFanSpeed() {
     const slider = document.getElementById("fanSlider");
     const dutyCycle = Number(slider.value);
+    sliderBusy = false;
 
     try {
         const res = await fetch("/api/fan/speed", {
@@ -274,7 +284,7 @@ async function refreshNotifications() {
             const div = document.createElement("div");
 
             div.className =
-                item.level === "warning" ? "alert" : "note";
+                item.level === "warning" ? "alert" : "note " + item.level;
 
             const time = new Date(item.created_at).toLocaleTimeString();
 
@@ -300,3 +310,4 @@ refreshNotifications();
 
 setInterval(refreshReadings, READINGS_POLL_MS);
 setInterval(refreshNotifications, NOTIFICATIONS_POLL_MS);
+setInterval(loadFanStatus, FAN_POLL_MS);
