@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,62 +67,63 @@
           <button onclick="saveThreshold(2)">Save</button>
         </div>
       </article>
+
     </section>
-  
-<!-- Fan Control Panel -->
-<section class="panel fan-panel">
 
-  <div class="fan-header">
-    <h2>Fan Control</h2>
-    <span id="fanStatus" class="fan-status">OFF</span>
-  </div>
+    <!-- Fan Control Panel -->
+    <section class="panel fan-panel">
 
-  <!-- Fan icon and RPM -->
-  <div class="fan-display">
-    <div id="fanIcon" class="fan-icon">✣</div>
+      <div class="fan-header">
+        <h2>Fan Control</h2>
+        <span id="fanStatus" class="fan-status">OFF</span>
+      </div>
 
-    <h1>
-      <span id="rpmDisplay">0</span>
-      <small>RPM</small>
-    </h1>
+      <!-- Fan icon and duty-cycle display -->
+      <div class="fan-display">
+        <div id="fanIcon" class="fan-icon">✣</div>
 
-    <p>Fan Speed</p>
-  </div>
+        <h1>
+          <span id="rpmDisplay">0%</span>
+          <small>Duty Cycle</small>
+        </h1>
 
-  <!-- Power button -->
-  <div class="fan-power">
-    <label>Fan Power</label>
-    <button id="powerButton" onclick="toggleFan()">
-      Turn ON
-    </button>
-  </div>
+        <p>PWM Fan Speed Control</p>
+      </div>
 
-  <!-- Speed slider -->
-  <div class="fan-speed">
-    <div class="speed-header">
-      <label for="fanSlider">Speed Control</label>
-      <span id="speedValue">1200 RPM</span>
-    </div>
+      <!-- Power button -->
+      <div class="fan-power">
+        <label>Fan Power</label>
+        <button id="powerButton" onclick="toggleFan()">
+          Turn ON
+        </button>
+      </div>
 
-    <input
-      type="range"
-      id="fanSlider"
-      min="0"
-      max="3000"
-      step="100"
-      value="1200"
-      oninput="updateFanSpeed()"
-      disabled
-    >
+      <!-- PWM Duty-Cycle Slider -->
+      <div class="fan-speed">
+        <div class="speed-header">
+          <label for="fanSlider">Speed Control</label>
+          <span id="speedValue">40% duty cycle</span>
+        </div>
 
-    <div class="speed-labels">
-      <span>0 RPM</span>
-      <span>3000 RPM</span>
-    </div>
-  </div>
+        <input
+          type="range"
+          id="fanSlider"
+          min="0"
+          max="100"
+          step="5"
+          value="40"
+          oninput="updateFanSpeed()"
+          onchange="saveFanSpeed()"
+          disabled
+        >
 
-</section>
+        <div class="speed-labels">
+          <span>0% (OFF)</span>
+          <span>100% (FULL)</span>
+        </div>
+      </div>
 
+    </section>
 
     <!-- Alerts -->
     <section class="panel">
@@ -132,11 +132,12 @@
         No active alerts.
       </div>
     </section>
+
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
 
- <!-- python3 -m http.server 8000 -->
-  <!-- http://localhost:8000 -->
+<!-- python3 -m http.server 8000 -->
+<!-- http://localhost:8000 -->

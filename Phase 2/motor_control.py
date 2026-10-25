@@ -1,66 +1,98 @@
 """
 Smart Store - Phase 2
-DC motor control (simulates the fridge fan), driven by a motor driver board
-(e.g. L298N) wired to the Raspberry Pi's GPIO pins.
-
-Like Phase 1, this falls back to a "mock" mode when real GPIO hardware isn't
-available (e.g. running on a laptop), so the rest of the dashboard can be
-developed and tested without the Pi.
+DC fan/motor control using PWM duty cycle on the L293D enable pin.
+GPIO numbers use BCM numbering.
 """
 
-# Raspberry Pi GPIO pins (BCM numbering) - match these to your wiring.
-EN1 = 22   # motor driver enable (speed/on-off)
-IN1 = 27   # motor driver direction pin 1
-IN2 = 17   # motor driver direction pin 2
+EN1 = 22   # L293D EN1: PWM speed control
+IN1 = 27   # L293D IN1: direction
+IN2 = 17   # L293D IN2: direction
+
+DEFAULT_DUTY_CYCLE = 40  # percent; adjust as needed (0-100)
+PWM_FREQUENCY = 1000     # Hz
 
 try:
-    from gpiozero import OutputDevice
+    from gpiozero import OutputDevice, PWMOutputDevice
 
-    enable = OutputDevice(EN1, initial_value=False)
+    enable = PWMOutputDevice(
+        EN1,
+        frequency=PWM_FREQUENCY,
+        initial_value=0
+    )
     input1 = OutputDevice(IN1, initial_value=True)
     input2 = OutputDevice(IN2, initial_value=False)
+
     HARDWARE_MODE = "real"
-    print("[hardware] gpiozero detected real Raspberry Pi GPIO pins (motor driver).")
+    print("[hardware] PWM motor control initialized.")
+
 except Exception as gpio_error:
-    print(f"[hardware] GPIO not available ({gpio_error}). Using mock motor driver for local testing.")
+    print(f"[hardware] GPIO not available ({gpio_error}). Using mock motor driver.")
 
     class MockOutputDevice:
-        def __init__(self, pin, initial_value=False):
+        def __init__(self, pin, initial_value=False, **kwargs):
             self.pin = pin
             self.value = initial_value
 
         def on(self):
-            self.value = True
-            print(f"[mock-hardware] GPIO{self.pin} -> ON")
+            self.value = 1
 
         def off(self):
-            self.value = False
-            print(f"[mock-hardware] GPIO{self.pin} -> OFF")
+            self.value = 0
 
         def close(self):
             pass
 
-    enable = MockOutputDevice(EN1, initial_value=False)
-    input1 = MockOutputDevice(IN1, initial_value=True)
-    input2 = MockOutputDevice(IN2, initial_value=False)
+    enable = MockOutputDevice(EN1, initial_value=0)
+    input1 = MockOutputDevice(IN1, initial_value=1)
+    input2 = MockOutputDevice(IN2, initial_value=0)
+
     HARDWARE_MODE = "mock"
 
 
-def fan_on():
+def set_fan_speed(duty_cycle):
+    """Set motor PWM duty cycle as an integer percentage from 0 to 100."""
+    duty_cycle = int(duty_cycle)
+
+    if not 0 <= duty_cycle <= 100:
+        raise ValueError("Duty cycle must be between 0 and 100.")
+
+    # Duty cycle 0 means no power; 100 means continuously enabled.
+    enable.value = duty_cycle / 100.0
+
+    print(f"Fan duty cycle: {duty_cycle}%")
+
+
+def fan_on(duty_cycle=DEFAULT_DUTY_CYCLE):
+    """Run the fan at the requested duty cycle."""
+    duty_cycle = int(duty_cycle)
+
+    if not 0 <= duty_cycle <= 100:
+        raise ValueError("Duty cycle must be between 0 and 100.")
+
     input1.on()
     input2.off()
-    enable.on()
+
+    set_fan_speed(duty_cycle)
+
     print("Fan ON")
 
 
 def fan_off():
-    enable.off()
+    """Stop the motor by setting PWM duty cycle to zero."""
+    set_fan_speed(0)
+
     print("Fan OFF")
 
 
 def cleanup():
-    enable.off()
+    """Safely stop PWM and release GPIO resources."""
+    enable.value = 0
+
+    input1.off()
+    input2.off()
+
     input1.close()
     input2.close()
     enable.close()
+
     print("GPIO cleaned up")

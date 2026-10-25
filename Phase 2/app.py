@@ -65,7 +65,13 @@ latest_readings = {
     1: {"temperature": None, "humidity": None, "updated_at": None},
     2: {"temperature": None, "humidity": None, "updated_at": None},
 }
-fan_state = {"status": "OFF"}
+
+# Fan state now also remembers the selected PWM duty cycle.
+fan_state = {
+    "status": "OFF",
+    "duty_cycle": motor_control.DEFAULT_DUTY_CYCLE
+}
+
 notifications = []  # list of {id, fridge_id, message, level, created_at} newest first
 
 
@@ -158,7 +164,7 @@ def has_recent_pending_alert(fridge_id):
     if not row:
         return False
     created = datetime.fromisoformat(row["created_at"])
-    
+
     now = datetime.utcnow()
     return (now - created).total_seconds() < ALERT_COOLDOWN_SECONDS
 
@@ -357,16 +363,69 @@ def fan_status():
     return jsonify(fan_state)
 
 
+@app.route("/api/fan/speed", methods=["POST"])
+def fan_speed():
+    data = request.get_json(silent=True) or {}
+
+    try:
+        duty_cycle = int(data.get("duty_cycle"))
+    except (TypeError, ValueError):
+        return jsonify({
+            "success": False,
+            "message": "duty_cycle must be an integer from 0 to 100."
+        }), 400
+
+    if not 0 <= duty_cycle <= 100:
+        return jsonify({
+            "success": False,
+            "message": "duty_cycle must be between 0 and 100."
+        }), 400
+
+    fan_state["duty_cycle"] = duty_cycle
+
+    if fan_state["status"] == "ON":
+        motor_control.set_fan_speed(duty_cycle)
+
+        if duty_cycle == 0:
+            fan_state["status"] = "OFF"
+
+        add_notification(
+            None,
+            f"Fan duty cycle set to {duty_cycle}%.",
+            level="info"
+        )
+
+    return jsonify({"success": True, **fan_state})
+
+
 @app.route("/api/fan/toggle", methods=["POST"])
 def fan_toggle():
     if fan_state["status"] == "OFF":
-        motor_control.fan_on()
+        duty_cycle = fan_state["duty_cycle"]
+
+        # If the saved value is zero, use the default when turning ON.
+        if duty_cycle == 0:
+            duty_cycle = motor_control.DEFAULT_DUTY_CYCLE
+            fan_state["duty_cycle"] = duty_cycle
+
+        motor_control.fan_on(duty_cycle)
         fan_state["status"] = "ON"
-        add_notification(None, "Fan turned ON manually from the dashboard.", level="info")
+
+        add_notification(
+            None,
+            f"Fan turned ON manually at {duty_cycle}% duty cycle.",
+            level="info"
+        )
     else:
         motor_control.fan_off()
         fan_state["status"] = "OFF"
-        add_notification(None, "Fan turned OFF manually from the dashboard.", level="info")
+
+        add_notification(
+            None,
+            "Fan turned OFF manually from the dashboard.",
+            level="info"
+        )
+
     return jsonify(fan_state)
 
 
@@ -375,22 +434,39 @@ def alert_confirm():
     token = request.args.get("token", "")
     action = request.args.get("action", "")
 
-    row, just_resolved = resolve_alert(token, "confirmed" if action == "yes" else "declined")
+    row, just_resolved = resolve_alert(
+        token,
+        "confirmed" if action == "yes" else "declined"
+    )
+
     if row is None:
-        return Response("<h1>This alert link isn't valid or has expired.</h1>", mimetype="text/html"), 404
+        return Response(
+            "<h1>This alert link isn't valid or has expired.</h1>",
+            mimetype="text/html"
+        ), 404
 
     fridge_id = row["fridge_id"]
     temperature = row["temperature"]
 
     if action == "yes":
         if just_resolved:
-            motor_control.fan_on()
+            duty_cycle = fan_state["duty_cycle"]
+
+            # Use the selected duty cycle when the email turns on the fan.
+            if duty_cycle == 0:
+                duty_cycle = motor_control.DEFAULT_DUTY_CYCLE
+                fan_state["duty_cycle"] = duty_cycle
+
+            motor_control.fan_on(duty_cycle)
             fan_state["status"] = "ON"
+
             add_notification(
                 fridge_id,
-                f"Fan turned ON by email confirmation (Refrigerator {fridge_id} was {temperature:.1f}C).",
+                f"Fan turned ON by email confirmation at {duty_cycle}% duty cycle "
+                f"(Refrigerator {fridge_id} was {temperature:.1f}C).",
                 level="success",
             )
+
         html = (
             f"<h1>Fan turned on</h1>"
             f"<p>The fan is now running for Refrigerator {fridge_id} "
@@ -404,6 +480,7 @@ def alert_confirm():
                 f"you chose not to turn on the fan.",
                 level="info",
             )
+
         html = (
             f"<h1>No action taken</h1>"
             f"<p>The fan was left off for Refrigerator {fridge_id}. You can close this tab.</p>"
@@ -415,9 +492,11 @@ def alert_confirm():
 if __name__ == "__main__":
     init_db()
     mqtt_client = start_mqtt()
+
     try:
         app.run(host="0.0.0.0", port=5001, debug=True, use_reloader=False)
     finally:
         if mqtt_client is not None:
             mqtt_client.loop_stop()
+
         motor_control.cleanup()
