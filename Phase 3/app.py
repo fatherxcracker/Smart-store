@@ -21,6 +21,7 @@ load_dotenv()
 
 import db
 from notifications import notify, notify_error
+from cart import cart_api
 
 
 def create_app():
@@ -33,6 +34,7 @@ def create_app():
     )
 
     db.init_db()
+    app.register_blueprint(cart_api)
 
     # ---------------------------------------------------------
     # Pages
@@ -49,6 +51,10 @@ def create_app():
             "inventory.html",
             products=db.get_inventory(),
         )
+
+    @app.get("/cart")
+    def shopping_cart():
+        return render_template("cart.html")
 
     # ---------------------------------------------------------
     # Product management
