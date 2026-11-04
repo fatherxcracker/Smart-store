@@ -9,6 +9,9 @@
           href="{{ url_for('static', filename='account.css') }}">
     <link rel="stylesheet"
           href="{{ url_for('static', filename='cart.css') }}">
+
+    <script src="{{ url_for('static', filename='cart.js') }}"
+            defer></script>
 </head>
 <body>
 <div class="app">
@@ -47,6 +50,27 @@
             </div>
 
             <p id="cart-message" role="status" aria-live="polite"></p>
+
+            <section class="info-card cart-scanner"
+                     aria-labelledby="scanner-heading">
+                <h2 id="scanner-heading">Scan a product</h2>
+                <p>Scan a barcode or type its UPC and press Enter.</p>
+
+                <form id="barcode-form">
+                    <label for="barcode-input">Product barcode</label>
+                    <div class="barcode-controls">
+                        <input id="barcode-input"
+                               name="upc"
+                               type="text"
+                               maxlength="13"
+                               autocomplete="off"
+                               required>
+                        <button class="primary-button" type="submit">
+                            Add product
+                        </button>
+                    </div>
+                </form>
+            </section>
 
             <div class="cart-layout">
                 <section class="history-card cart-list"
