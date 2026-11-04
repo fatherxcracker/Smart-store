@@ -1,0 +1,60 @@
+erDiagram
+    PRODUCTS ||--o{ RECEPTIONS : "is received in"
+    PRODUCTS ||--o{ PURCHASE_ITEMS : "appears on"
+    CUSTOMERS ||--o{ PURCHASES : "makes"
+    PURCHASES ||--|{ PURCHASE_ITEMS : "contains"
+
+    PRODUCTS {
+        int id PK
+        text name
+        text category
+        real price
+        text upc UK "barcode, max 13"
+        text epc UK "RFID tag, max 24"
+        text producer
+        text image_url
+        date expiry_date
+        int is_active "0 = deleted"
+        timestamp created_at
+        timestamp updated_at
+    }
+    RECEPTIONS {
+        int id PK
+        int product_id FK
+        int quantity
+        timestamp received_at
+        text note
+    }
+    CUSTOMERS {
+        int id PK
+        text name
+        text email UK
+        text phone
+        text membership_number UK "auto-generated"
+        text password_hash
+        int points
+        text language "en / fr"
+        timestamp created_at
+    }
+    PURCHASES {
+        int id PK
+        text receipt_number UK
+        int customer_id FK "NULL = guest"
+        real subtotal
+        real gst
+        real qst
+        real total
+        int points_earned
+        text payment_method
+        int email_sent
+        timestamp created_at
+    }
+    PURCHASE_ITEMS {
+        int id PK
+        int purchase_id FK
+        int product_id FK
+        text product_name "copied at checkout"
+        int quantity
+        real unit_price "copied at checkout"
+        real line_total
+    }
