@@ -190,7 +190,7 @@ Phase 3/
 | `HOST`, `PORT` | 0.0.0.0, 5002 | `0.0.0.0` lets laptops/phones on the network open the site |
 | `FLASK_SECRET_KEY` | random | Keeps logins and carts after a restart |
 | `RFID_PORT` | /dev/ttyUSB0 | CF600 serial port |
-| `RFID_SCAN_SECONDS` | 1.5 | How long one scan reads for |
+| `RFID_SCAN_SECONDS` | 2 | How long one scan reads for |
 | `RFID_SIMULATE` | 0 | `1` = no reader, use `RFID_SIMULATED_TAGS` |
 
 ---
@@ -208,6 +208,7 @@ Phase 3/
 
 | Message | Fix |
 |---|---|
+| "No RFID tags detected" / `(no tags)` | Hold the tags flat on top of the reader. Run `python rfid_reader.py --raw`: if it shows **received 0 bytes**, the reader isn't answering (check `RFID_PORT`, unplug/replug, try `RFID_RESPONSE_WAIT=0.8` in `.env`); if bytes arrive but no EPCs, send the output to the team. |
 | "RFID reader not found on /dev/ttyUSB0" | Reader unplugged, or the usbserial setup wasn't done. Check `ls /dev/ttyUSB*`. |
 | "No permission to open /dev/ttyUSB0" | Run `sudo usermod -aG dialout $USER`, then log out and in. |
 | "Unknown RFID tag(s)" | That tag isn't registered. Read it into a product with **Read tag from RFID reader**. |

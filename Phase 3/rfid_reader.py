@@ -21,7 +21,9 @@ load_dotenv()
 
 PORT = os.environ.get("RFID_PORT", "/dev/ttyUSB0")   # /dev/ttyACM0 on some Pis
 BAUD = int(os.environ.get("RFID_BAUD", "115200"))
-SCAN_SECONDS = float(os.environ.get("RFID_SCAN_SECONDS", "1.5"))
+SCAN_SECONDS = float(os.environ.get("RFID_SCAN_SECONDS", "2"))
+# Time the reader needs to answer one inventory command (0.5 s, as in the class SDK script)
+RESPONSE_WAIT = float(os.environ.get("RFID_RESPONSE_WAIT", "0.5"))
 SIMULATE = os.environ.get("RFID_SIMULATE", "0").lower() in ("1", "true", "yes")
 SIMULATED_TAGS = [
     tag.strip().upper()
@@ -68,8 +70,9 @@ def parse_epcs(buf):
         i = end
 
 
-def read_tags(seconds=None):
-    """Read for `seconds` and return every distinct EPC seen (all tags at once)."""
+def read_tags(seconds=None, debug=False):
+    """Read for `seconds` and return every distinct EPC seen (all tags at once).
+    debug=True prints the raw bytes the reader sends back."""
     seconds = SCAN_SECONDS if seconds is None else seconds
 
     if SIMULATE:
@@ -86,7 +89,7 @@ def read_tags(seconds=None):
 
     try:
         try:
-            ser = serial.Serial(PORT, BAUD, timeout=0.2)
+            ser = serial.Serial(PORT, BAUD, timeout=0.5)
         except serial.SerialException as error:
             text = str(error)
             if "Permission denied" in text:
@@ -101,14 +104,21 @@ def read_tags(seconds=None):
         found = {}
         buf = b""
         try:
+            ser.reset_input_buffer()
             deadline = time.monotonic() + seconds
-            while time.monotonic() < deadline:
+            while True:
                 ser.write(READ_TAGS_COMMAND)
-                time.sleep(0.3)
-                buf += ser.read(ser.in_waiting or 1)
+                time.sleep(RESPONSE_WAIT)          # let the reader finish answering
+                data = ser.read(ser.in_waiting)
+                if debug:
+                    print(f"  sent {READ_TAGS_COMMAND.hex(' ')}  ->  received {len(data)} bytes: "
+                          f"{data.hex(' ') if data else '(nothing)'}")
+                buf += data
                 epcs, buf = parse_epcs(buf)
                 for epc in epcs:
                     found[epc] = True  # keeps first-seen order, drops repeats
+                if time.monotonic() >= deadline:
+                    break
         finally:
             ser.close()
         return list(found)
@@ -122,11 +132,16 @@ def status():
 
 
 if __name__ == "__main__":
-    # Quick test on the Pi:  python rfid_reader.py
-    print(f"Reading from {'SIMULATED reader' if SIMULATE else PORT} ... hold tags near the reader (Ctrl+C to stop)")
+    # Quick test on the Pi:
+    #   python rfid_reader.py          -> prints the EPCs of the tags on the reader
+    #   python rfid_reader.py --raw    -> also prints the raw bytes (for troubleshooting)
+    import sys
+    raw = "--raw" in sys.argv
+    print(f"Reading from {'SIMULATED reader' if SIMULATE else PORT} at {BAUD} baud ... "
+          f"hold tags on the reader (Ctrl+C to stop)")
     try:
         while True:
-            tags = read_tags()
+            tags = read_tags(debug=raw)
             print(tags if tags else "(no tags)")
     except RFIDError as error:
         print("Error:", error)
