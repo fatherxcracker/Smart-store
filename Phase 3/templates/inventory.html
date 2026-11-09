@@ -3,9 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Inventory | Smart Store</title>
-
     <link rel="stylesheet"
           href="{{ url_for('static', filename='inventory.css') }}">
 </head>
@@ -13,7 +11,6 @@
 <main>
     <header>
         <p class="eyebrow">SMART STORE · PHASE 3</p>
-
         <h1>Inventory</h1>
 
         <p>
@@ -21,16 +18,30 @@
             Refresh to see the latest changes.
         </p>
 
-        <p>
+        <nav aria-label="Inventory navigation">
             <a href="{{ url_for('add_product') }}">Add product</a>
-        </p>
+            <span aria-hidden="true"> | </span>
+            <a href="{{ url_for('receive_stock') }}">Receive stock</a>
+            <span aria-hidden="true"> | </span>
+            <a href="{{ url_for('reception_history') }}">Reception history</a>
+        </nav>
     </header>
+
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+        {% if category == 'error' %}
+            <p class="form-error" role="alert">{{ message }}</p>
+        {% else %}
+            <p role="status"
+               style="padding: 16px; background: #e2f3e9; color: #215739; border-radius: 8px;">
+                {{ message }}
+            </p>
+        {% endif %}
+    {% endfor %}
 
     <div class="table-wrapper"
          role="region"
          aria-label="Product inventory"
          tabindex="0">
-
         <table>
             <caption>Stock = total received − total sold</caption>
 
@@ -50,58 +61,49 @@
 
             <tbody>
                 {% for product in products %}
-                <tr>
-                    <th scope="row">{{ product.name }}</th>
+                    <tr>
+                        <th scope="row">{{ product.name }}</th>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.upc }}</td>
 
-                    <td>{{ product.category }}</td>
+                        <td class="number">
+                            ${{ '%.2f'|format(product.price) }}
+                        </td>
 
-                    <td>{{ product.upc }}</td>
+                        <td class="number">{{ product.total_received }}</td>
+                        <td class="number">{{ product.total_sold }}</td>
 
-                    <td class="number">
-                        ${{ '%.2f'|format(product.price) }}
-                    </td>
+                        <td class="number">
+                            <span class="stock {{ 'empty' if product.in_stock <= 0 else '' }}">
+                                {{ product.in_stock }}
+                            </span>
+                        </td>
 
-                    <td class="number">
-                        {{ product.total_received }}
-                    </td>
+                        <td>
+                            {{ product.last_received_at or 'No receptions yet' }}
+                        </td>
 
-                    <td class="number">
-                        {{ product.total_sold }}
-                    </td>
+                        <td>
+                            <a href="{{ url_for('edit_product', product_id=product.id) }}">
+                                Edit
+                            </a>
 
-                    <td class="number">
-                        <span class="stock {{ 'empty' if product.in_stock <= 0 else '' }}">
-                            {{ product.in_stock }}
-                        </span>
-                    </td>
-
-                    <td>
-                        {{ product.last_received_at or 'No receptions yet' }}
-                    </td>
-
-                    <td>
-                        <a href="{{ url_for('edit_product', product_id=product.id) }}">
-                            Edit
-                        </a>
-
-                        <form method="post"
-                              action="{{ url_for('delete_product', product_id=product.id) }}"
-                              class="delete-form"
-                              onsubmit="return confirm('Delete this product from the inventory?');">
-
-                            <button type="submit" class="delete-button">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-
+                            <form method="post"
+                                  action="{{ url_for('delete_product', product_id=product.id) }}"
+                                  class="delete-form"
+                                  onsubmit="return confirm('Delete this product from the inventory?');">
+                                <button type="submit" class="delete-button">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
                 {% else %}
-                <tr>
-                    <td colspan="9" class="empty-message">
-                        No products yet. Products will appear here once registered.
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="9" class="empty-message">
+                            No products yet. Products will appear here once registered.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

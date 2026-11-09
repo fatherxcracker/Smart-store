@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reception History | Smart Store</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+</head>
+<body>
+<main>
+    <header>
+        <p class="eyebrow">SMART STORE · PHASE 3</p>
+        <h1>Reception History</h1>
+        <p>Review recorded stock deliveries.</p>
+
+        <nav aria-label="Inventory navigation">
+            <a href="{{ url_for('inventory') }}">Inventory</a>
+            <span aria-hidden="true"> | </span>
+            <a href="{{ url_for('receive_stock') }}">Receive stock</a>
+        </nav>
+    </header>
+
+    <form method="get"
+          action="{{ url_for('reception_history') }}"
+          class="product-form"
+          style="margin-top: 24px;">
+
+        <label for="product_id">Filter by product</label>
+
+        <select id="product_id"
+                name="product_id"
+                style="padding: 12px; font: inherit; width: 100%;">
+            <option value="">All products</option>
+
+            {% for product in products %}
+                <option value="{{ product.id }}"
+                        {% if selected_id == product.id|string %}
+                            selected
+                        {% endif %}>
+                    {{ product.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Apply filter</button>
+    </form>
+
+    <div class="table-wrapper"
+         role="region"
+         aria-label="Stock reception history"
+         tabindex="0">
+        <table>
+            <caption>{{ receptions|length }} recorded deliveries</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Quantity received</th>
+                    <th scope="col">Date received</th>
+                    <th scope="col">Note / invoice</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for reception in receptions %}
+                    <tr>
+                        <th scope="row">{{ reception.product_name }}</th>
+                        <td class="number">{{ reception.quantity }}</td>
+                        <td>{{ reception.received_at }}</td>
+                        <td>{{ reception.note or '—' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-message">
+                            No stock receptions found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

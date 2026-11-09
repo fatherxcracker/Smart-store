@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Receive Stock | Smart Store</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+</head>
+<body>
+<main>
+    <p class="eyebrow">SMART STORE · PHASE 3</p>
+
+    <h1>Receive Stock</h1>
+
+    <p>Record a delivery of an existing product.</p>
+
+    <p>
+        <a href="{{ url_for('inventory') }}">Back to inventory</a>
+    </p>
+
+    {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if products %}
+        <form method="post"
+              action="{{ url_for('receive_stock') }}"
+              class="product-form">
+
+            <label for="product_id">Product</label>
+
+            <select id="product_id"
+                    name="product_id"
+                    required
+                    style="padding: 12px; font: inherit; width: 100%;">
+                <option value="">Select a product</option>
+
+                {% for product in products %}
+                    <option value="{{ product.id }}"
+                            {% if values.get('product_id', '')|string == product.id|string %}
+                                selected
+                            {% endif %}>
+                        {{ product.name }} — {{ product.in_stock }} in stock
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="quantity">Quantity received</label>
+
+            <input id="quantity"
+                   name="quantity"
+                   type="number"
+                   min="1"
+                   step="1"
+                   value="{{ values.get('quantity', '') }}"
+                   required>
+
+            <label for="received_at">Date and time received</label>
+
+            <input id="received_at"
+                   name="received_at"
+                   type="datetime-local"
+                   value="{{ values.get('received_at', '') }}"
+                   required>
+
+            <label for="note">Note or invoice number (optional)</label>
+
+            <input id="note"
+                   name="note"
+                   type="text"
+                   value="{{ values.get('note', '') }}">
+
+            <button type="submit">Record delivery</button>
+        </form>
+    {% else %}
+        <p>Add a product before receiving stock.</p>
+
+        <a href="{{ url_for('add_product') }}">Add product</a>
+    {% endif %}
+</main>
+</body>
+</html>
