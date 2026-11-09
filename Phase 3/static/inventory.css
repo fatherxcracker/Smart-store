@@ -1,0 +1,163 @@
+:root {
+    font-family: system-ui, sans-serif;
+    color: #172b34;
+    background: #f3f6f7;
+}
+
+body {
+    margin: 0;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.eyebrow {
+    color: #176356;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+h1 {
+    font-size: 2.4rem;
+    margin: 8px 0;
+}
+
+header > p {
+    line-height: 1.6;
+}
+
+a {
+    color: #176356;
+}
+
+.table-wrapper {
+    margin-top: 28px;
+    overflow-x: auto;
+    background: white;
+    border: 1px solid #dce5e7;
+    border-radius: 12px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+caption {
+    padding: 18px;
+    text-align: left;
+    color: #52646b;
+}
+
+th,
+td {
+    padding: 16px;
+    border-top: 1px solid #e5ebed;
+    white-space: nowrap;
+}
+
+thead {
+    background: #eaf1f1;
+    font-size: 0.85rem;
+}
+
+tbody th {
+    font-weight: 600;
+}
+
+.number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.stock {
+    display: inline-block;
+    background: #e2f3e9;
+    color: #215739;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+.stock.empty {
+    color: #8a2727;
+    background: #fde8e8;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 36px 16px;
+    white-space: normal;
+}
+
+.product-form {
+    display: grid;
+    gap: 12px;
+    max-width: 540px;
+    padding: 24px;
+    background: white;
+    border: 1px solid #dce5e7;
+    border-radius: 12px;
+}
+
+.product-form label {
+    font-weight: 600;
+}
+
+.product-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #9aadb3;
+    border-radius: 6px;
+    font: inherit;
+    margin-bottom: 8px;
+}
+
+.product-form button {
+    padding: 12px 18px;
+    background: #176356;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.form-error {
+    padding: 14px;
+    background: #fde8e8;
+    color: #8a2727;
+    border-radius: 6px;
+}
+
+.delete-form {
+    display: inline;
+    margin-left: 12px;
+}
+
+.delete-button {
+    background: #fde8e8;
+    color: #8a2727;
+    border: 1px solid #e6bcbc;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font: inherit;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    main {
+        padding: 24px 12px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+}
