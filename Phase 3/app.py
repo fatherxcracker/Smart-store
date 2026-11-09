@@ -22,7 +22,7 @@ load_dotenv()
 import db
 from notifications import notify, notify_error
 from cart import cart_api
-
+from checkout import checkout_api
 
 def create_app():
     app = Flask(__name__)
@@ -35,6 +35,7 @@ def create_app():
 
     db.init_db()
     app.register_blueprint(cart_api)
+    app.register_blueprint(checkout_api)
 
     # ---------------------------------------------------------
     # Pages

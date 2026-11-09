@@ -158,36 +158,6 @@
     margin-bottom: 0;
 }
 
-#cart-message:empty {
-    display: none;
-}
-
-#cart-message:not(:empty) {
-    padding: 14px 18px;
-    margin-bottom: 22px;
-    border-radius: 9px;
-    background: #eaf2ff;
-    color: #154da5;
-}
-
-@media (max-width: 850px) {
-    .cart-layout {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 650px) {
-    .cart-main {
-        padding-top: 28px;
-        padding-bottom: 28px;
-    }
-
-    .cart-table th,
-    .cart-table td {
-        padding: 14px;
-    }
-}
-
 .cart-scanner {
     min-height: auto;
     margin-bottom: 22px;
@@ -246,6 +216,80 @@
     margin-top: 6px;
 }
 
+.checkout-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.checkout-form input,
+.checkout-form select {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfcfe;
+    color: var(--text);
+    font: inherit;
+}
+
+.checkout-form input:focus,
+.checkout-form select:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.checkout-form select {
+    margin-bottom: 20px;
+}
+
+.checkout-help {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 8px 0 20px;
+}
+
+.cart-receipt {
+    width: calc(100% - 40px);
+    max-width: 1050px;
+    min-height: auto;
+    margin: 0 auto 40px;
+}
+
+.cart-receipt h2 {
+    margin-top: 0;
+}
+
+.cart-receipt > p {
+    color: var(--muted);
+}
+
+#receipt-frame {
+    width: 100%;
+    height: 620px;
+    border: 0;
+    background: white;
+}
+
+#cart-message {
+    white-space: pre-line;
+}
+
+#cart-message:empty {
+    display: none;
+}
+
+#cart-message:not(:empty) {
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    border-radius: 9px;
+    background: #eaf2ff;
+    color: #154da5;
+}
+
 #cart-message[data-level="error"] {
     background: #fff0f0;
     color: #a32929;
@@ -256,7 +300,28 @@
     color: #215739;
 }
 
+#cart-message[data-level="warning"] {
+    background: #fff7e0;
+    color: #805b08;
+}
+
+@media (max-width: 850px) {
+    .cart-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 650px) {
+    .cart-main {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+
+    .cart-table th,
+    .cart-table td {
+        padding: 14px;
+    }
+
     .barcode-controls {
         flex-direction: column;
     }

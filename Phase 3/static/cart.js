@@ -4,6 +4,11 @@ const barcodeForm = document.getElementById("barcode-form");
 const barcodeInput = document.getElementById("barcode-input");
 const resetButton = document.getElementById("reset-cart");
 const checkoutButton = document.getElementById("checkout");
+const checkoutForm = document.getElementById("checkout-form");
+const membershipInput = document.getElementById("membership-number");
+const paymentSelect = document.getElementById("payment-method");
+const receiptPanel = document.getElementById("receipt-panel");
+const receiptFrame = document.getElementById("receipt-frame");
 
 const money = new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -11,6 +16,8 @@ const money = new Intl.NumberFormat("en-CA", {
 });
 
 let busy = false;
+let currentCart = null;
+let checkoutUncertain = false;
 
 function showMessage(text, level = "success") {
     cartMessage.textContent = text;
@@ -34,16 +41,67 @@ async function cartRequest(url, method = "GET", body = null) {
     try {
         response = await fetch(url, options);
     } catch {
-        throw new Error("Cannot reach the server. Please try again.");
+        throw new Error("Cannot reach the server.");
     }
 
-    const result = await response.json();
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new Error(
+            "The server returned an unexpected response. Check the Flask terminal."
+        );
+    }
 
     if (!response.ok || !result.success) {
-        throw new Error(result.message || "The request failed.");
+        const error = new Error(
+            result.message || "The request failed."
+        );
+
+        error.rejected = (
+            response.status >= 400 &&
+            response.status < 500 &&
+            result.success === false
+        );
+
+        throw error;
     }
 
     return result;
+}
+
+function refreshControls() {
+    barcodeForm.querySelector("button").disabled = busy;
+    barcodeInput.disabled = busy;
+    membershipInput.disabled = busy;
+    paymentSelect.disabled = busy;
+
+    resetButton.disabled = (
+        busy ||
+        !currentCart ||
+        currentCart.items.length === 0
+    );
+
+    checkoutButton.disabled = (
+        busy ||
+        checkoutUncertain ||
+        !currentCart ||
+        !currentCart.can_checkout
+    );
+
+    checkoutButton.textContent = busy
+        ? "Please wait..."
+        : "Proceed to payment";
+
+    document.querySelectorAll(".cart-remove").forEach(button => {
+        button.disabled = busy;
+    });
+}
+
+function setBusy(value) {
+    busy = value;
+    refreshControls();
 }
 
 function addCell(row, text, className = "") {
@@ -55,6 +113,7 @@ function addCell(row, text, className = "") {
 }
 
 function renderCart(cart) {
+    currentCart = cart;
     cartItems.replaceChildren();
 
     if (cart.items.length === 0) {
@@ -94,7 +153,6 @@ function renderCart(cart) {
         removeButton.className = "cart-remove";
         removeButton.textContent = "Remove";
         removeButton.setAttribute("aria-label", `Remove ${item.name}`);
-        removeButton.disabled = busy;
 
         removeButton.addEventListener("click", () => {
             updateCart(
@@ -112,52 +170,7 @@ function renderCart(cart) {
             money.format(cart[field]);
     }
 
-    resetButton.disabled = busy || cart.items.length === 0;
-
-    // Enabled once we connect payment and receipt handling.
-    checkoutButton.disabled = true;
-}
-
-function setBusy(value) {
-    busy = value;
-
-    barcodeForm.querySelector("button").disabled = value;
-    barcodeInput.disabled = value;
-
-    if (value) {
-        resetButton.disabled = true;
-        document.querySelectorAll(".cart-remove").forEach(button => {
-            button.disabled = true;
-        });
-    }
-}
-
-async function updateCart(url, method, body = null) {
-    if (busy) return;
-
-    setBusy(true);
-    let updatedCart = null;
-
-    try {
-        const result = await cartRequest(url, method, body);
-        updatedCart = result.cart;
-
-        showMessage(result.message);
-        barcodeInput.value = "";
-    } catch (error) {
-        showMessage(error.message, "error");
-    } finally {
-        setBusy(false);
-
-        if (updatedCart) {
-            renderCart(updatedCart);
-        } else {
-            // Restore controls after a rejected request.
-            await loadCart();
-        }
-
-        barcodeInput.focus();
-    }
+    refreshControls();
 }
 
 async function loadCart() {
@@ -165,8 +178,52 @@ async function loadCart() {
         const result = await cartRequest("/api/cart");
         renderCart(result.cart);
     } catch (error) {
+        currentCart = null;
+        refreshControls();
         showMessage(error.message, "error");
     }
+}
+
+async function updateCart(url, method, body = null) {
+    if (busy) return;
+
+    setBusy(true);
+
+    try {
+        const result = await cartRequest(url, method, body);
+
+        renderCart(result.cart);
+        showMessage(result.message);
+
+        barcodeInput.value = "";
+        receiptPanel.hidden = true;
+    } catch (error) {
+        showMessage(error.message, "error");
+        await loadCart();
+    } finally {
+        setBusy(false);
+        barcodeInput.focus();
+    }
+}
+
+function displayReceipt(html) {
+    receiptFrame.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport"
+                  content="width=device-width, initial-scale=1">
+        </head>
+        <body>${html}</body>
+        </html>
+    `;
+
+    receiptPanel.hidden = false;
+    receiptPanel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
 barcodeForm.addEventListener("submit", event => {
@@ -184,6 +241,76 @@ resetButton.addEventListener("click", () => {
     }
 
     updateCart("/api/cart", "DELETE");
+});
+
+checkoutForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (
+        busy ||
+        checkoutUncertain ||
+        !currentCart ||
+        !currentCart.can_checkout
+    ) {
+        return;
+    }
+
+    const membershipNumber = membershipInput.value.trim();
+    const memberDescription = membershipNumber
+        ? `Membership: ${membershipNumber}`
+        : "Guest checkout";
+
+    const confirmed = window.confirm(
+        `Confirm simulated payment of ${money.format(currentCart.total)}?\n` +
+        `${memberDescription}\n` +
+        "No real money will be charged."
+    );
+
+    if (!confirmed) return;
+
+    const details = {
+        membership_number: membershipNumber,
+        payment_method: paymentSelect.value,
+        language: "en"
+    };
+
+    setBusy(true);
+
+    let result;
+
+    try {
+        result = await cartRequest("/api/checkout", "POST", details);
+    } catch (error) {
+        if (error.rejected) {
+            showMessage(error.message, "error");
+        } else {
+            checkoutUncertain = true;
+
+            showMessage(
+                "Checkout status could not be confirmed. " +
+                "Check purchase history and the Flask terminal before trying again.",
+                "error"
+            );
+        }
+
+        await loadCart();
+        setBusy(false);
+        return;
+    }
+
+    renderCart(result.cart);
+    membershipInput.value = "";
+
+    const notes = result.notifications || [];
+    const hasWarning = notes.some(note => note.level === "warning");
+
+    showMessage(
+        notes.map(note => note.message).join("\n") || result.message,
+        hasWarning ? "warning" : "success"
+    );
+
+    setBusy(false);
+    displayReceipt(result.receipt_html);
 });
 
 loadCart();

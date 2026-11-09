@@ -130,12 +130,36 @@
                         </div>
                     </dl>
 
-                    <button id="checkout"
-                            class="primary-button"
-                            type="button"
-                            disabled>
-                        Proceed to payment
-                    </button>
+                    <form id="checkout-form" class="checkout-form">
+                        <label for="membership-number">
+                            Membership number (optional)
+                        </label>
+                        <input id="membership-number"
+                               name="membership_number"
+                               type="text"
+                               placeholder="SS-12345678"
+                               autocomplete="off"
+                               maxlength="11"
+                               aria-describedby="membership-help">
+
+                        <p id="membership-help" class="checkout-help">
+                            Leave blank to check out as a guest.
+                        </p>
+
+                        <label for="payment-method">Payment method</label>
+                        <select id="payment-method" name="payment_method">
+                            <option value="card">Card</option>
+                            <option value="tap">Tap</option>
+                            <option value="cash">Cash</option>
+                        </select>
+
+                        <button id="checkout"
+                                class="primary-button"
+                                type="submit"
+                                disabled>
+                            Proceed to payment
+                        </button>
+                    </form>
 
                     <button id="reset-cart"
                             class="secondary-button"
@@ -151,6 +175,19 @@
             </div>
         </div>
     </main>
+
+    <section id="receipt-panel"
+             class="info-card cart-receipt"
+             aria-labelledby="receipt-heading"
+             hidden>
+        <h2 id="receipt-heading">Your receipt</h2>
+        <p>Your purchase has been saved.</p>
+
+        <iframe id="receipt-frame"
+                title="Purchase receipt"
+                sandbox="">
+        </iframe>
+    </section>
 
     <footer>
         <span>© Smart Store</span>
