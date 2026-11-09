@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Product | Smart Store</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+</head>
+<body>
+<main>
+    <p class="eyebrow">SMART STORE · PHASE 3</p>
+    <h1>Edit Product</h1>
+
+    <p><a href="{{ url_for('inventory') }}">Back to inventory</a></p>
+
+    {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post"
+          action="{{ url_for('edit_product', product_id=product.id) }}"
+          class="product-form">
+
+        <label for="name">Product name</label>
+        <input id="name" name="name" type="text"
+               value="{{ values.get('name', '') }}" required>
+
+        <label for="category">Category</label>
+        <input id="category" name="category" type="text"
+               value="{{ values.get('category', '') }}" required>
+
+        <label for="price">Price ($)</label>
+        <input id="price" name="price" type="number"
+               min="0" step="0.01"
+               value="{{ values.get('price', '') }}" required>
+
+        <label for="upc">UPC — barcode (maximum 13 characters)</label>
+        <input id="upc" name="upc" type="text" maxlength="13"
+               value="{{ values.get('upc', '') }}" required>
+
+        <label for="epc">EPC — RFID tag (optional, maximum 24 characters)</label>
+        <input id="epc" name="epc" type="text" maxlength="24"
+               value="{{ values.get('epc') or '' }}">
+
+        <label for="producer">Producer company</label>
+        <input id="producer" name="producer" type="text"
+               value="{{ values.get('producer', '') }}" required>
+
+        <button type="submit">Save changes</button>
+    </form>
+</main>
+</body>
+</html>
