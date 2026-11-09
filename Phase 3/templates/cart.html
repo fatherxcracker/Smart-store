@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shopping Cart | Smart Store</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='cart.css') }}">
+
+    <script src="{{ url_for('static', filename='cart.js') }}"
+            defer></script>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">S</div>
+            <div>
+                <strong>SMART STORE</strong>
+                <small>Self-checkout</small>
+            </div>
+        </div>
+
+        <nav class="top-actions" aria-label="Store navigation">
+            <a class="nav-link" href="{{ url_for('home') }}">
+                Customer accounts
+            </a>
+            <a class="nav-link" href="{{ url_for('inventory') }}">
+                Inventory
+            </a>
+            <a class="nav-link active"
+               href="{{ url_for('shopping_cart') }}"
+               aria-current="page">
+                Shopping cart
+            </a>
+        </nav>
+    </header>
+
+    <main class="main cart-main">
+        <div class="dashboard-container">
+            <div class="page-heading">
+                <div>
+                    <span class="eyebrow">SELF-CHECKOUT</span>
+                    <h1>Your shopping cart</h1>
+                    <p>Review your items before proceeding to payment.</p>
+                </div>
+            </div>
+
+            <p id="cart-message" role="status" aria-live="polite"></p>
+
+            <section class="info-card cart-scanner"
+                     aria-labelledby="scanner-heading">
+                <h2 id="scanner-heading">Scan a product</h2>
+                <p>Scan a barcode or type its UPC and press Enter.</p>
+
+                <form id="barcode-form">
+                    <label for="barcode-input">Product barcode</label>
+                    <div class="barcode-controls">
+                        <input id="barcode-input"
+                               name="upc"
+                               type="text"
+                               maxlength="13"
+                               autocomplete="off"
+                               required>
+                        <button class="primary-button" type="submit">
+                            Add product
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <div class="cart-layout">
+                <section class="history-card cart-list"
+                         aria-labelledby="items-heading">
+                    <div class="cart-card-heading">
+                        <h2 id="items-heading">Shopping list</h2>
+                        <p>Scanned products will appear here.</p>
+                    </div>
+
+                    <div class="cart-table-wrapper"
+                         role="region"
+                         aria-label="Shopping list"
+                         tabindex="0">
+                        <table class="cart-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Product</th>
+                                    <th scope="col" class="number">Price</th>
+                                    <th scope="col" class="number">Quantity</th>
+                                    <th scope="col" class="number">Total</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-items">
+                                <tr>
+                                    <td colspan="5" class="cart-empty">
+                                        <strong>Your cart is empty</strong>
+                                        <span>Scan a product to begin shopping.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="info-card cart-summary"
+                         aria-labelledby="totals-heading">
+                    <span class="card-label">YOUR ORDER</span>
+                    <h2 id="totals-heading">Order summary</h2>
+
+                    <dl class="cart-totals">
+                        <div>
+                            <dt>Subtotal</dt>
+                            <dd id="cart-subtotal">$0.00</dd>
+                        </div>
+                        <div>
+                            <dt>GST (5%)</dt>
+                            <dd id="cart-gst">$0.00</dd>
+                        </div>
+                        <div>
+                            <dt>QST (9.975%)</dt>
+                            <dd id="cart-qst">$0.00</dd>
+                        </div>
+                        <div class="cart-grand-total">
+                            <dt>Total</dt>
+                            <dd id="cart-total">$0.00</dd>
+                        </div>
+                    </dl>
+
+                    <button id="checkout"
+                            class="primary-button"
+                            type="button"
+                            disabled>
+                        Proceed to payment
+                    </button>
+
+                    <button id="reset-cart"
+                            class="secondary-button"
+                            type="button"
+                            disabled>
+                        Reset cart
+                    </button>
+
+                    <p class="cart-payment-note">
+                        Payment is simulated for this project.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <span>© Smart Store</span>
+        <span>Smart shopping, better rewards.</span>
+    </footer>
+</div>
+</body>
+</html>
