@@ -338,7 +338,7 @@ button {
 }
 
 .membership-card {
-    background: linear-gradient(135deg, #0d1527, #17449c);
+    background: #14264a;
     color: white;
     border: none;
     display: flex;
