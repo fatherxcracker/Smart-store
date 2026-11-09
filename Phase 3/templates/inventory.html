@@ -24,6 +24,9 @@
             <a href="{{ url_for('home') }}">Customer accounts</a>
             <span aria-hidden="true"> | </span>
 
+            <a href="{{ url_for('shopping_cart') }}">Self-checkout</a>
+            <span aria-hidden="true"> | </span>
+
             <a href="{{ url_for('add_product') }}">Add product</a>
             <span aria-hidden="true"> | </span>
 
@@ -95,7 +98,7 @@
                         </td>
 
                         <td>
-                            {{ product.last_received_at or 'No receptions yet' }}
+                            {{ product.last_received_at|local_time or 'No receptions yet' }}
                         </td>
 
                         <td>

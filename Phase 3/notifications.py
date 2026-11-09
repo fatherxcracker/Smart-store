@@ -65,7 +65,7 @@ MESSAGES = {
         "Carte de membre introuvable. Vous pouvez continuer en tant qu'invité."),
     "payment_approved": ("success",
         "Payment of ${total:.2f} approved.",
-        "Paiement de {total:.2f} $ approuvé."),
+        "Paiement de {total} $ approuvé."),
     "checkout_completed": ("success",
         "Checkout completed! Receipt {receipt_number}. You earned {points} points.",
         "Paiement terminé ! Reçu {receipt_number}. Vous avez gagné {points} points."),
@@ -115,6 +115,9 @@ ERROR_TRANSLATIONS = {
     "Enter a valid email address.": "Entrez une adresse courriel valide.",
     "Password must be at least 6 characters.": "Le mot de passe doit contenir au moins 6 caractères.",
     "An account with this email already exists.": "Un compte avec ce courriel existe déjà.",
+    "Select a valid product.": "Sélectionnez un produit valide.",
+    "Quantity must be greater than zero.": "La quantité doit être supérieure à zéro.",
+    "Enter a valid reception date and time.": "Entrez une date et une heure de réception valides.",
 }
 
 
@@ -126,7 +129,12 @@ def notify(key, lang="en", save=True, **values):
     """Build (and log) a notification for an action. Returns a dict ready for jsonify()."""
     level, en, fr = MESSAGES[key]
     message_en = en.format(**values)
-    message_fr = fr.format(**values)
+    # French writes money with a comma: 13,17 $
+    values_fr = {
+        k: (f"{v:.2f}".replace(".", ",") if isinstance(v, float) else v)
+        for k, v in values.items()
+    }
+    message_fr = fr.format(**values_fr)
     if save:
         db.save_notification(level, message_en, message_fr)
     return {

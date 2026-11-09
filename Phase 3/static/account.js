@@ -72,6 +72,8 @@ const translations = {
         featureOne: "Your digital membership card",
         featureTwo: "Earn rewards on every purchase",
         featureThree: "All your receipts in one place",
+        checkoutLink: "Self-checkout",
+        inventoryLink: "Inventory",
     },
 
     fr: {
@@ -131,6 +133,8 @@ const translations = {
         featureOne: "Votre carte de membre numérique",
         featureTwo: "Gagnez des récompenses à chaque achat",
         featureThree: "Tous vos reçus au même endroit",
+        checkoutLink: "Caisse libre-service",
+        inventoryLink: "Inventaire",
     }
 };
 
@@ -340,7 +344,13 @@ async function showHistory() {
             receiptNumber.textContent = purchase.receipt_number;
 
             const date = document.createElement("span");
-            date.textContent = purchase.created_at;
+            // The database stores UTC; show it in the customer's local time.
+            date.textContent = new Date(
+                purchase.created_at.replace(" ", "T") + "Z"
+            ).toLocaleString(currentLanguage === "fr" ? "fr-CA" : "en-CA", {
+                dateStyle: "medium",
+                timeStyle: "short"
+            });
 
             const total = document.createElement("span");
             total.textContent = "$" + Number(purchase.total).toFixed(2);

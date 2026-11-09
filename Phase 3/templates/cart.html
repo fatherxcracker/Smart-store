@@ -51,9 +51,25 @@
 
             <p id="cart-message" role="status" aria-live="polite"></p>
 
+            <section class="info-card cart-scanner rfid-scanner"
+                     aria-labelledby="rfid-heading">
+                <h2 id="rfid-heading">Scan with RFID</h2>
+                <p>Place all your items on the reader, then scan. Every tag is read at once.</p>
+
+                <div class="rfid-controls">
+                    <button id="rfid-scan" class="primary-button" type="button">
+                        Scan all items
+                    </button>
+                    <label class="rfid-auto">
+                        <input id="rfid-auto" type="checkbox">
+                        Auto-scan (updates the list automatically)
+                    </label>
+                </div>
+            </section>
+
             <section class="info-card cart-scanner"
                      aria-labelledby="scanner-heading">
-                <h2 id="scanner-heading">Scan a product</h2>
+                <h2 id="scanner-heading">Or scan a barcode</h2>
                 <p>Scan a barcode or type its UPC and press Enter.</p>
 
                 <form id="barcode-form">

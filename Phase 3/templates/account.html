@@ -13,12 +13,6 @@
             defer></script>
 </head>
 <body>
-    <p style="margin: 12px 24px;">
-        <a href="{{ url_for('inventory') }}">Inventory / Inventaire</a>
-        |
-        <a href="{{ url_for('shopping_cart') }}">Shopping cart / Panier</a>
-    </p>
-
 <div class="app">
 
     <!-- NAVIGATION -->
@@ -48,6 +42,11 @@
                     Purchase History
                 </button>
             </nav>
+
+            <a class="nav-link" href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">Self-checkout</a>
+            <a class="nav-link" href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">Inventory</a>
 
             <div class="language-switch">
                 <button id="lang-en" class="selected" type="button">

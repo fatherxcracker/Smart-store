@@ -3,6 +3,7 @@
 from flask import Blueprint, jsonify, request, session
 
 import db
+import rfid_reader
 
 cart_api = Blueprint("cart_api", __name__)
 
@@ -124,20 +125,10 @@ def scan_barcode():
     return cart_response(f"{product['name']} added to your cart.")
 
 
-@cart_api.post("/api/cart/rfid")
-def scan_rfid():
-    """Add each new EPC once, ignoring repeated RFID readings."""
-    data = request.get_json(silent=True)
-
-    if not isinstance(data, dict):
-        return jsonify(
-            success=False,
-            message="Send RFID codes as JSON.",
-        ), 400
-
-    epcs = data.get("epcs")
-
-    if not isinstance(epcs, list) or not 1 <= len(epcs) <= 100:
+def add_epcs_to_cart(epcs):
+    """Add each new EPC once, ignoring repeated RFID readings.
+    Used by both the RFID reader scan and the JSON endpoint."""
+    if not isinstance(epcs, list) or len(epcs) > 100:
         return jsonify(
             success=False,
             message="Send between 1 and 100 EPC readings.",
@@ -167,35 +158,46 @@ def scan_rfid():
 
         normalized.add(epc)
 
+    if not normalized:
+        return cart_response("No RFID tags detected. Place the items on the reader.")
+
     # Remember tags across requests and page refreshes.
+    # Unknown tags are remembered too, so a stray tag left on the reader
+    # is reported once instead of on every auto-scan.
     seen = set(session.get("rfid_seen", []))
-    new_epcs = normalized - seen
+    unknown_seen = set(session.get("rfid_unknown", []))
+    new_epcs = normalized - seen - unknown_seen
 
     if not new_epcs:
         return cart_response(
             "These RFID tags have already been read. Cart unchanged."
         )
 
+    products = db.find_by_epcs(sorted(new_epcs))
+    unknown = sorted(new_epcs - set(products))
+    known = sorted(new_epcs & set(products))
+
+    if unknown:
+        session["rfid_unknown"] = sorted(unknown_seen | set(unknown))[-40:]
+
+    if not known:
+        return jsonify(
+            success=False,
+            message="Unknown RFID tag(s): " + ", ".join(unknown)
+                    + ". Please ask an employee.",
+        ), 404
+
     # Bound session size because Flask stores it in a signed cookie.
-    if len(seen | new_epcs) > 40:
+    if len(seen | set(known)) > 40:
         return jsonify(
             success=False,
             message="RFID limit reached. Reset the cart to start a new session.",
         ), 400
 
-    products = db.find_by_epcs(sorted(new_epcs))
-    unknown = sorted(new_epcs - set(products))
-
-    if unknown:
-        return jsonify(
-            success=False,
-            message="Unknown RFID tags: " + ", ".join(unknown),
-        ), 404
-
     cart = get_cart()
 
     # Validate the entire batch before saving any changes.
-    for epc in sorted(new_epcs):
+    for epc in known:
         product = products[epc]
         product_id = str(product["id"])
         quantity = cart.get(product_id, 0) + 1
@@ -215,11 +217,46 @@ def scan_rfid():
         cart[product_id] = quantity
 
     save_cart(cart)
-    session["rfid_seen"] = sorted(seen | new_epcs)
+    session["rfid_seen"] = sorted(seen | set(known))
 
-    return cart_response(
-        f"{len(new_epcs)} RFID item(s) added to your cart."
-    )
+    message = f"{len(known)} RFID item(s) added to your cart."
+    if unknown:
+        message += (
+            f" {len(unknown)} unknown tag(s) ignored: " + ", ".join(unknown) + "."
+        )
+    return cart_response(message)
+
+
+@cart_api.post("/api/cart/rfid")
+def scan_rfid():
+    """Add EPCs sent as JSON: {"epcs": ["E280...", ...]} (for testing)."""
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify(
+            success=False,
+            message="Send RFID codes as JSON.",
+        ), 400
+
+    epcs = data.get("epcs")
+    if not isinstance(epcs, list) or not epcs:
+        return jsonify(
+            success=False,
+            message="Send between 1 and 100 EPC readings.",
+        ), 400
+
+    return add_epcs_to_cart(epcs)
+
+
+@cart_api.post("/api/cart/rfid/scan")
+def scan_rfid_reader():
+    """Read every tag on the CF600 at once and add them to the cart."""
+    try:
+        epcs = rfid_reader.read_tags()
+    except rfid_reader.RFIDError as error:
+        return jsonify(success=False, message=str(error)), 503
+
+    return add_epcs_to_cart(epcs)
 
 
 @cart_api.delete("/api/cart/items/<int:product_id>")
@@ -243,5 +280,6 @@ def remove_item(product_id):
 def reset_cart():
     session.pop("shopping_cart", None)
     session.pop("rfid_seen", None)
+    session.pop("rfid_unknown", None)
 
     return cart_response("Your cart has been reset.")

@@ -9,6 +9,16 @@ const membershipInput = document.getElementById("membership-number");
 const paymentSelect = document.getElementById("payment-method");
 const receiptPanel = document.getElementById("receipt-panel");
 const receiptFrame = document.getElementById("receipt-frame");
+const rfidButton = document.getElementById("rfid-scan");
+const rfidAuto = document.getElementById("rfid-auto");
+const rfidSection = document.querySelector(".rfid-scanner");
+
+// Language chosen on the customer portal (EN/FR switch), used for the receipt.
+const language = localStorage.getItem("smartstore-language") === "fr" ? "fr" : "en";
+
+// Auto-scan: read the reader again every few seconds while the box is ticked.
+const AUTO_SCAN_MS = 2500;
+let autoScanTimer = null;
 
 const money = new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -73,6 +83,10 @@ async function cartRequest(url, method = "GET", body = null) {
 
 function refreshControls() {
     barcodeForm.querySelector("button").disabled = busy;
+    rfidButton.disabled = busy;
+    rfidButton.textContent = busy && rfidSection.classList.contains("scanning")
+        ? "Scanning..."
+        : "Scan all items";
     barcodeInput.disabled = busy;
     membershipInput.disabled = busy;
     paymentSelect.disabled = busy;
@@ -226,6 +240,62 @@ function displayReceipt(html) {
     });
 }
 
+// ---------------------------------------------------------
+// RFID: read every tag on the CF600 at once
+// ---------------------------------------------------------
+async function scanRfid({ quiet = false } = {}) {
+    if (busy) return;
+
+    setBusy(true);
+    rfidSection.classList.add("scanning");
+    refreshControls();
+
+    try {
+        const result = await cartRequest("/api/cart/rfid/scan", "POST");
+        renderCart(result.cart);
+
+        // In auto mode, stay quiet when nothing changed.
+        const unchanged = result.message.includes("already been read") ||
+                          result.message.startsWith("No RFID tags");
+        if (!quiet || !unchanged) {
+            showMessage(result.message, result.message.includes("unknown") ? "warning" : "success");
+        }
+        if (!unchanged) receiptPanel.hidden = true;
+    } catch (error) {
+        showMessage(error.message, "error");
+
+        // Reader missing / not set up: stop auto-scan instead of repeating the error.
+        if (rfidAuto.checked && error.message.includes("reader")) {
+            rfidAuto.checked = false;
+            stopAutoScan();
+        }
+    } finally {
+        rfidSection.classList.remove("scanning");
+        setBusy(false);
+    }
+}
+
+function startAutoScan() {
+    stopAutoScan();
+    scanRfid();
+    autoScanTimer = setInterval(() => scanRfid({ quiet: true }), AUTO_SCAN_MS);
+}
+
+function stopAutoScan() {
+    clearInterval(autoScanTimer);
+    autoScanTimer = null;
+}
+
+rfidButton.addEventListener("click", () => scanRfid());
+
+rfidAuto.addEventListener("change", () => {
+    if (rfidAuto.checked) {
+        startAutoScan();
+    } else {
+        stopAutoScan();
+    }
+});
+
 barcodeForm.addEventListener("submit", event => {
     event.preventDefault();
 
@@ -268,10 +338,14 @@ checkoutForm.addEventListener("submit", async event => {
 
     if (!confirmed) return;
 
+    // Stop reading tags once the customer confirms the list.
+    rfidAuto.checked = false;
+    stopAutoScan();
+
     const details = {
         membership_number: membershipNumber,
         payment_method: paymentSelect.value,
-        language: "en"
+        language: language
     };
 
     setBusy(true);

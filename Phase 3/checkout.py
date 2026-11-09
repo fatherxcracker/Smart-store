@@ -95,6 +95,7 @@ def complete_checkout():
     # Keep customer login information in the session.
     session.pop("shopping_cart", None)
     session.pop("rfid_seen", None)
+    session.pop("rfid_unknown", None)
 
     return jsonify({
         "success": True,

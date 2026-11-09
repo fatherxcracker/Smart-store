@@ -161,3 +161,31 @@ tbody th {
         font-size: 2rem;
     }
 }
+
+/* RFID "read tag" button on the product forms */
+.product-form .read-tag-button {
+    justify-self: start;
+    margin-top: -4px;
+    background: #e8f1ef;
+    color: #1f5f52;
+    border: 1px solid #b9d7cf;
+}
+
+.tag-status {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.tag-status:empty {
+    display: none;
+}
+
+.tag-status.success { color: #215739; }
+.tag-status.warning { color: #8a5a00; }
+.tag-status.error { color: #a12b2b; }
+
+/* Links to the other parts of the store */
+.store-links {
+    margin: 0 0 18px;
+    font-size: 0.95rem;
+}

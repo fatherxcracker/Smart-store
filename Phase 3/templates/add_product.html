@@ -36,11 +36,14 @@
 
         <label for="upc">UPC — barcode (maximum 13 characters)</label>
         <input id="upc" name="upc" type="text" maxlength="13"
+               placeholder="Click here and scan the barcode"
                value="{{ values.get('upc', '') }}" required>
 
         <label for="epc">EPC — RFID tag (optional, maximum 24 characters)</label>
         <input id="epc" name="epc" type="text" maxlength="24"
                value="{{ values.get('epc', '') }}">
+        <button id="read-tag" type="button" class="read-tag-button">Read tag from RFID reader</button>
+        <p id="tag-status" class="tag-status" role="status" aria-live="polite"></p>
 
         <label for="producer">Producer company</label>
         <input id="producer" name="producer" type="text"
@@ -49,5 +52,6 @@
         <button type="submit">Save product</button>
     </form>
 </main>
+<script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
 </body>
 </html>

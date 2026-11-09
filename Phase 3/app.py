@@ -1,8 +1,17 @@
-"""Smart Store Phase 3: customer accounts and inventory management."""
+"""Smart Store Phase 3: smart self-checkout.
+
+Pages
+  /            customer accounts (register, login, points, purchase history)  - EN/FR
+  /inventory   admin: products, stock receptions, inventory dashboard
+  /cart        self-checkout: RFID + barcode scanning, payment, receipt
+
+Run on the Raspberry Pi (the CF600 RFID reader is plugged into it):
+    python app.py      ->  http://<pi-ip>:5002
+"""
 
 import os
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from flask import (
@@ -20,6 +29,7 @@ from flask import (
 load_dotenv()
 
 import db
+import rfid_reader
 from notifications import notify, notify_error
 from cart import cart_api
 from checkout import checkout_api
@@ -34,6 +44,18 @@ def create_app():
     )
 
     db.init_db()
+
+    @app.template_filter("local_time")
+    def local_time(value):
+        """The database stores UTC; show times in the Pi's local time."""
+        if not value:
+            return ""
+        try:
+            utc = datetime.fromisoformat(str(value)).replace(tzinfo=timezone.utc)
+            return utc.astimezone().strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            return value
+
     app.register_blueprint(cart_api)
     app.register_blueprint(checkout_api)
 
@@ -78,14 +100,11 @@ def create_app():
                     producer=request.form.get("producer", "").strip(),
                 )
 
-                flash(
-                    f'Product "{name}" added successfully.',
-                    "success",
-                )
+                flash(notify("product_added", name=name)["message"], "success")
                 return redirect(url_for("inventory"))
 
             except db.DatabaseError as exc:
-                error = str(exc)
+                error = notify_error(str(exc))["message"]
 
         return render_template(
             "add_product.html",
@@ -122,14 +141,11 @@ def create_app():
                     producer=request.form.get("producer", "").strip(),
                 )
 
-                flash(
-                    f'Product "{name}" updated successfully.',
-                    "success",
-                )
+                flash(notify("product_updated", name=name)["message"], "success")
                 return redirect(url_for("inventory"))
 
             except db.DatabaseError as exc:
-                error = str(exc)
+                error = notify_error(str(exc))["message"]
 
         return render_template(
             "edit_product.html",
@@ -148,13 +164,10 @@ def create_app():
         try:
             db.delete_product(product_id)
 
-            flash(
-                f'Product "{product["name"]}" deleted successfully.',
-                "success",
-            )
+            flash(notify("product_deleted", name=product["name"])["message"], "success")
 
         except db.DatabaseError as exc:
-            flash(str(exc), "error")
+            flash(notify_error(str(exc))["message"], "error")
 
         return redirect(url_for("inventory"))
 
@@ -222,19 +235,26 @@ def create_app():
                     product_id=product_id,
                     quantity=quantity,
                     note=request.form.get("note", "").strip() or None,
-                    received_at=received_date.strftime(
+                    # Form time is local; the database stores UTC.
+                    received_at=received_date.astimezone(timezone.utc).strftime(
                         "%Y-%m-%d %H:%M:%S"
                     ),
                 )
 
+                in_stock = db.get_product(product_id)["in_stock"]
                 flash(
-                    f'Received {quantity} units of "{product["name"]}".',
+                    notify(
+                        "stock_received",
+                        quantity=quantity,
+                        name=product["name"],
+                        in_stock=in_stock,
+                    )["message"],
                     "success",
                 )
                 return redirect(url_for("inventory"))
 
             except db.DatabaseError as exc:
-                error = str(exc)
+                error = notify_error(str(exc))["message"]
 
         return render_template(
             "receive_stock.html",
@@ -262,6 +282,46 @@ def create_app():
         )
 
     # ---------------------------------------------------------
+    # RFID reader (admin: read a tag's EPC into the product form)
+    # ---------------------------------------------------------
+
+    @app.get("/api/rfid/read")
+    def read_rfid_tag():
+        try:
+            epcs = rfid_reader.read_tags()
+        except rfid_reader.RFIDError as error:
+            return jsonify(success=False, message=str(error)), 503
+
+        if not epcs:
+            return jsonify(
+                success=False,
+                message="No RFID tag detected. Hold the tag on the reader and try again.",
+            ), 404
+
+        if len(epcs) > 1:
+            return jsonify(
+                success=False,
+                message=f"{len(epcs)} tags detected. Put only one tag on the reader.",
+                epcs=epcs,
+            ), 409
+
+        existing = db.find_by_epc(epcs[0])
+        return jsonify(
+            success=True,
+            epc=epcs[0],
+            message=(
+                f"Tag {epcs[0]} read."
+                if existing is None
+                else f'Tag {epcs[0]} read. It already belongs to "{existing["name"]}".'
+            ),
+            in_use_by=existing["name"] if existing else None,
+        )
+
+    @app.get("/api/notifications")
+    def notifications_log():
+        return jsonify(db.get_notifications(20))
+
+    # ---------------------------------------------------------
     # Customer accounts
     # ---------------------------------------------------------
 
@@ -278,7 +338,7 @@ def create_app():
                 language=data.get("language", "en"),
             )
 
-            session.clear()
+            # Keep the shopping cart; only switch the logged-in customer.
             session["customer_id"] = customer["id"]
 
             return jsonify({
@@ -305,7 +365,7 @@ def create_app():
         if not customer:
             return jsonify(notify("login_failed")), 401
 
-        session.clear()
+        # Keep the shopping cart; only switch the logged-in customer.
         session["customer_id"] = customer["id"]
 
         return jsonify(notify(
@@ -324,7 +384,7 @@ def create_app():
         customer = db.get_customer(customer_id)
 
         if not customer:
-            session.clear()
+            session.pop("customer_id", None)
             return jsonify(error="Account not found."), 404
 
         return jsonify(customer)
@@ -354,15 +414,17 @@ def create_app():
 
     @app.post("/api/account/logout")
     def logout():
-        session.clear()
+        session.pop("customer_id", None)
         return jsonify(notify("logged_out"))
 
     return app
 
 
 if __name__ == "__main__":
+    # 0.0.0.0 = reachable from other devices on the same network (laptop/phone).
+    # Use HOST=127.0.0.1 in .env to allow only the Pi's own browser.
     create_app().run(
-        host="127.0.0.1",
-        port=5002,
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "5002")),
         debug=False,
     )

@@ -326,3 +326,38 @@
         flex-direction: column;
     }
 }
+
+/* RFID scanning */
+.rfid-scanner {
+    margin-bottom: 20px;
+}
+
+.rfid-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+}
+
+.rfid-controls .primary-button {
+    width: auto;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+.rfid-auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.rfid-auto input {
+    width: 18px;
+    height: 18px;
+}
+
+.rfid-scanner.scanning #rfid-scan {
+    opacity: 0.75;
+}
