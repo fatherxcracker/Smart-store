@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Smart Store | Customer Portal</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <script src="{{ url_for('static', filename='account.js') }}"
+            defer></script>
+</head>
+<body>
+    <p style="margin: 12px 24px;">
+        <a href="{{ url_for('inventory') }}">Inventory / Inventaire</a>
+    </p>
+
+<div class="app">
+
+    <!-- NAVIGATION -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">S</div>
+
+            <div>
+                <strong>SMART STORE</strong>
+                <small data-i18n="portal">Customer Portal</small>
+            </div>
+        </div>
+
+        <div class="top-actions">
+            <nav id="account-nav" hidden>
+                <button class="nav-link"
+                        type="button"
+                        data-page="dashboard"
+                        data-i18n="dashboard">
+                    Dashboard
+                </button>
+
+                <button class="nav-link"
+                        type="button"
+                        data-page="history"
+                        data-i18n="history">
+                    Purchase History
+                </button>
+            </nav>
+
+            <div class="language-switch">
+                <button id="lang-en" class="selected" type="button">
+                    EN
+                </button>
+
+                <button id="lang-fr" type="button">
+                    FR
+                </button>
+            </div>
+
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+        </div>
+    </header>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <main class="main">
+
+        <!-- LOGIN PAGE -->
+        <section id="login-page" class="page">
+            <div class="login-container">
+                <div class="login-heading">
+                    <div class="login-icon">S</div>
+
+                    <span class="eyebrow" data-i18n="memberAccess">
+                        MEMBER ACCESS
+                    </span>
+
+                    <h1 data-i18n="welcomeTitle">
+                        Shopping made smarter.
+                    </h1>
+
+                    <p data-i18n="welcomeDesc">
+                        Access your membership, track rewards,
+                        and view your shopping history.
+                    </p>
+                </div>
+
+                <div class="login-card">
+                    <h2 data-i18n="signIn">Sign in</h2>
+
+                    <p class="subtitle" data-i18n="signInDesc">
+                        Enter your details to access your account.
+                    </p>
+
+                    <form id="login-form">
+                        <label for="login-email" data-i18n="email">
+                            Email address
+                        </label>
+
+                        <input id="login-email"
+                               name="email"
+                               type="email"
+                               autocomplete="email"
+                               required>
+
+                        <label for="login-password" data-i18n="password">
+                            Password
+                        </label>
+
+                        <input id="login-password"
+                               name="password"
+                               type="password"
+                               autocomplete="current-password"
+                               required>
+
+                        <button class="primary-button"
+                                type="submit"
+                                data-i18n="signIn">
+                            Sign in
+                        </button>
+                    </form>
+
+                    <div class="login-divider"></div>
+
+                    <p class="switch-text">
+                        <span data-i18n="noAccount">
+                            Don't have an account?
+                        </span>
+
+                        <button class="text-button"
+                                type="button"
+                                data-page="register"
+                                data-i18n="createOne">
+                            Create one
+                        </button>
+                    </p>
+                </div>
+
+                <p class="login-footnote" data-i18n="footer">
+                    Smart shopping, better rewards.
+                </p>
+            </div>
+        </section>
+
+        <!-- REGISTER PAGE -->
+        <section id="register-page" class="page" hidden>
+            <div class="login-container">
+                <div class="login-heading">
+                    <div class="login-icon">S</div>
+
+                    <span class="eyebrow" data-i18n="joinStore">
+                        JOIN SMART STORE
+                    </span>
+
+                    <h1 data-i18n="createAccount">
+                        Create account
+                    </h1>
+
+                    <p data-i18n="registerDesc">
+                        Create an account and receive your own
+                        membership number.
+                    </p>
+                </div>
+
+                <div class="login-card">
+                    <h2 data-i18n="createAccount">Create account</h2>
+
+                    <p class="subtitle" data-i18n="registerSubtitle">
+                        Join our loyalty program today.
+                    </p>
+
+                    <form id="register-form">
+                        <label for="register-name" data-i18n="fullName">
+                            Full name
+                        </label>
+
+                        <input id="register-name"
+                               name="name"
+                               autocomplete="name"
+                               required>
+
+                        <label for="register-email" data-i18n="email">
+                            Email address
+                        </label>
+
+                        <input id="register-email"
+                               name="email"
+                               type="email"
+                               autocomplete="email"
+                               required>
+
+                        <label for="register-password"
+                               data-i18n="password">
+                            Password
+                        </label>
+
+                        <input id="register-password"
+                               name="password"
+                               type="password"
+                               minlength="6"
+                               autocomplete="new-password"
+                               required>
+
+                        <label for="register-phone" data-i18n="phone">
+                            Phone (optional)
+                        </label>
+
+                        <input id="register-phone"
+                               name="phone"
+                               type="tel"
+                               autocomplete="tel">
+
+                        <button class="primary-button"
+                                type="submit"
+                                data-i18n="createAccount">
+                            Create account
+                        </button>
+                    </form>
+
+                    <p class="switch-text">
+                        <span data-i18n="haveAccount">
+                            Already have an account?
+                        </span>
+
+                        <button class="text-button"
+                                type="button"
+                                data-page="login"
+                                data-i18n="signIn">
+                            Sign in
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard-page" class="page" hidden>
+            <div class="dashboard-container">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow" data-i18n="overview">
+                            ACCOUNT OVERVIEW
+                        </span>
+
+                        <h1>
+                            <span data-i18n="hello">Hello</span>,
+                            <span id="welcome-name"></span>!
+                        </h1>
+
+                        <p data-i18n="dashboardDesc">
+                            Here's your Smart Store membership.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="info-card membership-card">
+                        <span data-i18n="memberCard">
+                            MEMBERSHIP CARD
+                        </span>
+
+                        <div class="membership-logo">
+                            SMART STORE
+                        </div>
+
+                        <div>
+                            <small data-i18n="memberNumber">
+                                MEMBER NUMBER
+                            </small>
+
+                            <h2 id="membership-number">---</h2>
+                            <p id="card-name"></p>
+                        </div>
+                    </div>
+
+                    <div class="info-card points-card">
+                        <span class="card-label"
+                              data-i18n="loyaltyPoints">
+                            LOYALTY POINTS
+                        </span>
+
+                        <div class="points-number" id="customer-points">
+                            0
+                        </div>
+
+                        <p data-i18n="pointsDesc">
+                            Earn 1 point for every full dollar spent before tax.
+                        </p>
+                    </div>
+
+                    <div class="info-card profile-card">
+                        <span class="card-label" data-i18n="profile">
+                            MY PROFILE
+                        </span>
+
+                        <p class="field-label" data-i18n="fullName">
+                            Full name
+                        </p>
+
+                        <strong id="customer-name">---</strong>
+
+                        <p class="field-label" data-i18n="email">
+                            Email address
+                        </p>
+
+                        <strong id="customer-email">---</strong>
+                    </div>
+                </div>
+
+                <div class="bottom-action">
+                    <div>
+                        <h3 data-i18n="yourPurchases">
+                            Your purchases
+                        </h3>
+
+                        <p data-i18n="purchaseDesc">
+                            View receipts and track points earned.
+                        </p>
+                    </div>
+
+                    <button class="primary-button compact"
+                            type="button"
+                            data-page="history"
+                            data-i18n="viewHistory">
+                        View purchase history
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PURCHASE HISTORY -->
+        <section id="history-page" class="page" hidden>
+            <div class="dashboard-container">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow" data-i18n="activity">
+                            ACCOUNT ACTIVITY
+                        </span>
+
+                        <h1 data-i18n="purchaseHistory">
+                            Purchase History
+                        </h1>
+
+                        <p data-i18n="historyDesc">
+                            Your previous Smart Store receipts.
+                        </p>
+                    </div>
+
+                    <button class="secondary-button"
+                            type="button"
+                            data-page="dashboard"
+                            data-i18n="backDashboard">
+                        Back to dashboard
+                    </button>
+                </div>
+
+                <div class="history-card">
+                    <div class="history-header">
+                        <span data-i18n="receipt">Receipt</span>
+                        <span data-i18n="date">Date</span>
+                        <span data-i18n="total">Total</span>
+                        <span data-i18n="earned">Points earned</span>
+                        <span></span>
+                    </div>
+
+                    <div id="purchase-history"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards.
+        </span>
+    </footer>
+</div>
+</body>
+</html>

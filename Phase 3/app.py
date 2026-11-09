@@ -1,4 +1,4 @@
-"""Phase 3 web application: inventory and product management."""
+"""Smart Store Phase 3: customer accounts and inventory management."""
 
 import os
 import secrets
@@ -13,29 +13,46 @@ from flask import (
     url_for,
     abort,
     flash,
+    jsonify,
+    session,
 )
 
 load_dotenv()
+
 import db
+from notifications import notify, notify_error
 
 
 def create_app():
     app = Flask(__name__)
 
-    # Flash messages use a signed session cookie.
     app.config["SECRET_KEY"] = (
-        os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+        os.environ.get("FLASK_SECRET_KEY")
+        or os.environ.get("SECRET_KEY")
+        or secrets.token_hex(32)
     )
 
     db.init_db()
 
+    # ---------------------------------------------------------
+    # Pages
+    # ---------------------------------------------------------
+
     @app.get("/")
+    @app.get("/account")
+    def home():
+        return render_template("account.html")
+
     @app.get("/inventory")
     def inventory():
         return render_template(
             "inventory.html",
             products=db.get_inventory(),
         )
+
+    # ---------------------------------------------------------
+    # Product management
+    # ---------------------------------------------------------
 
     @app.route("/products/add", methods=["GET", "POST"])
     def add_product():
@@ -54,7 +71,10 @@ def create_app():
                     producer=request.form.get("producer", "").strip(),
                 )
 
-                flash(f'Product "{name}" added successfully.', "success")
+                flash(
+                    f'Product "{name}" added successfully.',
+                    "success",
+                )
                 return redirect(url_for("inventory"))
 
             except db.DatabaseError as exc:
@@ -95,7 +115,10 @@ def create_app():
                     producer=request.form.get("producer", "").strip(),
                 )
 
-                flash(f'Product "{name}" updated successfully.', "success")
+                flash(
+                    f'Product "{name}" updated successfully.',
+                    "success",
+                )
                 return redirect(url_for("inventory"))
 
             except db.DatabaseError as exc:
@@ -117,14 +140,20 @@ def create_app():
 
         try:
             db.delete_product(product_id)
+
             flash(
                 f'Product "{product["name"]}" deleted successfully.',
                 "success",
             )
+
         except db.DatabaseError as exc:
             flash(str(exc), "error")
 
         return redirect(url_for("inventory"))
+
+    # ---------------------------------------------------------
+    # Inventory
+    # ---------------------------------------------------------
 
     @app.route("/inventory/receive", methods=["GET", "POST"])
     def receive_stock():
@@ -143,7 +172,9 @@ def create_app():
 
             try:
                 try:
-                    product_id = int(request.form.get("product_id", ""))
+                    product_id = int(
+                        request.form.get("product_id", "")
+                    )
                 except ValueError:
                     raise db.DatabaseError("Select a valid product.")
 
@@ -153,7 +184,9 @@ def create_app():
                     raise db.DatabaseError("Product not found.")
 
                 try:
-                    quantity = int(request.form.get("quantity", ""))
+                    quantity = int(
+                        request.form.get("quantity", "")
+                    )
                 except ValueError:
                     raise db.DatabaseError(
                         "Quantity must be a whole number."
@@ -164,7 +197,9 @@ def create_app():
                         "Quantity must be greater than zero."
                     )
 
-                received_at = request.form.get("received_at", "").strip()
+                received_at = request.form.get(
+                    "received_at", ""
+                ).strip()
 
                 try:
                     received_date = datetime.strptime(
@@ -218,6 +253,102 @@ def create_app():
             products=db.get_inventory(),
             selected_id=selected_id,
         )
+
+    # ---------------------------------------------------------
+    # Customer accounts
+    # ---------------------------------------------------------
+
+    @app.post("/api/account/register")
+    def register():
+        data = request.get_json(silent=True) or {}
+
+        try:
+            customer = db.create_customer(
+                name=data.get("name", ""),
+                email=data.get("email", ""),
+                password=data.get("password", ""),
+                phone=data.get("phone", ""),
+                language=data.get("language", "en"),
+            )
+
+            session.clear()
+            session["customer_id"] = customer["id"]
+
+            return jsonify({
+                **notify(
+                    "account_created",
+                    data.get("language", "en"),
+                    membership_number=customer["membership_number"],
+                ),
+                "membership_number": customer["membership_number"],
+            }), 201
+
+        except db.DatabaseError as error:
+            return jsonify(notify_error(str(error))), 400
+
+    @app.post("/api/account/login")
+    def login():
+        data = request.get_json(silent=True) or {}
+
+        customer = db.login_customer(
+            data.get("email", ""),
+            data.get("password", ""),
+        )
+
+        if not customer:
+            return jsonify(notify("login_failed")), 401
+
+        session.clear()
+        session["customer_id"] = customer["id"]
+
+        return jsonify(notify(
+            "login_success",
+            customer["language"],
+            name=customer["name"],
+        ))
+
+    @app.get("/api/account/me")
+    def my_account():
+        customer_id = session.get("customer_id")
+
+        if not customer_id:
+            return jsonify(error="Please log in."), 401
+
+        customer = db.get_customer(customer_id)
+
+        if not customer:
+            session.clear()
+            return jsonify(error="Account not found."), 404
+
+        return jsonify(customer)
+
+    @app.get("/api/account/history")
+    def history():
+        customer_id = session.get("customer_id")
+
+        if not customer_id:
+            return jsonify(error="Please log in."), 401
+
+        return jsonify(db.get_purchase_history(customer_id))
+
+    @app.get("/api/account/receipt/<int:purchase_id>")
+    def view_receipt(purchase_id):
+        customer_id = session.get("customer_id")
+
+        if not customer_id:
+            return jsonify(error="Please log in."), 401
+
+        receipt = db.get_purchase(purchase_id)
+
+        if not receipt or receipt["customer_id"] != customer_id:
+            return jsonify(error="Receipt not found."), 404
+
+        return jsonify(receipt)
+
+    @app.post("/api/account/logout")
+    def logout():
+        session.clear()
+        return jsonify(notify("logged_out"))
 
     return app
 
