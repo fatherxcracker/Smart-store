@@ -7,7 +7,8 @@ A semester-long IoT project, built in phases. Each phase lives in its own folder
 | Phase | Folder | What it does |
 |---|---|---|
 | Phase 1 | [`Phase 1/`](./Phase%201/README.md) | Customer registration page (HTML/CSS/JS + Flask + SQLite) with a Raspberry Pi 5, blue/red LEDs and a buzzer signalling success/failure. |
-| Phase 2 | [`Phase 2/`](./Phase%202/README.md) | IoT fridge-monitoring dashboard: two ESP32 + DHT11 sensors publish temperature/humidity over MQTT to a Raspberry Pi broker, a Flask dashboard displays live gauges, sends an email alert when a fridge overheats, and turns on a fan (DC motor) when you confirm the email. |
+| Phase 2 | [`Phase 2/`](./Phase%202/README.md) | IoT fridge-monitoring dashboard: two ESP32 + DHT11 sensors publish temperature/humidity over MQTT to a Raspberry Pi broker, a Flask dashboard displays live gauges, sends an email alert when a fridge overheats, and turns on a fan (DC motor) when you reply YES to the email. |
+| Phase 3 | [`Phase 3/`](./Phase%203/README.md) | Smart self-checkout: product and inventory management, a checkout that reads all items at once with a CF600 RFID reader (or a barcode scanner), simulated payment, loyalty points, receipts emailed automatically, and a bilingual (EN/FR) customer portal. |
 
 Open each phase's own README for its full setup, wiring, and run instructions.
 
@@ -17,7 +18,8 @@ Open each phase's own README for its full setup, wiring, and run instructions.
 Smart-store/
 ├── README.md              <- you are here
 ├── Phase 1/                <- self-contained: own venv, own requirements.txt
-└── Phase 2/                <- self-contained: own venv, own requirements.txt
+├── Phase 2/                <- self-contained: own venv, own requirements.txt
+└── Phase 3/                <- self-contained: own venv, own requirements.txt
 ```
 
-Each phase folder is independent — different `requirements.txt`, different virtual environment, different Flask app running on a different port (Phase 1 on 5000, Phase 2 on 5001), so you can `cd` into either one and run it without the other phase needing to exist or run at the same time.
+Each phase folder is independent — different `requirements.txt`, different virtual environment, different Flask app running on a different port (Phase 1 on 5000, Phase 2 on 5001, Phase 3 on 5002), so you can `cd` into any one and run it without the other phases needing to exist or run at the same time.
