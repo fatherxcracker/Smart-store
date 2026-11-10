@@ -1,40 +1,52 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <!-- tells browser how to read page -->
     <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<<<<<<< HEAD
-    <title>Smart Store | Customer Portal</title>
-=======
+    <!-- Name shown in the browser tab -->
     <title>Smart Store</title>
->>>>>>> 1c8b4b6 (Update Phase 3 customer account system and UI)
 
+    <!-- Connects CSS file to style website -->
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='account.css') }}">
+        href="{{ url_for('static', filename='account.css') }}">
 
+    <!-- Connects JavaScript to make buttons and forms work -->
+    <!-- defer: JavaScript runs after HTML is loaded -->
     <script src="{{ url_for('static', filename='account.js') }}"
-            defer></script>
+        defer></script>
 </head>
+
 <body>
 
+<!-- Contains whole website -->
 <div class="app">
 
-    <!-- NAVIGATION -->
-    <header class="topbar">
-        <div class="brand">
-<<<<<<< HEAD
-            <div class="brand-icon">S</div>
+    <!--Navigation-->
 
-=======
->>>>>>> 1c8b4b6 (Update Phase 3 customer account system and UI)
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
             <div>
                 <strong>SMART STORE</strong>
             </div>
         </div>
 
+        <!-- Buttons on the right side of the top bar -->
         <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <!-- hidden: they are not shown at first -->
             <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
                 <button class="nav-link"
                         type="button"
                         data-page="dashboard"
@@ -42,29 +54,48 @@
                     Dashboard
                 </button>
 
+                <!-- Opens purchase history page -->
                 <button class="nav-link"
                         type="button"
                         data-page="history"
                         data-i18n="history">
                     Purchase History
                 </button>
+
             </nav>
 
-            <a class="nav-link" href="{{ url_for('shopping_cart') }}"
-               data-i18n="checkoutLink">Self-checkout</a>
-            <a class="nav-link" href="{{ url_for('inventory') }}"
-               data-i18n="inventoryLink">Inventory</a>
+            <!-- Link to self-checkout page -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
 
+            <!-- Link to inventory page -->
+            <a class="nav-link"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
             <div class="language-switch">
-                <button id="lang-en" class="selected" type="button">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
                     EN
                 </button>
 
+                <!-- French button -->
                 <button id="lang-fr" type="button">
                     FR
                 </button>
+
             </div>
 
+            <!-- Logout button appears after login -->
             <button id="logout-button"
                     class="logout"
                     type="button"
@@ -72,16 +103,26 @@
                     hidden>
                 Log Out
             </button>
+
         </div>
     </header>
 
+    <!-- Displays success messages or errors -->
+    <!-- JavaScript changes the message shown here -->
     <div id="message" role="status" aria-live="polite"></div>
 
+    <!-- Main content of website -->
     <main class="main">
 
-        <!-- LOGIN PAGE -->
+        <!--Login page-->
+
+        <!--first page customers see -->
         <section id="login-page" class="page">
+
+            <!-- Container keeps login content together -->
             <div class="login-container">
+
+                <!-- Heading above login form -->
                 <div class="login-heading">
 
                     <span class="eyebrow" data-i18n="memberAccess">
@@ -96,73 +137,97 @@
                         Access your membership, track rewards,
                         and view your shopping history.
                     </p>
+
                 </div>
 
+                <!-- White card containing the login form -->
                 <div class="login-card">
+
                     <h2 data-i18n="signIn">Sign in</h2>
 
                     <p class="subtitle" data-i18n="signInDesc">
                         Enter your details to access your account.
                     </p>
 
+                    <!-- Customer enters email and password here -->
+                    <!-- account.js sends this information to Flask -->
                     <form id="login-form">
+
+                        <!-- Email label -->
                         <label for="login-email" data-i18n="email">
                             Email address
                         </label>
 
+                        <!-- Email input -->
+                        <!-- required: the field cannot be empty -->
                         <input id="login-email"
                                name="email"
                                type="email"
                                autocomplete="email"
                                required>
 
+                        <!-- Password label -->
                         <label for="login-password" data-i18n="password">
                             Password
                         </label>
 
+                        <!-- Password input -->
+                        <!-- type=password hides characters typed -->
                         <input id="login-password"
                                name="password"
                                type="password"
                                autocomplete="current-password"
                                required>
 
+                        <!-- Submits login form -->
                         <button class="primary-button"
                                 type="submit"
                                 data-i18n="signIn">
                             Sign in
                         </button>
+
                     </form>
 
+                    <!-- Small dividing line -->
                     <div class="login-divider"></div>
 
+                    <!-- Option to create a new account -->
                     <p class="switch-text">
+
                         <span data-i18n="noAccount">
                             Don't have an account?
                         </span>
 
+                        <!-- JavaScript switches to register-page -->
                         <button class="text-button"
                                 type="button"
                                 data-page="register"
                                 data-i18n="createOne">
                             Create one
                         </button>
+
                     </p>
+
                 </div>
 
+                <!-- Small text below login card -->
                 <p class="login-footnote" data-i18n="footer">
                     Smart shopping, better rewards.
                 </p>
+
             </div>
         </section>
 
-        <!-- REGISTER PAGE -->
+
+        <!-- Register page -->
+
+        <!-- Hidden until customer clicks Create one -->
         <section id="register-page" class="page" hidden>
+
             <div class="login-container">
+
+                <!-- Registration heading -->
                 <div class="login-heading">
-<<<<<<< HEAD
-                    <div class="login-icon">S</div>
-=======
->>>>>>> 1c8b4b6 (Update Phase 3 customer account system and UI)
 
                     <span class="eyebrow" data-i18n="joinStore">
                         JOIN SMART STORE
@@ -176,16 +241,25 @@
                         Create an account and receive your own
                         membership number.
                     </p>
+
                 </div>
 
+                <!-- Registration form card -->
                 <div class="login-card">
-                    <h2 data-i18n="createAccount">Create account</h2>
+
+                    <h2 data-i18n="createAccount">
+                        Create account
+                    </h2>
 
                     <p class="subtitle" data-i18n="registerSubtitle">
                         Join our loyalty program today.
                     </p>
 
+                    <!-- Form used to create a new customer -->
+                    <!-- JavaScript sends the details to Flask -->
                     <form id="register-form">
+
+                        <!-- Customer's full name -->
                         <label for="register-name" data-i18n="fullName">
                             Full name
                         </label>
@@ -195,6 +269,7 @@
                                autocomplete="name"
                                required>
 
+                        <!-- Customer's email -->
                         <label for="register-email" data-i18n="email">
                             Email address
                         </label>
@@ -205,11 +280,13 @@
                                autocomplete="email"
                                required>
 
+                        <!-- Customer creates a password -->
                         <label for="register-password"
                                data-i18n="password">
                             Password
                         </label>
 
+                        <!-- minlength=6 requires at least 6 characters -->
                         <input id="register-password"
                                name="password"
                                type="password"
@@ -217,6 +294,7 @@
                                autocomplete="new-password"
                                required>
 
+                        <!-- Phone number is optional -->
                         <label for="register-phone" data-i18n="phone">
                             Phone (optional)
                         </label>
@@ -226,14 +304,18 @@
                                type="tel"
                                autocomplete="tel">
 
+                        <!-- Submits the registration form -->
                         <button class="primary-button"
                                 type="submit"
                                 data-i18n="createAccount">
                             Create account
                         </button>
+
                     </form>
 
+                    <!-- Return to the login page -->
                     <p class="switch-text">
+
                         <span data-i18n="haveAccount">
                             Already have an account?
                         </span>
@@ -244,33 +326,49 @@
                                 data-i18n="signIn">
                             Sign in
                         </button>
+
                     </p>
+
                 </div>
             </div>
         </section>
 
-        <!-- DASHBOARD -->
+
+        <!-- Customer dashboard -->
+
+        <!-- Shown after a customer logs in -->
         <section id="dashboard-page" class="page" hidden>
+
             <div class="dashboard-container">
+
+                <!-- Welcome message -->
                 <div class="page-heading">
                     <div>
+
                         <span class="eyebrow" data-i18n="overview">
                             ACCOUNT OVERVIEW
                         </span>
 
                         <h1>
                             <span data-i18n="hello">Hello</span>,
+
+                            <!-- JavaScript puts the customer's name here -->
                             <span id="welcome-name"></span>!
                         </h1>
 
                         <p data-i18n="dashboardDesc">
                             Here's your Smart Store membership.
                         </p>
+
                     </div>
                 </div>
 
+                <!-- Grid has the three customer cards -->
                 <div class="dashboard-grid">
+
+                    <!-- membership card -->
                     <div class="info-card membership-card">
+
                         <span data-i18n="memberCard">
                             MEMBERSHIP CARD
                         </span>
@@ -280,21 +378,30 @@
                         </div>
 
                         <div>
+
                             <small data-i18n="memberNumber">
                                 MEMBER NUMBER
                             </small>
 
+                            <!-- Membership number comes from database -->
+                            <!-- JavaScript replaces --- with the real number -->
                             <h2 id="membership-number">---</h2>
+
+                            <!-- Customer name appears on the card -->
                             <p id="card-name"></p>
+
                         </div>
                     </div>
 
+                    <!-- Loyalty points card -->
                     <div class="info-card points-card">
+
                         <span class="card-label"
                               data-i18n="loyaltyPoints">
                             LOYALTY POINTS
                         </span>
 
+                        <!-- JavaScript displays the customer's points -->
                         <div class="points-number" id="customer-points">
                             0
                         </div>
@@ -302,53 +409,57 @@
                         <p data-i18n="pointsDesc">
                             Earn 1 point for every full dollar spent before tax.
                         </p>
+
                     </div>
 
+                    <!-- customer profile card -->
                     <div class="info-card profile-card">
+
                         <span class="card-label" data-i18n="profile">
                             MY PROFILE
                         </span>
 
+                        <!-- Display customer name -->
                         <p class="field-label" data-i18n="fullName">
                             Full name
                         </p>
 
                         <strong id="customer-name">---</strong>
 
+                        <!-- Display customer email -->
                         <p class="field-label" data-i18n="email">
                             Email address
                         </p>
 
                         <strong id="customer-email">---</strong>
+
                     </div>
                 </div>
 
-                <div class="bottom-action">
-                    <div>
-                        <h3 data-i18n="yourPurchases">
-                            Your purchases
-                        </h3>
-
-                        <p data-i18n="purchaseDesc">
-                            View receipts and track points earned.
-                        </p>
-                    </div>
-
-                    <button class="primary-button compact"
-                            type="button"
-                            data-page="history"
-                            data-i18n="viewHistory">
-                        View purchase history
-                    </button>
-                </div>
             </div>
         </section>
 
-        <!-- PURCHASE HISTORY -->
+
+        <!-- Purchase history -->
+
+        <!-- Displays purchases made by the logged-in customer -->
         <section id="history-page" class="page" hidden>
+
             <div class="dashboard-container">
+
+                <!-- Returns to customer dashboard -->
+                <!-- Placed on the top left like the other back buttons -->
+                <button class="back-button"
+                        type="button"
+                        data-page="dashboard"
+                        data-i18n="backDashboard">
+                    ← Back to dashboard
+                </button>
+
+                <!-- Purchase history heading -->
                 <div class="page-heading">
                     <div>
+
                         <span class="eyebrow" data-i18n="activity">
                             ACCOUNT ACTIVITY
                         </span>
@@ -360,39 +471,48 @@
                         <p data-i18n="historyDesc">
                             Your previous Smart Store receipts.
                         </p>
-                    </div>
 
-                    <button class="secondary-button"
-                            type="button"
-                            data-page="dashboard"
-                            data-i18n="backDashboard">
-                        Back to dashboard
-                    </button>
+                    </div>
                 </div>
 
+                <!-- Card has purchase records -->
                 <div class="history-card">
+
+                    <!-- Column headings for the purchase history -->
                     <div class="history-header">
+
                         <span data-i18n="receipt">Receipt</span>
                         <span data-i18n="date">Date</span>
                         <span data-i18n="total">Total</span>
                         <span data-i18n="earned">Points earned</span>
                         <span></span>
+
                     </div>
 
+                    <!-- JavaScript adds purchase records here -->
+                    <!-- Flask gets the purchases from the database -->
                     <div id="purchase-history"></div>
+
                 </div>
             </div>
         </section>
 
     </main>
 
+    <!-- footer -->
+
+    <!-- Bottom section of the website -->
     <footer>
+
         <span>© Smart Store</span>
 
         <span data-i18n="footer">
             Smart shopping, better rewards.
         </span>
+
     </footer>
+
 </div>
+
 </body>
 </html>

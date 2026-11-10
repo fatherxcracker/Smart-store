@@ -1,132 +1,885 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- Name shown in browser tab -->
     <title>Inventory | Smart Store</title>
 
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for product table -->
     <link rel="stylesheet"
           href="{{ url_for('static', filename='inventory.css') }}">
+
+    <style>
+        /* Keeps header same size and position as customer account */
+        body .app > .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            max-width: none;
+            height: 90px;
+            min-height: 90px;
+            max-height: 90px;
+            margin: 0;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            background: white;
+            border-bottom: 1px solid #e5eaf2;
+            flex-wrap: nowrap;
+        }
+
+        /* Keeps store name same size */
+        .topbar .brand {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .topbar .brand strong {
+            display: block;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.15;
+            color: #101218;
+            max-width: 100px;
+        }
+
+        /* Keeps navigation controls aligned */
+        .topbar .top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            flex: 1;
+            flex-wrap: nowrap;
+            min-width: 0;
+        }
+
+        .topbar #account-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Styles navigation links */
+        .topbar .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 4px;
+            border: none;
+            background: none;
+            color: #566176;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* Highlights selected navigation */
+        .topbar .nav-link:hover,
+        .topbar .nav-link.active {
+            color: #1769ff;
+        }
+
+        /* Keeps language buttons same size */
+        .topbar .language-switch {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 48px;
+            padding: 4px;
+            background: #f0f3f8;
+            border-radius: 9px;
+        }
+
+        .topbar .language-switch button {
+            min-width: 50px;
+            height: 40px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #6d7687;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .topbar .language-switch button.selected {
+            background: #1769ff;
+            color: white;
+        }
+
+        /* Styles logout button */
+        .topbar .logout {
+            min-width: 98px;
+            min-height: 48px;
+            padding: 11px 16px;
+            background: #101218;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Keeps hidden buttons hidden */
+        .topbar [hidden] {
+            display: none !important;
+        }
+
+        /* Keeps inventory content centered */
+        .inventory-main {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Styles back button */
+        .inventory-main .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 16px;
+            margin-bottom: 28px;
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .inventory-main .back-button:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* Page heading */
+        .inventory-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .inventory-heading h1 {
+            font-size: 33px;
+            color: #171b26;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        .inventory-heading p {
+            color: #737e91;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* Product action buttons */
+        .inventory-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .inventory-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #1769ff;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 17px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .inventory-actions a:hover {
+            background: #0954db;
+        }
+
+        .inventory-actions a.secondary {
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+        }
+
+        .inventory-actions a.secondary:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* White card containing inventory table */
+        .inventory-card {
+            background: white;
+            border: 1px solid #e5eaf2;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(18,33,60,.04);
+        }
+
+        /* Table scrolls on smaller screens */
+        .inventory-card .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Inventory table */
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .inventory-table thead {
+            background: #f0f4fa;
+        }
+
+        .inventory-table th {
+            text-align: left;
+            padding: 17px 18px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #526079;
+            white-space: nowrap;
+        }
+
+        .inventory-table td {
+            padding: 17px 18px;
+            font-size: 12px;
+            border-top: 1px solid #e5eaf2;
+            color: #171b26;
+            vertical-align: middle;
+        }
+
+        .inventory-table tbody tr:hover {
+            background: #f8faff;
+        }
+
+        /* Product name */
+        .product-name {
+            font-weight: 700;
+            color: #171b26;
+        }
+
+        /* Stock quantity */
+        .stock-number {
+            font-weight: 700;
+            color: #1769ff;
+        }
+
+        /* Edit and Delete buttons */
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 9px 13px;
+            background: #edf4ff;
+            color: #1769ff;
+            border: none;
+            border-radius: 7px;
+            font-weight: 700;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .edit-button:hover {
+            background: #dceaff;
+        }
+
+        .delete-button {
+            background: #fff0f0;
+            color: #c12d3a;
+            border: none;
+            border-radius: 7px;
+            padding: 9px 13px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #ffe0e0;
+        }
+
+        /* Notification messages */
+        .inventory-message {
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border-radius: 9px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .inventory-message.success {
+            background: #eaf2ff;
+            color: #154da5;
+        }
+
+        .inventory-message.error {
+            background: #fff0f0;
+            color: #b42332;
+        }
+
+        /* Empty inventory message */
+        .empty-inventory {
+            padding: 30px;
+            color: #737e91;
+            text-align: center;
+        }
+
+        /* Adjusts navigation on smaller screens */
+        @media (max-width: 1100px) {
+            body .app > .topbar {
+                gap: 12px;
+                padding: 0 20px;
+            }
+
+            .topbar .top-actions,
+            .topbar #account-nav {
+                gap: 10px;
+            }
+
+            .topbar .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .topbar .top-actions {
+                overflow-x: auto;
+                scrollbar-width: thin;
+            }
+        }
+
+        /* Adjusts layout for phones */
+        @media (max-width: 650px) {
+            body .app > .topbar {
+                padding: 0 14px;
+                gap: 10px;
+            }
+
+            .topbar .brand {
+                min-width: 85px;
+            }
+
+            .topbar .brand strong {
+                font-size: 14px;
+            }
+
+            .topbar .nav-link {
+                font-size: 12px;
+            }
+
+            .inventory-main {
+                padding: 24px 14px;
+            }
+
+            .inventory-heading h1 {
+                font-size: 27px;
+            }
+
+            .inventory-actions {
+                width: 100%;
+            }
+
+            .inventory-actions a {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<main>
-    <header>
-        <p class="eyebrow">SMART STORE · PHASE 3</p>
-        <h1>Inventory</h1>
 
-        <p>
-            Current stock for {{ products|length }} products.
-            Refresh to see the latest changes.
-        </p>
+<!-- Contains whole website -->
+<div class="app">
 
-        <nav aria-label="Inventory navigation">
-            <a href="{{ url_for('home') }}">Customer accounts</a>
-            <span aria-hidden="true"> | </span>
+    <!--Navigation-->
 
-            <a href="{{ url_for('shopping_cart') }}">Self-checkout</a>
-            <span aria-hidden="true"> | </span>
+    <!-- Top bar of website -->
+    <header class="topbar">
 
-            <a href="{{ url_for('add_product') }}">Add product</a>
-            <span aria-hidden="true"> | </span>
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
 
-            <a href="{{ url_for('receive_stock') }}">Receive stock</a>
-            <span aria-hidden="true"> | </span>
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
 
-            <a href="{{ url_for('reception_history') }}">
-                Reception history
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
             </a>
-        </nav>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
     </header>
 
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-        {% if category == 'error' %}
-            <p class="form-error" role="alert">{{ message }}</p>
-        {% else %}
-            <p role="status"
-               style="padding: 16px; background: #e2f3e9; color: #215739; border-radius: 8px;">
-                {{ message }}
-            </p>
-        {% endif %}
-    {% endfor %}
 
-    <div class="table-wrapper"
-         role="region"
-         aria-label="Product inventory"
-         tabindex="0">
+    <!-- Main inventory content -->
+    <main class="inventory-main">
 
-        <table>
-            <caption>Stock = total received − total sold</caption>
+        <!-- Returns to customer account -->
+        <a class="back-button"
+           href="{{ url_for('home') }}#dashboard"
+           data-i18n="backAccounts">
+            ← Back to Customer Accounts
+        </a>
 
-            <thead>
-                <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">UPC</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Received</th>
-                    <th scope="col">Sold</th>
-                    <th scope="col">In stock</th>
-                    <th scope="col">Last received</th>
-                    <th scope="col">Actions</th>
-                </tr>
-            </thead>
+        <!-- Inventory heading and actions -->
+        <div class="inventory-heading">
 
-            <tbody>
-                {% for product in products %}
-                    <tr>
-                        <th scope="row">{{ product.name }}</th>
-                        <td>{{ product.category }}</td>
-                        <td>{{ product.upc }}</td>
+            <div>
+                <span class="eyebrow" data-i18n="productManagement">
+                    PRODUCT MANAGEMENT
+                </span>
 
-                        <td class="number">
-                            ${{ '%.2f'|format(product.price) }}
-                        </td>
+                <h1 data-i18n="inventoryTitle">
+                    Inventory
+                </h1>
 
-                        <td class="number">
-                            {{ product.total_received }}
-                        </td>
+                <p data-i18n="inventoryDesc">
+                    Manage products, stock quantities and deliveries
+                </p>
+            </div>
 
-                        <td class="number">
-                            {{ product.total_sold }}
-                        </td>
+            <!-- Buttons for inventory features -->
+            <div class="inventory-actions">
 
-                        <td class="number">
-                            <span class="stock {{ 'empty' if product.in_stock <= 0 else '' }}">
-                                {{ product.in_stock }}
-                            </span>
-                        </td>
+                <!-- Opens Add Product -->
+                <a href="{{ url_for('add_product') }}"
+                   data-i18n="addProduct">
+                    Add Product
+                </a>
 
-                        <td>
-                            {{ product.last_received_at|local_time or 'No receptions yet' }}
-                        </td>
+                <!-- Opens Receive Stock -->
+                <a class="secondary"
+                   href="{{ url_for('receive_stock') }}"
+                   data-i18n="receiveStock">
+                    Receive Stock
+                </a>
 
-                        <td>
-                            <a href="{{ url_for('edit_product', product_id=product.id) }}">
-                                Edit
-                            </a>
+                <!-- Opens Reception History -->
+                <a class="secondary"
+                   href="{{ url_for('reception_history') }}"
+                   data-i18n="receptionHistory">
+                    Reception History
+                </a>
 
-                            <form method="post"
-                                  action="{{ url_for('delete_product', product_id=product.id) }}"
-                                  class="delete-form"
-                                  onsubmit="return confirm('Delete this product from the inventory?');">
+            </div>
+        </div>
 
-                                <button type="submit" class="delete-button">
-                                    Delete
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="9" class="empty-message">
-                            No products yet. Products will appear here once registered.
-                        </td>
-                    </tr>
+
+        <!-- Flask notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+
+                    <div class="inventory-message {{ category }}"
+                         role="status">
+                        {{ message }}
+                    </div>
+
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</main>
+            {% endif %}
+        {% endwith %}
+
+
+        <!-- Inventory table -->
+        <div class="inventory-card">
+
+            <div class="table-wrapper">
+
+                <table class="inventory-table">
+
+                    <!-- Table headings -->
+                    <thead>
+                        <tr>
+                            <th data-i18n="product">Product</th>
+                            <th data-i18n="category">Category</th>
+                            <th data-i18n="price">Price</th>
+                            <th>UPC</th>
+                            <th>EPC</th>
+                            <th data-i18n="producer">Producer</th>
+                            <th data-i18n="inStock">In Stock</th>
+                            <th data-i18n="actions">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <!-- Display products from database -->
+                        {% for product in products %}
+
+                            <tr>
+
+                                <!-- Product name -->
+                                <td>
+                                    <span class="product-name">
+                                        {{ product.name }}
+                                    </span>
+                                </td>
+
+                                <!-- Product category -->
+                                <td>{{ product.category }}</td>
+
+                                <!-- Product price -->
+                                <td>
+                                    ${{ "%.2f"|format(product.price|float) }}
+                                </td>
+
+                                <!-- Barcode -->
+                                <td>{{ product.upc or '—' }}</td>
+
+                                <!-- RFID tag -->
+                                <td>{{ product.epc or '—' }}</td>
+
+                                <!-- Producer company -->
+                                <td>{{ product.producer or '—' }}</td>
+
+                                <!-- Current stock -->
+                                <td>
+                                    <span class="stock-number">
+                                        {{ product.in_stock }}
+                                    </span>
+                                </td>
+
+                                <!-- Edit and Delete buttons -->
+                                <td>
+                                    <div class="table-actions">
+
+                                        <!-- Opens Edit Product -->
+                                        <a class="edit-button"
+                                           href="{{ url_for('edit_product', product_id=product.id) }}"
+                                           data-i18n="edit">
+                                            Edit
+                                        </a>
+
+                                        <!-- Deletes selected product -->
+                                        <form method="post"
+                                              action="{{ url_for('delete_product', product_id=product.id) }}"
+                                              class="delete-form">
+
+                                            <button class="delete-button"
+                                                    type="submit"
+                                                    data-i18n="delete">
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <!-- Display message if no products exist -->
+                            <tr>
+                                <td colspan="8"
+                                    class="empty-inventory"
+                                    data-i18n="noProducts">
+                                    No products in inventory
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<!-- Navigation and translation functionality -->
+<script>
+    // Remember the selected language
+    let storeLanguage =
+        localStorage.getItem("smartstore-language") || "en";
+
+    // English and French translations
+    const storeTranslations = {
+
+        // English translations
+        en: {
+            dashboard: "Dashboard",
+            history: "Purchase History",
+            checkoutLink: "Self-checkout",
+            inventoryLink: "Inventory",
+            logout: "Log Out",
+            backAccounts: "← Back to Customer Accounts",
+            productManagement: "PRODUCT MANAGEMENT",
+            inventoryTitle: "Inventory",
+            inventoryDesc: "Manage products, stock quantities and deliveries",
+            addProduct: "Add Product",
+            receiveStock: "Receive Stock",
+            receptionHistory: "Reception History",
+            product: "Product",
+            category: "Category",
+            price: "Price",
+            producer: "Producer",
+            inStock: "In Stock",
+            actions: "Actions",
+            edit: "Edit",
+            delete: "Delete",
+            noProducts: "No products in inventory",
+            deleteConfirm: "Are you sure you want to delete this product?",
+            footer: "Smart shopping, better rewards"
+        },
+
+        // French translations
+        fr: {
+            dashboard: "Tableau de bord",
+            history: "Historique des achats",
+            checkoutLink: "Caisse libre-service",
+            inventoryLink: "Inventaire",
+            logout: "Déconnexion",
+            backAccounts: "← Retour aux comptes clients",
+            productManagement: "GESTION DES PRODUITS",
+            inventoryTitle: "Inventaire",
+            inventoryDesc: "Gérez les produits, les quantités en stock et les livraisons",
+            addProduct: "Ajouter un produit",
+            receiveStock: "Réceptionner du stock",
+            receptionHistory: "Historique des réceptions",
+            product: "Produit",
+            category: "Catégorie",
+            price: "Prix",
+            producer: "Fabricant",
+            inStock: "En stock",
+            actions: "Actions",
+            edit: "Modifier",
+            delete: "Supprimer",
+            noProducts: "Aucun produit dans l'inventaire",
+            deleteConfirm: "Voulez-vous vraiment supprimer ce produit ?",
+            footer: "Magasinez mieux, gagnez plus"
+        }
+    };
+
+    // Change language
+    function changeStoreLanguage(language) {
+
+        // Use English if language is not supported
+        storeLanguage = storeTranslations[language] ? language : "en";
+
+        // Save language in browser
+        localStorage.setItem("smartstore-language", storeLanguage);
+
+        // Update html language
+        document.documentElement.lang = storeLanguage;
+
+        // Translate all page text
+        document.querySelectorAll("[data-i18n]").forEach(element => {
+            const key = element.dataset.i18n;
+
+            if (storeTranslations[storeLanguage][key]) {
+                element.textContent =
+                    storeTranslations[storeLanguage][key];
+            }
+        });
+
+        // Highlight selected language
+        document.getElementById("lang-en").classList.toggle(
+            "selected", storeLanguage === "en"
+        );
+
+        document.getElementById("lang-fr").classList.toggle(
+            "selected", storeLanguage === "fr"
+        );
+    }
+
+    // English button
+    document.getElementById("lang-en").addEventListener("click", () => {
+        changeStoreLanguage("en");
+    });
+
+    // French button
+    document.getElementById("lang-fr").addEventListener("click", () => {
+        changeStoreLanguage("fr");
+    });
+
+    // Check if customer is logged in
+    async function checkStoreLogin() {
+
+        try {
+            // Ask Flask for current customer
+            const response = await fetch("/api/account/me", {
+                credentials: "same-origin"
+            });
+
+            // Customer is logged in when request succeeds
+            const isLoggedIn = response.ok;
+
+            // Show Dashboard and Purchase History after login
+            document.getElementById("account-nav").hidden = !isLoggedIn;
+
+            // Show logout button after login
+            document.getElementById("logout-button").hidden = !isLoggedIn;
+
+        } catch (error) {
+
+            // Hide customer buttons if server cannot be reached
+            document.getElementById("account-nav").hidden = true;
+            document.getElementById("logout-button").hidden = true;
+        }
+    }
+
+    // Confirm before deleting product
+    document.querySelectorAll(".delete-form").forEach(form => {
+        form.addEventListener("submit", event => {
+
+            // Ask customer to confirm deletion
+            const confirmed = confirm(
+                storeTranslations[storeLanguage].deleteConfirm
+            );
+
+            // Cancel deletion if customer clicks Cancel
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    // Logout customer
+    document.getElementById("logout-button").addEventListener(
+        "click", async () => {
+
+            try {
+                // Tell Flask to log out customer
+                const response = await fetch("/api/account/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+                // Check if logout succeeded
+                if (!response.ok) {
+                    throw new Error("Logout failed");
+                }
+
+                // Return to customer login page
+                window.location.href = "{{ url_for('home') }}";
+
+            } catch (error) {
+
+                // Show error if logout fails
+                alert(
+                    storeLanguage === "fr"
+                        ? "Impossible de se déconnecter"
+                        : "Could not log out"
+                );
+            }
+        }
+    );
+
+    // Start inventory translation and navigation
+    changeStoreLanguage(storeLanguage);
+    checkStoreLogin();
+</script>
+
 </body>
 </html>

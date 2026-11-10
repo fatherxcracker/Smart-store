@@ -1,85 +1,827 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
     <title>Reception History | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for reception history -->
     <link rel="stylesheet"
           href="{{ url_for('static', filename='inventory.css') }}">
-</head>
-<body>
-<main>
-    <header>
-        <p class="eyebrow">SMART STORE · PHASE 3</p>
-        <h1>Reception History</h1>
-        <p>Review recorded stock deliveries.</p>
 
-        <nav aria-label="Inventory navigation">
-            <a href="{{ url_for('inventory') }}">Inventory</a>
-            <span aria-hidden="true"> | </span>
-            <a href="{{ url_for('receive_stock') }}">Receive stock</a>
-        </nav>
+    <style>
+        /* Keeps header same size and position as customer account */
+        body .app > .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            max-width: none;
+            height: 90px;
+            min-height: 90px;
+            max-height: 90px;
+            margin: 0;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            background: white;
+            border-bottom: 1px solid #e5eaf2;
+            flex-wrap: nowrap;
+        }
+
+        /* Keeps store name same size */
+        .topbar .brand {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .topbar .brand strong {
+            display: block;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.15;
+            color: #101218;
+            max-width: 100px;
+        }
+
+        /* Keeps navigation controls aligned */
+        .topbar .top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            flex: 1;
+            flex-wrap: nowrap;
+            min-width: 0;
+        }
+
+        .topbar #account-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Styles navigation links */
+        .topbar .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 4px;
+            border: none;
+            background: none;
+            color: #566176;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* Highlights selected navigation */
+        .topbar .nav-link:hover,
+        .topbar .nav-link.active {
+            color: #1769ff;
+        }
+
+        /* Keeps language buttons same size */
+        .topbar .language-switch {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 48px;
+            padding: 4px;
+            background: #f0f3f8;
+            border-radius: 9px;
+        }
+
+        .topbar .language-switch button {
+            min-width: 50px;
+            height: 40px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #6d7687;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .topbar .language-switch button.selected {
+            background: #1769ff;
+            color: white;
+        }
+
+        /* Styles logout button */
+        .topbar .logout {
+            min-width: 98px;
+            min-height: 48px;
+            padding: 11px 16px;
+            background: #101218;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Keeps hidden buttons hidden */
+        .topbar [hidden] {
+            display: none !important;
+        }
+
+        /* Keeps page content centered */
+        .history-main {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Styles back button */
+        .history-main .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 16px;
+            margin-bottom: 28px;
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .history-main .back-button:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* Keeps heading and filter aligned */
+        .history-controls {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        /* Styles page heading */
+        .history-heading h1 {
+            font-size: 33px;
+            color: #171b26;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        /* Styles description under heading */
+        .history-heading p {
+            color: #737e91;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* Styles product filter form */
+        .filter-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #e5eaf2;
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        /* Keeps filter label above dropdown */
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Styles filter label */
+        .filter-field label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #171b26;
+        }
+
+        /* Styles product dropdown */
+        .filter-field select {
+            min-width: 230px;
+            padding: 11px 14px;
+            border: 1px solid #dce3ed;
+            border-radius: 8px;
+            background: #fbfcfe;
+            color: #171b26;
+            outline: none;
+        }
+
+        /* Highlights dropdown when clicked */
+        .filter-field select:focus {
+            border-color: #1769ff;
+            box-shadow: 0 0 0 3px rgba(23,105,255,.08);
+        }
+
+        /* Styles apply filter button */
+        .filter-button {
+            background: #1769ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 17px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .filter-button:hover {
+            background: #0954db;
+        }
+
+        /* Creates white card for reception history */
+        .history-main .reception-card {
+            background: white;
+            border: 1px solid #e5eaf2;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(18,33,60,.04);
+        }
+
+        /* Allows table to scroll on smaller screens */
+        .reception-card .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Styles reception history table */
+        .reception-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        /* Styles table heading background */
+        .reception-table thead {
+            background: #f0f4fa;
+        }
+
+        /* Styles table headings */
+        .reception-table th {
+            text-align: left;
+            padding: 17px 18px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #526079;
+            white-space: nowrap;
+        }
+
+        /* Styles table information */
+        .reception-table td {
+            padding: 17px 18px;
+            font-size: 12px;
+            border-top: 1px solid #e5eaf2;
+            color: #171b26;
+            vertical-align: middle;
+        }
+
+        /* Highlights row when hovered */
+        .reception-table tbody tr:hover {
+            background: #f8faff;
+        }
+
+        /* Styles product names */
+        .reception-product {
+            font-weight: 700;
+        }
+
+        /* Highlights received quantities */
+        .received-quantity {
+            font-weight: 700;
+            color: #1769ff;
+        }
+
+        /* Styles empty history message */
+        .empty-history {
+            padding: 30px;
+            color: #737e91;
+            text-align: center;
+        }
+
+        /* Adjusts header on smaller screens */
+        @media (max-width: 1100px) {
+            body .app > .topbar {
+                gap: 12px;
+                padding: 0 20px;
+            }
+
+            .topbar .top-actions,
+            .topbar #account-nav {
+                gap: 10px;
+            }
+
+            .topbar .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .topbar .top-actions {
+                overflow-x: auto;
+                scrollbar-width: thin;
+            }
+        }
+
+        /* Adjusts layout for phones */
+        @media (max-width: 650px) {
+            body .app > .topbar {
+                padding: 0 14px;
+                gap: 10px;
+            }
+
+            .topbar .brand {
+                min-width: 85px;
+            }
+
+            .topbar .brand strong {
+                font-size: 14px;
+            }
+
+            .topbar .nav-link {
+                font-size: 12px;
+            }
+
+            .history-main {
+                padding: 24px 14px;
+            }
+
+            .history-heading h1 {
+                font-size: 27px;
+            }
+
+            .filter-form {
+                width: 100%;
+            }
+
+            .filter-field {
+                width: 100%;
+            }
+
+            .filter-field select {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .filter-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
     </header>
 
-    <form method="get"
-          action="{{ url_for('reception_history') }}"
-          class="product-form"
-          style="margin-top: 24px;">
 
-        <label for="product_id">Filter by product</label>
+    <!-- Main page content -->
+    <main class="history-main">
 
-        <select id="product_id"
-                name="product_id"
-                style="padding: 12px; font: inherit; width: 100%;">
-            <option value="">All products</option>
+        <!-- Returns to inventory -->
+        <a class="back-button"
+           href="{{ url_for('inventory') }}"
+           data-i18n="backInventory">
+            ← Back to Inventory
+        </a>
 
-            {% for product in products %}
-                <option value="{{ product.id }}"
-                        {% if selected_id == product.id|string %}
-                            selected
-                        {% endif %}>
-                    {{ product.name }}
-                </option>
-            {% endfor %}
-        </select>
 
-        <button type="submit">Apply filter</button>
-    </form>
+        <!-- Reception history heading and filter -->
+        <div class="history-controls">
 
-    <div class="table-wrapper"
-         role="region"
-         aria-label="Stock reception history"
-         tabindex="0">
-        <table>
-            <caption>{{ receptions|length }} recorded deliveries</caption>
+            <div class="history-heading">
 
-            <thead>
-                <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Quantity received</th>
-                    <th scope="col">Date received</th>
-                    <th scope="col">Note / invoice</th>
-                </tr>
-            </thead>
+                <span class="eyebrow" data-i18n="productManagement">
+                    PRODUCT MANAGEMENT
+                </span>
 
-            <tbody>
-                {% for reception in receptions %}
-                    <tr>
-                        <th scope="row">{{ reception.product_name }}</th>
-                        <td class="number">{{ reception.quantity }}</td>
-                        <td>{{ reception.received_at|local_time }}</td>
-                        <td>{{ reception.note or '—' }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="4" class="empty-message">
-                            No stock receptions found.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</main>
+                <h1 data-i18n="receptionHistoryTitle">
+                    Reception History
+                </h1>
+
+                <p data-i18n="receptionHistoryDesc">
+                    View previous stock deliveries and quantities received
+                </p>
+
+            </div>
+
+
+            <!-- Filter reception history by product -->
+            <!-- Sends selected product ID to Flask using GET -->
+            <form method="get"
+                  action="{{ url_for('reception_history') }}"
+                  class="filter-form">
+
+                <div class="filter-field">
+
+                    <label for="product_id"
+                           data-i18n="filterByProduct">
+                        Filter by Product
+                    </label>
+
+                    <!-- Dropdown contains products from database -->
+                    <select id="product_id"
+                            name="product_id">
+
+                        <!-- Empty value shows all products -->
+                        <option value=""
+                                data-i18n="allProducts">
+                            All Products
+                        </option>
+
+                        {% for product in products %}
+
+                            <option value="{{ product.id }}"
+                                {% if selected_id == product.id|string %}
+                                    selected
+                                {% endif %}>
+                                {{ product.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- Applies selected product filter -->
+                <button type="submit"
+                        class="filter-button"
+                        data-i18n="applyFilter">
+                    Apply Filter
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- Reception history table -->
+        <div class="reception-card">
+
+            <div class="table-wrapper">
+
+                <table class="reception-table">
+
+                    <!-- Table headings -->
+                    <thead>
+                        <tr>
+                            <th data-i18n="product">Product</th>
+
+                            <th data-i18n="quantityReceived">
+                                Quantity Received
+                            </th>
+
+                            <th data-i18n="receptionDate">
+                                Reception Date
+                            </th>
+
+                            <th data-i18n="note">
+                                Note
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <!-- Display reception records from database -->
+                        {% for reception in receptions %}
+
+                            <tr>
+
+                                <!-- Product name -->
+                                <td>
+                                    <span class="reception-product">
+                                        {{ reception.product_name }}
+                                    </span>
+                                </td>
+
+                                <!-- Quantity received -->
+                                <td>
+                                    <span class="received-quantity">
+                                        +{{ reception.quantity }}
+                                    </span>
+                                </td>
+
+                                <!-- Convert stored date into local time -->
+                                <td>
+                                    {{ reception.received_at|local_time }}
+                                </td>
+
+                                <!-- Optional delivery note -->
+                                <td>
+                                    {{ reception.note or '—' }}
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <!-- Display message if no receptions exist -->
+                            <tr>
+                                <td colspan="4"
+                                    class="empty-history"
+                                    data-i18n="noReceptions">
+                                    No reception records found
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<!-- Navigation and translation functionality -->
+<script>
+    // Remember the selected language
+    let storeLanguage =
+        localStorage.getItem("smartstore-language") || "en";
+
+    // English and French translations
+    const storeTranslations = {
+
+        // English translations
+        en: {
+            dashboard: "Dashboard",
+            history: "Purchase History",
+            checkoutLink: "Self-checkout",
+            inventoryLink: "Inventory",
+            logout: "Log Out",
+            backInventory: "← Back to Inventory",
+            productManagement: "PRODUCT MANAGEMENT",
+            receptionHistoryTitle: "Reception History",
+            receptionHistoryDesc: "View previous stock deliveries and quantities received",
+            filterByProduct: "Filter by Product",
+            allProducts: "All Products",
+            applyFilter: "Apply Filter",
+            product: "Product",
+            quantityReceived: "Quantity Received",
+            receptionDate: "Reception Date",
+            note: "Note",
+            noReceptions: "No reception records found",
+            footer: "Smart shopping, better rewards"
+        },
+
+        // French translations
+        fr: {
+            dashboard: "Tableau de bord",
+            history: "Historique des achats",
+            checkoutLink: "Caisse libre-service",
+            inventoryLink: "Inventaire",
+            logout: "Déconnexion",
+            backInventory: "← Retour à l'inventaire",
+            productManagement: "GESTION DES PRODUITS",
+            receptionHistoryTitle: "Historique des réceptions",
+            receptionHistoryDesc: "Consultez les livraisons précédentes et les quantités reçues",
+            filterByProduct: "Filtrer par produit",
+            allProducts: "Tous les produits",
+            applyFilter: "Appliquer le filtre",
+            product: "Produit",
+            quantityReceived: "Quantité reçue",
+            receptionDate: "Date de réception",
+            note: "Note",
+            noReceptions: "Aucune réception trouvée",
+            footer: "Magasinez mieux, gagnez plus"
+        }
+    };
+
+    // Change language
+    function changeStoreLanguage(language) {
+
+        // Use English if language is not supported
+        storeLanguage = storeTranslations[language] ? language : "en";
+
+        // Save language in browser
+        localStorage.setItem("smartstore-language", storeLanguage);
+
+        // Update html language
+        document.documentElement.lang = storeLanguage;
+
+        // Translate all page text
+        document.querySelectorAll("[data-i18n]").forEach(element => {
+            const key = element.dataset.i18n;
+
+            if (storeTranslations[storeLanguage][key]) {
+                element.textContent =
+                    storeTranslations[storeLanguage][key];
+            }
+        });
+
+        // Highlight selected language
+        document.getElementById("lang-en").classList.toggle(
+            "selected", storeLanguage === "en"
+        );
+
+        document.getElementById("lang-fr").classList.toggle(
+            "selected", storeLanguage === "fr"
+        );
+
+        // Translate browser tab title
+        document.title =
+            storeLanguage === "fr"
+                ? "Historique des réceptions | Smart Store"
+                : "Reception History | Smart Store";
+    }
+
+    // English button
+    document.getElementById("lang-en").addEventListener("click", () => {
+        changeStoreLanguage("en");
+    });
+
+    // French button
+    document.getElementById("lang-fr").addEventListener("click", () => {
+        changeStoreLanguage("fr");
+    });
+
+    // Check if customer is logged in
+    async function checkStoreLogin() {
+
+        try {
+            // Ask Flask for current customer
+            const response = await fetch("/api/account/me", {
+                credentials: "same-origin"
+            });
+
+            // Customer is logged in when request succeeds
+            const isLoggedIn = response.ok;
+
+            // Show Dashboard and Purchase History after login
+            document.getElementById("account-nav").hidden = !isLoggedIn;
+
+            // Show logout button after login
+            document.getElementById("logout-button").hidden = !isLoggedIn;
+
+        } catch (error) {
+
+            // Hide customer buttons if server cannot be reached
+            document.getElementById("account-nav").hidden = true;
+            document.getElementById("logout-button").hidden = true;
+        }
+    }
+
+    // Logout customer
+    document.getElementById("logout-button").addEventListener(
+        "click", async () => {
+
+            try {
+                // Tell Flask to log out customer
+                const response = await fetch("/api/account/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+                // Check if logout succeeded
+                if (!response.ok) {
+                    throw new Error("Logout failed");
+                }
+
+                // Return to customer login page
+                window.location.href = "{{ url_for('home') }}";
+
+            } catch (error) {
+
+                // Show error if logout fails
+                alert(
+                    storeLanguage === "fr"
+                        ? "Impossible de se déconnecter"
+                        : "Could not log out"
+                );
+            }
+        }
+    );
+
+    // Start reception history translation and navigation
+    changeStoreLanguage(storeLanguage);
+    checkStoreLogin();
+</script>
+
 </body>
 </html>

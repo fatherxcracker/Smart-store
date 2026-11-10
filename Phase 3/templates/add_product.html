@@ -1,57 +1,796 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
     <title>Add Product | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for product forms -->
     <link rel="stylesheet"
           href="{{ url_for('static', filename='inventory.css') }}">
+
+    <style>
+        /* Keeps header same size and position as customer account */
+        body .app > .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            max-width: none;
+            height: 90px;
+            min-height: 90px;
+            max-height: 90px;
+            margin: 0;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            background: white;
+            border-bottom: 1px solid #e5eaf2;
+            flex-wrap: nowrap;
+        }
+
+        /* Keeps store name same size */
+        .topbar .brand {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .topbar .brand strong {
+            display: block;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.15;
+            color: #101218;
+            max-width: 100px;
+        }
+
+        /* Keeps navigation controls aligned */
+        .topbar .top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            flex: 1;
+            flex-wrap: nowrap;
+            min-width: 0;
+        }
+
+        .topbar #account-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Styles navigation links */
+        .topbar .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 4px;
+            border: none;
+            background: none;
+            color: #566176;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* Highlights selected navigation */
+        .topbar .nav-link:hover,
+        .topbar .nav-link.active {
+            color: #1769ff;
+        }
+
+        /* Keeps language buttons same size */
+        .topbar .language-switch {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 48px;
+            padding: 4px;
+            background: #f0f3f8;
+            border-radius: 9px;
+        }
+
+        .topbar .language-switch button {
+            min-width: 50px;
+            height: 40px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #6d7687;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .topbar .language-switch button.selected {
+            background: #1769ff;
+            color: white;
+        }
+
+        /* Styles logout button */
+        .topbar .logout {
+            min-width: 98px;
+            min-height: 48px;
+            padding: 11px 16px;
+            background: #101218;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Keeps hidden buttons hidden */
+        .topbar [hidden] {
+            display: none !important;
+        }
+
+        /* Keeps page content centered */
+        .product-main {
+            flex: 1;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Styles back button */
+        .product-main .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 16px;
+            margin-bottom: 28px;
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .product-main .back-button:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* Styles page heading */
+        .product-heading h1 {
+            font-size: 33px;
+            color: #171b26;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        /* Styles text under heading */
+        .product-heading p {
+            color: #737e91;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* Creates white card for product form */
+        .product-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            width: 100%;
+            max-width: 560px;
+            margin-top: 28px;
+            padding: 30px;
+            background: white;
+            border: 1px solid #e5eaf2;
+            border-radius: 14px;
+            box-shadow: 0 12px 35px rgba(18,33,60,.05);
+        }
+
+        /* Styles product form title */
+        .product-form h2 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: #171b26;
+        }
+
+        /* Styles description inside form */
+        .product-form .form-description {
+            color: #737e91;
+            font-size: 12px;
+            margin: 0 0 24px;
+        }
+
+        /* Styles labels above input boxes */
+        .product-form label {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #171b26;
+        }
+
+        /* Styles boxes where product information is entered */
+        .product-form input {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            border: 1px solid #dce3ed;
+            border-radius: 8px;
+            background: #fbfcfe;
+            color: #171b26;
+            outline: none;
+        }
+
+        /* Highlights input when clicked */
+        .product-form input:focus {
+            border-color: #1769ff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(23,105,255,.08);
+        }
+
+        /* Styles save product button */
+        .product-form .save-button {
+            background: #1769ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 13px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .product-form .save-button:hover {
+            background: #0954db;
+        }
+
+        /* Styles RFID reader button */
+        .product-form .read-tag-button {
+            align-self: flex-start;
+            background: #eaf2ff;
+            color: #154da5;
+            border: 1px solid #cbdfff;
+            border-radius: 8px;
+            padding: 11px 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .product-form .read-tag-button:hover {
+            background: #dceaff;
+        }
+
+        /* Shows RFID reader messages */
+        .tag-status {
+            margin-bottom: 18px;
+            font-size: 12px;
+        }
+
+        /* Styles form errors */
+        .form-error {
+            color: #b42332;
+            background: #fff0f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            max-width: 560px;
+            margin-top: 20px;
+        }
+
+        /* Adjusts header on smaller screens */
+        @media (max-width: 1100px) {
+            body .app > .topbar {
+                gap: 12px;
+                padding: 0 20px;
+            }
+
+            .topbar .top-actions,
+            .topbar #account-nav {
+                gap: 10px;
+            }
+
+            .topbar .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .topbar .top-actions {
+                overflow-x: auto;
+                scrollbar-width: thin;
+            }
+        }
+
+        /* Adjusts layout for phones */
+        @media (max-width: 650px) {
+            body .app > .topbar {
+                padding: 0 14px;
+                gap: 10px;
+            }
+
+            .topbar .brand {
+                min-width: 85px;
+            }
+
+            .topbar .brand strong {
+                font-size: 14px;
+            }
+
+            .topbar .nav-link {
+                font-size: 12px;
+            }
+
+            .product-main {
+                padding: 24px 14px;
+            }
+
+            .product-heading h1 {
+                font-size: 27px;
+            }
+
+            .product-form {
+                padding: 24px 20px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<main>
-    <p class="eyebrow">SMART STORE · PHASE 3</p>
-    <h1>Add Product</h1>
 
-    <p><a href="{{ url_for('inventory') }}">Back to inventory</a></p>
+<!-- Contains whole website -->
+<div class="app">
 
-    {% if error %}
-        <p class="form-error" role="alert">{{ error }}</p>
-    {% endif %}
+    <!--Navigation-->
 
-    <form method="post" action="{{ url_for('add_product') }}"
-          class="product-form">
+    <!-- Top bar of website -->
+    <header class="topbar">
 
-        <label for="name">Product name</label>
-        <input id="name" name="name" type="text"
-               value="{{ values.get('name', '') }}" required>
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
 
-        <label for="category">Category</label>
-        <input id="category" name="category" type="text"
-               value="{{ values.get('category', '') }}" required>
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
 
-        <label for="price">Price ($)</label>
-        <input id="price" name="price" type="number"
-               min="0" step="0.01"
-               value="{{ values.get('price', '') }}" required>
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
 
-        <label for="upc">UPC — barcode (maximum 13 characters)</label>
-        <input id="upc" name="upc" type="text" maxlength="13"
-               placeholder="Click here and scan the barcode"
-               value="{{ values.get('upc', '') }}" required>
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
 
-        <label for="epc">EPC — RFID tag (optional, maximum 24 characters)</label>
-        <input id="epc" name="epc" type="text" maxlength="24"
-               value="{{ values.get('epc', '') }}">
-        <button id="read-tag" type="button" class="read-tag-button">Read tag from RFID reader</button>
-        <p id="tag-status" class="tag-status" role="status" aria-live="polite"></p>
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
 
-        <label for="producer">Producer company</label>
-        <input id="producer" name="producer" type="text"
-               value="{{ values.get('producer', '') }}" required>
+            </nav>
 
-        <button type="submit">Save product</button>
-    </form>
-</main>
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- Main page content -->
+    <main class="product-main">
+
+        <!-- Returns to inventory -->
+        <a class="back-button"
+           href="{{ url_for('inventory') }}"
+           data-i18n="backInventory">
+            ← Back to Inventory
+        </a>
+
+        <!-- Add product heading -->
+        <div class="product-heading">
+
+            <span class="eyebrow" data-i18n="productManagement">
+                PRODUCT MANAGEMENT
+            </span>
+
+            <h1 data-i18n="addProductTitle">
+                Add Product
+            </h1>
+
+            <p data-i18n="addProductDesc">
+                Register a new product in the inventory
+            </p>
+
+        </div>
+
+
+        <!-- Displays error if product cannot be added -->
+        {% if error %}
+            <p class="form-error" role="alert">
+                {{ error }}
+            </p>
+        {% endif %}
+
+
+        <!-- Add product form -->
+        <!-- Sends product information to Flask -->
+        <form method="post"
+              action="{{ url_for('add_product') }}"
+              class="product-form">
+
+            <h2 data-i18n="productDetails">
+                Product Details
+            </h2>
+
+            <p class="form-description" data-i18n="formDescription">
+                Enter the information for the new product
+            </p>
+
+
+            <!-- Product name -->
+            <label for="name" data-i18n="productName">
+                Product Name
+            </label>
+
+            <input id="name"
+                   name="name"
+                   type="text"
+                   value="{{ values.get('name', '') }}"
+                   required>
+
+
+            <!-- Product category -->
+            <label for="category" data-i18n="category">
+                Category
+            </label>
+
+            <input id="category"
+                   name="category"
+                   type="text"
+                   value="{{ values.get('category', '') }}"
+                   required>
+
+
+            <!-- Product price -->
+            <label for="price" data-i18n="price">
+                Price ($)
+            </label>
+
+            <input id="price"
+                   name="price"
+                   type="number"
+                   min="0"
+                   step="0.01"
+                   value="{{ values.get('price', '') }}"
+                   required>
+
+
+            <!-- UPC is the barcode identifier -->
+            <label for="upc" data-i18n="upcLabel">
+                UPC — Barcode (maximum 13 characters)
+            </label>
+
+            <input id="upc"
+                   name="upc"
+                   type="text"
+                   maxlength="13"
+                   placeholder="Click here and scan the barcode"
+                   data-i18n-placeholder="upcPlaceholder"
+                   value="{{ values.get('upc', '') }}"
+                   required>
+
+
+            <!-- EPC is the RFID tag identifier -->
+            <!-- RFID tag is optional -->
+            <label for="epc" data-i18n="epcLabel">
+                EPC — RFID Tag (optional, maximum 24 characters)
+            </label>
+
+            <input id="epc"
+                   name="epc"
+                   type="text"
+                   maxlength="24"
+                   value="{{ values.get('epc', '') }}">
+
+
+            <!-- Reads tag from RFID reader -->
+            <!-- rfid_tag.js handles the scanning -->
+            <button id="read-tag"
+                    type="button"
+                    class="read-tag-button"
+                    data-i18n="readTag">
+                Read Tag from RFID Reader
+            </button>
+
+            <!-- Displays RFID reader messages -->
+            <p id="tag-status"
+               class="tag-status"
+               role="status"
+               aria-live="polite"></p>
+
+
+            <!-- Producer company -->
+            <label for="producer" data-i18n="producer">
+                Producer Company
+            </label>
+
+            <input id="producer"
+                   name="producer"
+                   type="text"
+                   value="{{ values.get('producer', '') }}"
+                   required>
+
+
+            <!-- Saves product to database -->
+            <button type="submit"
+                    class="save-button"
+                    data-i18n="saveProduct">
+                Save Product
+            </button>
+
+        </form>
+
+    </main>
+
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<!-- Connects JavaScript for RFID scanning -->
 <script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
+
+
+<!-- Navigation and translation functionality -->
+<script>
+    // Remember the selected language
+    let storeLanguage =
+        localStorage.getItem("smartstore-language") || "en";
+
+    // English and French translations
+    const storeTranslations = {
+
+        // English translations
+        en: {
+            dashboard: "Dashboard",
+            history: "Purchase History",
+            checkoutLink: "Self-checkout",
+            inventoryLink: "Inventory",
+            logout: "Log Out",
+            backInventory: "← Back to Inventory",
+            productManagement: "PRODUCT MANAGEMENT",
+            addProductTitle: "Add Product",
+            addProductDesc: "Register a new product in the inventory",
+            productDetails: "Product Details",
+            formDescription: "Enter the information for the new product",
+            productName: "Product Name",
+            category: "Category",
+            price: "Price ($)",
+            upcLabel: "UPC — Barcode (maximum 13 characters)",
+            upcPlaceholder: "Click here and scan the barcode",
+            epcLabel: "EPC — RFID Tag (optional, maximum 24 characters)",
+            readTag: "Read Tag from RFID Reader",
+            producer: "Producer Company",
+            saveProduct: "Save Product",
+            footer: "Smart shopping, better rewards"
+        },
+
+        // French translations
+        fr: {
+            dashboard: "Tableau de bord",
+            history: "Historique des achats",
+            checkoutLink: "Caisse libre-service",
+            inventoryLink: "Inventaire",
+            logout: "Déconnexion",
+            backInventory: "← Retour à l'inventaire",
+            productManagement: "GESTION DES PRODUITS",
+            addProductTitle: "Ajouter un produit",
+            addProductDesc: "Enregistrez un nouveau produit dans l'inventaire",
+            productDetails: "Détails du produit",
+            formDescription: "Entrez les informations du nouveau produit",
+            productName: "Nom du produit",
+            category: "Catégorie",
+            price: "Prix ($)",
+            upcLabel: "UPC — Code-barres (maximum 13 caractères)",
+            upcPlaceholder: "Cliquez ici et numérisez le code-barres",
+            epcLabel: "EPC — Étiquette RFID (facultatif, maximum 24 caractères)",
+            readTag: "Lire l'étiquette avec le lecteur RFID",
+            producer: "Entreprise productrice",
+            saveProduct: "Enregistrer le produit",
+            footer: "Magasinez mieux, gagnez plus"
+        }
+    };
+
+    // Change language
+    function changeStoreLanguage(language) {
+
+        // Use English if language is not supported
+        storeLanguage = storeTranslations[language] ? language : "en";
+
+        // Save language in browser
+        localStorage.setItem("smartstore-language", storeLanguage);
+
+        // Update html language
+        document.documentElement.lang = storeLanguage;
+
+        // Translate all page text
+        document.querySelectorAll("[data-i18n]").forEach(element => {
+            const key = element.dataset.i18n;
+
+            if (storeTranslations[storeLanguage][key]) {
+                element.textContent =
+                    storeTranslations[storeLanguage][key];
+            }
+        });
+
+        // Translate input placeholders
+        document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+            const key = element.dataset.i18nPlaceholder;
+
+            if (storeTranslations[storeLanguage][key]) {
+                element.placeholder =
+                    storeTranslations[storeLanguage][key];
+            }
+        });
+
+        // Highlight selected language
+        document.getElementById("lang-en").classList.toggle(
+            "selected", storeLanguage === "en"
+        );
+
+        document.getElementById("lang-fr").classList.toggle(
+            "selected", storeLanguage === "fr"
+        );
+
+        // Translate browser tab title
+        document.title =
+            storeLanguage === "fr"
+                ? "Ajouter un produit | Smart Store"
+                : "Add Product | Smart Store";
+    }
+
+    // English button
+    document.getElementById("lang-en").addEventListener("click", () => {
+        changeStoreLanguage("en");
+    });
+
+    // French button
+    document.getElementById("lang-fr").addEventListener("click", () => {
+        changeStoreLanguage("fr");
+    });
+
+    // Check if customer is logged in
+    async function checkStoreLogin() {
+
+        try {
+            // Ask Flask for current customer
+            const response = await fetch("/api/account/me", {
+                credentials: "same-origin"
+            });
+
+            // Customer is logged in when request succeeds
+            const isLoggedIn = response.ok;
+
+            // Show Dashboard and Purchase History after login
+            document.getElementById("account-nav").hidden = !isLoggedIn;
+
+            // Show logout button after login
+            document.getElementById("logout-button").hidden = !isLoggedIn;
+
+        } catch (error) {
+
+            // Hide customer buttons if server cannot be reached
+            document.getElementById("account-nav").hidden = true;
+            document.getElementById("logout-button").hidden = true;
+        }
+    }
+
+    // Logout customer
+    document.getElementById("logout-button").addEventListener(
+        "click", async () => {
+
+            try {
+                // Tell Flask to log out customer
+                const response = await fetch("/api/account/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+                // Check if logout succeeded
+                if (!response.ok) {
+                    throw new Error("Logout failed");
+                }
+
+                // Return to customer login page
+                window.location.href = "{{ url_for('home') }}";
+
+            } catch (error) {
+
+                // Show error if logout fails
+                alert(
+                    storeLanguage === "fr"
+                        ? "Impossible de se déconnecter"
+                        : "Could not log out"
+                );
+            }
+        }
+    );
+
+    // Start product translation and navigation
+    changeStoreLanguage(storeLanguage);
+    checkStoreLogin();
+</script>
+
 </body>
 </html>

@@ -189,3 +189,273 @@ tbody th {
     margin: 0 0 18px;
     font-size: 0.95rem;
 }
+
+
+/* ================= SMART STORE SHARED DESIGN ================= */
+
+/* Use the same colors and font as the customer account page */
+:root {
+    --blue: #1769ff;
+    --blue-hover: #0954db;
+    --background: #f6f8fc;
+    --text: #171b26;
+    --muted: #737e91;
+    --border: #e5eaf2;
+
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--text);
+    background: var(--background);
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* Match the header on all pages */
+.topbar {
+    max-width: none;
+    margin: 0;
+    padding: 0 clamp(20px, 5vw, 80px);
+}
+
+.topbar .brand strong {
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.topbar .nav-link {
+    color: #566176;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.topbar .nav-link:hover,
+.topbar .nav-link.active {
+    color: var(--blue);
+}
+
+/* Main inventory page */
+.inventory-main {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 45px 24px;
+    flex: 1;
+}
+
+.inventory-container {
+    max-width: 1150px;
+    margin: 0 auto;
+}
+
+/* Page title and description */
+.inventory-heading {
+    margin-bottom: 24px;
+}
+
+.inventory-heading h1 {
+    font-size: 33px;
+    letter-spacing: -1px;
+    margin: 9px 0;
+}
+
+.inventory-heading p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Inventory action buttons */
+.inventory-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.inventory-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.inventory-button:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.inventory-button.primary {
+    background: var(--blue);
+    color: white;
+    border-color: var(--blue);
+}
+
+.inventory-button.primary:hover {
+    background: var(--blue-hover);
+    color: white;
+}
+
+/* White card around the inventory table */
+.inventory-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.inventory-card-heading {
+    padding: 24px;
+}
+
+.inventory-card-heading h2 {
+    font-size: 19px;
+    margin: 0 0 8px;
+}
+
+.inventory-card-heading p {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 0;
+}
+
+/* Table styling */
+.inventory-card .table-wrapper {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    overflow-x: auto;
+}
+
+.inventory-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.inventory-card thead {
+    background: #f0f4fa;
+}
+
+.inventory-card th,
+.inventory-card td {
+    padding: 17px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.inventory-card thead th {
+    color: #526079;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Stock quantities */
+.stock {
+    background: #eaf2ff;
+    color: #154da5;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.stock.empty {
+    background: #fde8e8;
+    color: #a32929;
+}
+
+/* Edit and Delete actions */
+.inventory-row-actions {
+    white-space: nowrap;
+}
+
+.edit-link {
+    color: var(--blue);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.edit-link:hover {
+    text-decoration: underline;
+}
+
+.delete-button {
+    background: #fff0f0;
+    color: #a32929;
+    border: 1px solid #f4d4d4;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+/* Success notifications */
+.inventory-success {
+    padding: 14px 18px;
+    background: #e8f6ee;
+    color: #215739;
+    border-radius: 9px;
+    margin-bottom: 20px;
+}
+
+/* Make existing product forms match the blue theme */
+.product-form {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(18, 33, 60, .05);
+}
+
+.product-form input {
+    border: 1px solid #dce3ed;
+    border-radius: 8px;
+    background: #fbfcfe;
+}
+
+.product-form input:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.product-form button:not(.delete-button) {
+    background: var(--blue);
+    color: white;
+    border-radius: 8px;
+}
+
+.product-form button:not(.delete-button):hover {
+    background: var(--blue-hover);
+}
+
+/* RFID button remains a secondary action */
+.product-form .read-tag-button {
+    background: #eaf2ff !important;
+    color: #154da5 !important;
+    border: 1px solid #cbdfff !important;
+}
+
+/* Responsive layout */
+@media (max-width: 650px) {
+    .inventory-main {
+        padding: 25px 14px;
+    }
+
+    .inventory-heading h1 {
+        font-size: 28px;
+    }
+
+    .inventory-actions {
+        flex-direction: column;
+    }
+
+    .inventory-button {
+        width: 100%;
+    }
+}

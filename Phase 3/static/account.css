@@ -1,6 +1,8 @@
 
+/* Loads the Inter font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* Main website colors */
 :root {
     --blue: #1769ff;
     --blue-hover: #0954db;
@@ -12,15 +14,19 @@
     --border: #e5eaf2;
 }
 
+/* Makes padding and borders part of element sizes */
 * {
     box-sizing: border-box;
 }
 
-html, body {
+/* Removes default browser spacing */
+html,
+body {
     margin: 0;
     min-height: 100%;
 }
 
+/* Sets website font and colors */
 body {
     font-family: 'Inter', Arial, sans-serif;
     background: var(--background);
@@ -28,43 +34,70 @@ body {
     font-size: 14px;
 }
 
-button, input {
+/* Makes buttons and inputs use the same font */
+button,
+input,
+select,
+textarea {
     font: inherit;
 }
 
+/* Makes buttons clickable */
 button {
     cursor: pointer;
 }
 
+/* Hides elements until JavaScript displays them */
 [hidden] {
     display: none !important;
 }
 
+/* Keeps website full height */
 .app {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* HEADER */
 
-.topbar {
-    height: 76px;
+/* Header */
+
+/* Keeps header same height on every page */
+body .app > .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100;
+    width: 100% !important;
+    max-width: none !important;
+    height: 90px !important;
+    min-height: 90px !important;
+    max-height: 90px !important;
+    flex-shrink: 0;
+    margin: 0 !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
     background: white;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 clamp(20px, 5vw, 80px);
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+/* Keeps SMART STORE small on every page */
+body .app > .topbar .brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px;
+    flex: 0 0 95px !important;
+    width: 95px !important;
+    min-width: 95px !important;
 }
 
-.brand-icon, .login-icon {
+/* Styles optional logo */
+.brand-icon,
+.login-icon {
     background: var(--blue);
     color: white;
     display: grid;
@@ -72,6 +105,7 @@ button {
     font-weight: 800;
 }
 
+/* Sets logo size */
 .brand-icon {
     width: 40px;
     height: 40px;
@@ -79,12 +113,18 @@ button {
     font-size: 23px;
 }
 
-.brand strong {
+/* Styles SMART STORE text */
+body .app > .topbar .brand strong {
     display: block;
-    font-size: 15px;
-    letter-spacing: 1px;
+    font-size: 16px !important;
+    font-weight: 800;
+    letter-spacing: .7px;
+    line-height: 1.15;
+    color: var(--black);
+    max-width: 95px;
 }
 
+/* Styles optional brand description */
 .brand small {
     display: block;
     color: var(--muted);
@@ -92,94 +132,152 @@ button {
     margin-top: 4px;
 }
 
-.top-actions, #account-nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+/* Keeps navigation small and aligned */
+body .app > .topbar .top-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
 }
 
-.nav-link {
-    border: 0;
-    background: none;
-    padding: 10px 4px;
+/* Keeps Dashboard and Purchase History together */
+body .app > .topbar #account-nav:not([hidden]) {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    flex-shrink: 0;
+    flex-wrap: nowrap !important;
+}
+
+/* Styles navigation links */
+body .app > .topbar .nav-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    min-width: 0 !important;
+    padding: 7px 1px !important;
+    background: transparent;
+    border: none;
     color: #566176;
-    font-weight: 600;
     text-decoration: none;
+    font-size: 11px !important;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap !important;
+    flex-shrink: 0;
 }
 
-.nav-link:hover, .nav-link.active {
+/* Highlights navigation on hover */
+body .app > .topbar .nav-link:hover,
+body .app > .topbar .nav-link.active {
     color: var(--blue);
 }
 
-.language-switch {
+/* Styles language switch */
+body .app > .topbar .language-switch {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0;
+    height: 38px !important;
+    padding: 3px !important;
     background: #f0f3f8;
     border-radius: 9px;
-    padding: 4px;
-    display: flex;
 }
 
-.language-switch button {
-    border: 0;
+/* Styles language buttons */
+body .app > .topbar .language-switch button {
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 6px !important;
     background: transparent;
     color: #6d7687;
-    padding: 8px 12px;
+    border: none;
     border-radius: 7px;
-    font-size: 12px;
+    font-size: 11px !important;
     font-weight: 700;
 }
 
-.language-switch button.selected {
+/* Highlights selected language */
+body .app > .topbar .language-switch button.selected {
     background: var(--blue);
     color: white;
 }
 
-.logout {
+/* Styles logout button */
+body .app > .topbar .logout {
+    min-width: 75px !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
     background: var(--black);
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 11px 16px;
+    font-size: 11px !important;
     font-weight: 600;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
-/* MAIN */
+/* Changes logout color on hover */
+body .app > .topbar .logout:hover {
+    background: #303642;
+}
 
+/* Keeps hidden buttons hidden */
+body .app > .topbar [hidden] {
+    display: none !important;
+}
+
+
+/* Main content */
+
+/* Centers content between header and footer */
 .main {
     flex: 1;
     width: 100%;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     padding: 25px 20px;
 }
 
+/* Controls width of each account page */
 .page {
     width: 100%;
     max-width: 1100px;
 }
 
-/* LOGIN AND REGISTRATION */
 
+/* Login and registration */
+
+/* Centers login form */
 .login-container {
     width: 100%;
     max-width: 430px;
     margin: auto;
 }
 
+/* Centers login heading */
 .login-heading {
     text-align: center;
     margin-bottom: 24px;
 }
 
+/* Styles login icon */
 .login-icon {
     width: 52px;
     height: 52px;
     border-radius: 15px;
     font-size: 28px;
     margin: 0 auto 18px;
-    box-shadow: 0 6px 15px rgba(23,105,255,.18);
 }
 
+/* Styles small blue headings */
 .eyebrow {
     color: var(--blue);
     font-size: 10px;
@@ -187,6 +285,7 @@ button {
     font-weight: 800;
 }
 
+/* Styles login title */
 .login-heading h1 {
     font-size: 28px;
     letter-spacing: -1px;
@@ -194,6 +293,7 @@ button {
     font-weight: 800;
 }
 
+/* Styles login description */
 .login-heading p {
     color: var(--muted);
     line-height: 1.6;
@@ -202,6 +302,7 @@ button {
     margin: auto;
 }
 
+/* Creates login card */
 .login-card {
     background: white;
     border: 1px solid var(--border);
@@ -210,12 +311,14 @@ button {
     box-shadow: 0 12px 35px rgba(18,33,60,.05);
 }
 
+/* Styles login card headings */
 .login-card h2 {
     margin: 0 0 7px;
     font-size: 22px;
     letter-spacing: -.5px;
 }
 
+/* Styles descriptions */
 .subtitle {
     color: var(--muted);
     font-size: 12px;
@@ -223,17 +326,20 @@ button {
     margin: 0 0 24px;
 }
 
+/* Stacks login fields */
 .login-card form {
     display: flex;
     flex-direction: column;
 }
 
+/* Styles form labels */
 .login-card label {
     font-size: 12px;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
+/* Styles form inputs */
 .login-card input {
     height: 44px;
     border: 1px solid #dce3ed;
@@ -244,12 +350,14 @@ button {
     outline: none;
 }
 
+/* Highlights selected input */
 .login-card input:focus {
     border-color: var(--blue);
     background: white;
     box-shadow: 0 0 0 3px rgba(23,105,255,.08);
 }
 
+/* Styles main blue buttons */
 .primary-button {
     background: var(--blue);
     color: white;
@@ -259,21 +367,25 @@ button {
     font-weight: 700;
 }
 
+/* Darkens blue buttons on hover */
 .primary-button:hover {
     background: var(--blue-hover);
 }
 
+/* Makes login button full width */
 .login-card .primary-button {
     width: 100%;
     margin-top: 4px;
 }
 
+/* Dividing line */
 .login-divider {
     height: 1px;
     background: var(--border);
     margin-top: 23px;
 }
 
+/* Styles text below login form */
 .switch-text {
     text-align: center;
     color: var(--muted);
@@ -281,6 +393,7 @@ button {
     margin: 18px 0 0;
 }
 
+/* Styles text buttons */
 .text-button {
     background: none;
     border: 0;
@@ -289,6 +402,7 @@ button {
     padding: 5px;
 }
 
+/* Styles login footer text */
 .login-footnote {
     text-align: center;
     color: #9aa4b4;
@@ -296,14 +410,17 @@ button {
     margin-top: 23px;
 }
 
-/* DASHBOARD */
 
+/* Dashboard */
+
+/* Controls dashboard width */
 .dashboard-container {
     width: 100%;
     max-width: 1050px;
     margin: auto;
 }
 
+/* Styles dashboard heading */
 .page-heading {
     display: flex;
     justify-content: space-between;
@@ -312,23 +429,27 @@ button {
     margin-bottom: 27px;
 }
 
+/* Styles dashboard title */
 .page-heading h1 {
     font-size: 33px;
     letter-spacing: -1px;
     margin: 9px 0;
 }
 
+/* Styles dashboard description */
 .page-heading p {
     color: var(--muted);
     margin: 0;
 }
 
+/* Arranges customer cards */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1.2fr .8fr 1fr;
     gap: 18px;
 }
 
+/* Styles all customer cards */
 .info-card {
     min-height: 225px;
     background: white;
@@ -337,6 +458,7 @@ button {
     padding: 25px;
 }
 
+/* Styles membership card */
 .membership-card {
     background: #14264a;
     color: white;
@@ -346,7 +468,7 @@ button {
     justify-content: space-between;
 }
 
-
+/* Styles membership labels */
 .membership-card > span,
 .membership-card small {
     color: #b4c7ea;
@@ -355,23 +477,26 @@ button {
     font-weight: 700;
 }
 
+/* Styles membership logo */
 .membership-logo {
     font-size: 19px;
     font-weight: 800;
     letter-spacing: 1px;
 }
 
+/* Styles membership number */
 .membership-card h2 {
     font-size: 22px;
     margin: 8px 0;
-    letter-spacing: 1px;
 }
 
+/* Styles customer name */
 .membership-card p {
     margin: 0;
     color: #dce8ff;
 }
 
+/* Styles card labels */
 .card-label {
     font-size: 11px;
     color: var(--muted);
@@ -379,6 +504,7 @@ button {
     letter-spacing: 1px;
 }
 
+/* Styles loyalty points */
 .points-number {
     font-size: 58px;
     font-weight: 800;
@@ -386,66 +512,31 @@ button {
     margin: 16px 0 8px;
 }
 
+/* Styles loyalty description */
 .points-card p {
     color: var(--muted);
     line-height: 1.6;
     font-size: 12px;
 }
 
+/* Styles profile labels */
 .field-label {
     color: var(--muted);
     font-size: 11px;
     margin: 23px 0 6px;
 }
 
+/* Styles profile values */
 .profile-card strong {
     display: block;
     font-size: 13px;
     overflow-wrap: anywhere;
 }
 
-.bottom-action {
-    margin-top: 20px;
-    padding: 24px 28px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-}
 
-.bottom-action h3 {
-    margin: 0 0 8px;
-}
+/* Purchase history */
 
-.bottom-action p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.compact {
-    white-space: nowrap;
-}
-
-/* PURCHASE HISTORY */
-
-.secondary-button {
-    background: white;
-    color: var(--black);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 17px;
-    font-weight: 600;
-}
-
-.secondary-button:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-}
-
+/* Creates purchase history card */
 .history-card {
     background: white;
     border: 1px solid var(--border);
@@ -453,6 +544,7 @@ button {
     overflow: hidden;
 }
 
+/* Arranges receipt columns */
 .history-header,
 .history-row {
     display: grid;
@@ -462,6 +554,7 @@ button {
     padding: 18px 22px;
 }
 
+/* Styles purchase history headings */
 .history-header {
     background: #f0f4fa;
     font-size: 11px;
@@ -469,11 +562,13 @@ button {
     color: #526079;
 }
 
+/* Styles each purchase row */
 .history-row {
     border-top: 1px solid var(--border);
     font-size: 12px;
 }
 
+/* Styles receipt buttons */
 .history-row button {
     border: none;
     color: var(--blue);
@@ -483,25 +578,84 @@ button {
     font-weight: 700;
 }
 
+/* Allows history to scroll */
 #purchase-history {
     max-height: 390px;
     overflow-y: auto;
 }
 
+/* Styles expanded receipt details */
 .receipt-details {
     padding: 16px 22px;
     background: #f8faff;
     border-top: 1px solid var(--border);
 }
 
-/* NOTIFICATIONS */
 
+/* Back buttons */
+
+/* Styles Back to Dashboard */
+#history-page .back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #171b26;
+    border: 1px solid #e5eaf2;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    margin-bottom: 28px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+/* Turns text and border blue on hover */
+#history-page .back-button:hover,
+#history-page .back-button:active,
+#history-page .back-button:focus-visible {
+    background: white;
+    color: #1769ff;
+    border-color: #1769ff;
+}
+
+/* Styles back buttons on other pages */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #171b26;
+    border: 1px solid #e5eaf2;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 28px;
+}
+
+/* Highlights other back buttons */
+.back-button:hover,
+.back-button:active {
+    background: white;
+    color: #1769ff;
+    border-color: #1769ff;
+}
+
+
+/* Notifications */
+
+/* Styles notifications */
 #message {
     position: fixed;
-    top: 88px;
+    top: 102px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 110;
     max-width: min(500px, 90vw);
     background: #eaf2ff;
     color: #154da5;
@@ -511,12 +665,15 @@ button {
     box-shadow: 0 5px 20px #00000012;
 }
 
+/* Hides empty notifications */
 #message:empty {
     display: none;
 }
 
-/* FOOTER */
 
+/* Footer */
+
+/* Styles footer */
 footer {
     min-height: 50px;
     padding: 15px 5%;
@@ -527,10 +684,98 @@ footer {
     display: flex;
     justify-content: space-between;
     gap: 12px;
+    margin-top: auto;
 }
 
-/* RESPONSIVE DESIGN */
 
+/* Shared inventory and checkout styling */
+
+/* Centers inventory and checkout pages */
+.store-main {
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 24px;
+}
+
+/* Styles page headings */
+.store-heading h1 {
+    font-size: 33px;
+    letter-spacing: -1px;
+    margin: 9px 0;
+}
+
+/* Styles descriptions */
+.store-heading p {
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Styles shared cards */
+.store-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 12px 35px rgba(18,33,60,.04);
+}
+
+/* Styles shared action buttons */
+.store-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 17px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* Highlights shared action buttons */
+.store-action:hover {
+    background: var(--blue-hover);
+    color: white;
+}
+
+/* Styles secondary actions */
+.store-action.secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+/* Highlights secondary actions */
+.store-action.secondary:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+}
+
+
+/* Responsive */
+
+/* Makes navigation smaller on tablets */
+@media (max-width: 1100px) {
+    body .app > .topbar {
+        gap: 8px !important;
+        padding: 0 12px !important;
+    }
+
+    body .app > .topbar .top-actions,
+    body .app > .topbar #account-nav {
+        gap: 5px !important;
+    }
+
+    body .app > .topbar .nav-link {
+        font-size: 10px !important;
+    }
+}
+
+/* Adjusts dashboard on tablets */
 @media (max-width: 900px) {
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -541,19 +786,43 @@ footer {
     }
 }
 
+/* Adjusts layout for phones */
 @media (max-width: 650px) {
-    .topbar {
-        height: auto;
-        min-height: 70px;
-        padding: 14px 18px;
-        flex-wrap: wrap;
-        gap: 12px;
+    body .app > .topbar {
+        padding: 0 8px !important;
+        gap: 6px !important;
     }
 
-    .top-actions,
-    #account-nav {
-        gap: 10px;
-        flex-wrap: wrap;
+    body .app > .topbar .brand {
+        flex-basis: 70px !important;
+        width: 70px !important;
+        min-width: 70px !important;
+    }
+
+    body .app > .topbar .brand strong {
+        font-size: 12px !important;
+    }
+
+    body .app > .topbar .top-actions,
+    body .app > .topbar #account-nav {
+        gap: 4px !important;
+    }
+
+    body .app > .topbar .nav-link {
+        font-size: 9px !important;
+        padding: 5px 0 !important;
+    }
+
+    body .app > .topbar .language-switch button {
+        min-width: 27px !important;
+        padding: 5px !important;
+        font-size: 10px !important;
+    }
+
+    body .app > .topbar .logout {
+        min-width: 60px !important;
+        padding: 7px !important;
+        font-size: 10px !important;
     }
 
     .main {
@@ -580,10 +849,13 @@ footer {
         min-height: auto;
     }
 
-    .bottom-action,
     .page-heading {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .page-heading h1 {
+        font-size: 27px;
     }
 
     .history-card {
@@ -594,5 +866,16 @@ footer {
     .history-row {
         min-width: 650px;
     }
-}
 
+    .store-main {
+        padding: 24px 14px;
+    }
+
+    .store-heading h1 {
+        font-size: 27px;
+    }
+
+    .store-card {
+        padding: 20px;
+    }
+}
