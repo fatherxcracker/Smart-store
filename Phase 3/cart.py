@@ -174,18 +174,27 @@ def add_epcs_to_cart(epcs):
         )
 
     products = db.find_by_epcs(sorted(new_epcs))
-    unknown = sorted(new_epcs - set(products))
+    sold = db.find_sold_tags(sorted(new_epcs - set(products)))
+    unknown = sorted(new_epcs - set(products) - set(sold))
     known = sorted(new_epcs & set(products))
 
+    # Only truly unknown tags are remembered; a sold tag that an employee
+    # re-assigns must work on the next scan.
     if unknown:
         session["rfid_unknown"] = sorted(unknown_seen | set(unknown))[-40:]
 
+    problems = []
+    if sold:
+        problems.append(
+            "Already sold: "
+            + ", ".join(f"{info['name']} (receipt {info['receipt_number']})" for info in sold.values())
+            + ". Please ask an employee to re-tag the item."
+        )
+    if unknown:
+        problems.append("Unknown RFID tag(s): " + ", ".join(unknown) + ". Please ask an employee.")
+
     if not known:
-        return jsonify(
-            success=False,
-            message="Unknown RFID tag(s): " + ", ".join(unknown)
-                    + ". Please ask an employee.",
-        ), 404
+        return jsonify(success=False, message=" ".join(problems)), 404
 
     # Bound session size because Flask stores it in a signed cookie.
     if len(seen | set(known)) > 40:
@@ -223,10 +232,8 @@ def add_epcs_to_cart(epcs):
     session["rfid_cart_tags"] = active
 
     message = f"{len(known)} RFID item(s) added to your cart."
-    if unknown:
-        message += (
-            f" {len(unknown)} unknown tag(s) ignored: " + ", ".join(unknown) + "."
-        )
+    if problems:
+        message += " Ignored: " + " ".join(problems)
     return cart_response(message)
 
 

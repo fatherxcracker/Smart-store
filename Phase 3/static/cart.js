@@ -524,7 +524,7 @@ async function scanRfid({ quiet = false } = {}) {
 
             showMessage(
                 raw,
-                raw.includes("unknown") ? "warning" : "success",
+                raw.includes("unknown") || raw.includes("Ignored:") ? "warning" : "success",
                 key
             );
         }

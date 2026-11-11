@@ -476,16 +476,23 @@ def create_app():
 
         # Check if tag already belongs to a product
         existing = db.find_by_epc(epcs[0])
+        sold = db.find_sold_tags([epcs[0]]).get(epcs[0])
+
+        if existing is not None:
+            message = f'Tag {epcs[0]} read. It already belongs to "{existing["name"]}".'
+        elif sold is not None:
+            message = (
+                f'Tag {epcs[0]} read. It was sold as "{sold["name"]}" '
+                f'(receipt {sold["receipt_number"]}). Assigning it makes it available again.'
+            )
+        else:
+            message = f"Tag {epcs[0]} read."
 
         # Return scanned tag information
         return jsonify(
             success=True,
             epc=epcs[0],
-            message=(
-                f"Tag {epcs[0]} read."
-                if existing is None
-                else f'Tag {epcs[0]} read. It already belongs to "{existing["name"]}".'
-            ),
+            message=message,
             in_use_by=existing["name"] if existing else None,
         )
 

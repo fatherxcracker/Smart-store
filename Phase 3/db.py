@@ -103,13 +103,32 @@ def add_product(name, category, price, upc, epc, producer, image_url=None, expir
             (name.strip(), category.strip(), price, upc, epc, producer.strip(), image_url, expiry_date),
         )
         if epc:
-            conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, cur.lastrowid))
+            _assign_tag(conn, cur.lastrowid, epc)
         conn.commit()
         return cur.lastrowid
     except sqlite3.IntegrityError as error:
         raise DatabaseError(_duplicate_message(error))
     finally:
         conn.close()
+
+
+def _assign_tag(conn, product_id, epc):
+    """Make `epc` an available (unsold) tag of `product_id` in product_tags.
+
+    A tag that was sold before is re-armed: the admin is physically putting
+    that tag on an item again. An unsold tag of another product is refused."""
+    row = conn.execute(
+        "SELECT product_id, sold_purchase_id FROM product_tags WHERE epc = ?", (epc,)
+    ).fetchone()
+    if row is None:
+        conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, product_id))
+    elif row["sold_purchase_id"] is not None:
+        conn.execute(
+            "UPDATE product_tags SET product_id = ?, sold_purchase_id = NULL, reception_id = NULL WHERE epc = ?",
+            (product_id, epc),
+        )
+    elif row["product_id"] != product_id:
+        raise DatabaseError("This EPC is already assigned to another product.")
 
 
 def update_product(product_id, name, category, price, upc, epc, producer, image_url=None, expiry_date=None):
@@ -194,6 +213,32 @@ def find_by_epcs(epcs):
         conn.close()
 
 
+def find_sold_tags(epcs):
+    """For tags that were already sold: {epc: {"name", "receipt_number"}}."""
+    epcs = [e.strip().upper() for e in epcs if e and e.strip()]
+    if not epcs:
+        return {}
+    conn = get_connection()
+    try:
+        placeholders = ",".join("?" for _ in epcs)
+        rows = conn.execute(
+            f"""SELECT t.epc, p.name, pu.receipt_number
+                FROM product_tags t
+                JOIN products p ON p.id = t.product_id
+                JOIN purchases pu ON pu.id = t.sold_purchase_id
+                WHERE t.epc IN ({placeholders})""",
+            epcs,
+        ).fetchall()
+        return {row["epc"]: {"name": row["name"], "receipt_number": row["receipt_number"]} for row in rows}
+    finally:
+        conn.close()
+
+
+def reuse_sold_tags():
+    """Demo/testing mode (RFID_REUSE_SOLD_TAGS=1): checkout doesn't use up tags."""
+    return os.environ.get("RFID_REUSE_SOLD_TAGS", "0").lower() in ("1", "true", "yes")
+
+
 def get_product_tags(product_id):
     conn = get_connection()
     try:
@@ -212,10 +257,18 @@ def register_product_tag(product_id, epc):
         product = conn.execute("SELECT * FROM inventory WHERE id = ?", (product_id,)).fetchone()
         if not product:
             raise DatabaseError("Product not found.")
+        current = conn.execute(
+            "SELECT product_id, sold_purchase_id FROM product_tags WHERE epc = ?", (epc,)
+        ).fetchone()
+        if current and current["sold_purchase_id"] is None:
+            if current["product_id"] == product_id:
+                raise DatabaseError("This tag is already assigned to this product.")
+            raise DatabaseError("This EPC is already assigned to another product.")
         tagged = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ? AND sold_purchase_id IS NULL", (product_id,)).fetchone()[0]
         if tagged >= product["in_stock"]:
             raise DatabaseError("Receive more stock before assigning another tag.")
-        conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, product_id))
+        # New tag, or a sold tag being put on an item again (re-armed).
+        _assign_tag(conn, product_id, epc)
         conn.commit()
     except sqlite3.IntegrityError:
         conn.rollback()
@@ -457,8 +510,9 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
             [(purchase_id, *line) for line in lines],
         )
 
-        for epc in epcs:
-            conn.execute("UPDATE product_tags SET sold_purchase_id = ? WHERE epc = ?", (purchase_id, epc))
+        if not reuse_sold_tags():
+            for epc in epcs:
+                conn.execute("UPDATE product_tags SET sold_purchase_id = ? WHERE epc = ?", (purchase_id, epc))
 
         if customer_id is not None and totals["points_earned"]:
             conn.execute(

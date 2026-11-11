@@ -112,6 +112,8 @@ Stop the app before running `python rfid_reader.py`, because only one program ca
 - Existing product EPCs are migrated to individual tag records on startup. Existing accounts, stock and purchases are preserved.
 - With `RFID_SIMULATE=1`, checkout uses the EPCs in `RFID_SIMULATED_TAGS`. Use tags that exist in the database.
 - Tagged items must be checked out using RFID, so their individual tags can be marked sold. Barcode checkout is available for untagged stock.
+- **A sold tag can't be scanned again.** The cart shows *"Already sold: … (receipt …)"*. To put that tag on a new item, assign it again in **Manage tags**; it becomes available.
+- **Testing with the same tags over and over?** Set `RFID_REUSE_SOLD_TAGS=1` in `.env` and restart the app. Checkout then doesn't use up tags. Set it back to `0` for the real demo.
 
 ---
 
@@ -229,6 +231,7 @@ Phase 3/
 | `RFID_PORT` | /dev/ttyUSB0 | CF600 serial port |
 | `RFID_SCAN_SECONDS` | 2 | How long one scan reads for |
 | `RFID_SIMULATE` | 0 | `1` = no reader, use `RFID_SIMULATED_TAGS` |
+| `RFID_REUSE_SOLD_TAGS` | 0 | `1` = testing: checkout doesn't mark tags sold, so the same tags can be bought again |
 
 ---
 
@@ -248,7 +251,8 @@ Phase 3/
 | "No RFID tags detected" / `(no tags)` | Hold the tags flat on top of the reader. The reader only sees tags within a few cm, so lay the tag flat in the middle of the reader. Stop the app and run `python rfid_reader.py --raw`. If you see `cf 01 00 01 01 12` frames but no EPCs, the reader is working and the tag is out of range. If **nothing at all** comes back, check `RFID_PORT` and unplug/replug the reader. |
 | "RFID reader not found on /dev/ttyUSB0" | Reader unplugged, or the usbserial setup wasn't done. Check `ls /dev/ttyUSB*`. |
 | "No permission to open /dev/ttyUSB0" | Run `sudo usermod -aG dialout $USER`, then log out and in. |
-| "Unknown RFID tag(s)" | That tag is unavailable or not registered. Assign an available tag through **Manage tags** (see section 4). |
+| "Unknown RFID tag(s)" | That tag isn't registered. Assign it through **Manage tags** (see section 4). |
+| "Already sold: …" | That tag was sold in an earlier checkout. Assign it again in **Manage tags**, or set `RFID_REUSE_SOLD_TAGS=1` while testing. |
 | "The receipt could not be emailed" | Check `SMTP_EMAIL` / `SMTP_APP_PASSWORD` in `.env`; the purchase is still saved. |
 | Page won't open from a laptop | Same network as the Pi? Use `http://<pi-ip>:5002` and `HOST=0.0.0.0`. |
 
