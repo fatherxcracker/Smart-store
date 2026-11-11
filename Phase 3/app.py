@@ -63,6 +63,14 @@ def create_app():
     # Create database tables if needed
     db.init_db()
 
+    @app.before_request
+    def protect_inventory_management():
+        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history"}
+        if request.endpoint in protected:
+            customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
+            if not customer or not customer.get("is_admin"):
+                abort(403, "Administrator access required.")
+
     # Converts stored UTC dates into local time
     @app.template_filter("local_time")
     def local_time(value):
@@ -107,7 +115,8 @@ def create_app():
     def inventory():
 
         # Get products from the database
-        return render_template("inventory.html", products=db.get_inventory(),)
+        customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
+        return render_template("inventory.html", products=db.get_inventory(), is_admin=bool(customer and customer.get("is_admin")))
 
     # Opens the shopping cart page
     @app.get("/cart")

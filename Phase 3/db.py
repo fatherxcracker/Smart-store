@@ -52,6 +52,9 @@ def init_db(seed=True):
     conn = get_connection()
     with open(SCHEMA_PATH, encoding="utf-8") as f:
         conn.executescript(f.read())
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(customers)")}
+    if "is_admin" not in columns:
+        conn.execute("ALTER TABLE customers ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
     if seed and conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0:
         with open(SEED_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())

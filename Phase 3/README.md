@@ -76,6 +76,17 @@ Open `http://<pi-ip>:5002` (find the IP with `hostname -I`), or `http://localhos
 
 The database `smartstore.db` is created automatically the first time, with 5 sample products and 24 of each in stock. To start the demo from a clean database, stop the app and delete `smartstore.db`.
 
+### Test accounts (new databases only)
+
+The initial seed creates these demo accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Administrator | `admin@smartstore.local` | `eUL1b-l0PhnHW9WDo8A6Dw` |
+| Customer | `john@gmail.com` | `123456` |
+
+These publicly documented credentials are for testing only. Do not use them for a network-accessible or real store. The seed runs when the product database is empty; it does not add accounts to an existing populated database or change existing passwords. To grant an existing account administrator access, run `python manage_admin.py email@example.com` from Phase 3. Add `--revoke` to remove access.
+
 ---
 
 ## 4. How each requirement is covered

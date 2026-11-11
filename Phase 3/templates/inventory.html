@@ -532,6 +532,7 @@
             </div>
 
             <!-- Buttons for inventory features -->
+            {% if is_admin %}
             <div class="inventory-actions">
 
                 <!-- Opens Add Product -->
@@ -555,6 +556,7 @@
                 </a>
 
             </div>
+            {% endif %}
         </div>
 
 
@@ -590,7 +592,7 @@
                             <th>EPC</th>
                             <th data-i18n="producer">Producer</th>
                             <th data-i18n="inStock">In Stock</th>
-                            <th data-i18n="actions">Actions</th>
+                            {% if is_admin %}<th data-i18n="actions">Actions</th>{% endif %}
                         </tr>
                     </thead>
 
@@ -632,6 +634,7 @@
                                     </span>
                                 </td>
 
+                                {% if is_admin %}
                                 <!-- Edit and Delete buttons -->
                                 <td>
                                     <div class="table-actions">
@@ -658,6 +661,7 @@
 
                                     </div>
                                 </td>
+                                {% endif %}
 
                             </tr>
 
