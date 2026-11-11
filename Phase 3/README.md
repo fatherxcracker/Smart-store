@@ -245,7 +245,7 @@ Phase 3/
 
 | Message | Fix |
 |---|---|
-| "No RFID tags detected" / `(no tags)` | Hold the tags flat on top of the reader. Run `python rfid_reader.py --raw`: if it shows **received 0 bytes**, the reader isn't answering (check `RFID_PORT`, unplug/replug, try `RFID_RESPONSE_WAIT=0.8` in `.env`); if bytes arrive but no EPCs, send the output to the team. |
+| "No RFID tags detected" / `(no tags)` | Hold the tags flat on top of the reader. The reader only sees tags within a few cm, so lay the tag flat in the middle of the reader. Stop the app and run `python rfid_reader.py --raw`. If you see `cf 01 00 01 01 12` frames but no EPCs, the reader is working and the tag is out of range. If **nothing at all** comes back, check `RFID_PORT` and unplug/replug the reader. |
 | "RFID reader not found on /dev/ttyUSB0" | Reader unplugged, or the usbserial setup wasn't done. Check `ls /dev/ttyUSB*`. |
 | "No permission to open /dev/ttyUSB0" | Run `sudo usermod -aG dialout $USER`, then log out and in. |
 | "Unknown RFID tag(s)" | That tag is unavailable or not registered. Assign an available tag through **Manage tags** (see section 4). |

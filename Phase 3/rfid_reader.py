@@ -1,6 +1,7 @@
 """
 Smart Store - Phase 3
-Chafon CF600 UHF RFID reader (USB serial), based on the class SDK test script.
+Chafon CF600 UHF RFID reader (USB serial), using the Chafon CF protocol
+(frames start with 0xCF, CRC16/MCRF4XX).
 
     import rfid_reader
     epcs = rfid_reader.read_tags()   # every tag on the reader right now, e.g. ["E280...01", "E280...02"]
@@ -22,8 +23,8 @@ load_dotenv()
 PORT = os.environ.get("RFID_PORT", "/dev/ttyUSB0")   # /dev/ttyACM0 on some Pis
 BAUD = int(os.environ.get("RFID_BAUD", "115200"))
 SCAN_SECONDS = float(os.environ.get("RFID_SCAN_SECONDS", "2"))
-# Time the reader needs to answer one inventory command (0.5 s, as in the class SDK script)
-RESPONSE_WAIT = float(os.environ.get("RFID_RESPONSE_WAIT", "0.5"))
+# How often we collect what the reader has sent while it is scanning
+RESPONSE_WAIT = float(os.environ.get("RFID_RESPONSE_WAIT", "0.2"))
 SIMULATE = os.environ.get("RFID_SIMULATE", "0").lower() in ("1", "true", "yes")
 SIMULATED_TAGS = [
     tag.strip().upper()
@@ -34,8 +35,29 @@ SIMULATED_TAGS = [
     if tag.strip()
 ]
 
-# Chafon "inventory" command: asks the reader for every tag in range.
-READ_TAGS_COMMAND = bytes([0x04, 0xFF, 0x01, 0x1B, 0xB4])
+
+def _crc16(data):
+    """CRC16/MCRF4XX used by the Chafon CF protocol (sent high byte first)."""
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0x8408 if crc & 1 else crc >> 1
+    return crc
+
+
+def _command(cmd, payload=b""):
+    """Build a CF-protocol frame: CF | addr FF | cmd(2) | len | payload | crc(2)."""
+    frame = bytes([0xCF, 0xFF, cmd >> 8, cmd & 0xFF, len(payload)]) + payload
+    crc = _crc16(frame)
+    return frame + bytes([crc >> 8, crc & 0xFF])
+
+
+CMD_INVENTORY = 0x0001
+CMD_STOP = 0x0002
+# Start inventory: the reader then keeps sending one frame per tag it sees until STOP.
+START_INVENTORY = _command(CMD_INVENTORY, bytes([0x00, 0x00, 0x00, 0x00, 0x00]))
+STOP_INVENTORY = _command(CMD_STOP)
 
 # Only one request may use the serial port at a time.
 _port_lock = threading.Lock()
@@ -62,7 +84,9 @@ def parse_epcs(buf):
         if end > len(buf):
             return epcs, buf[i:]
         data = buf[i + 5:i + 5 + length]
-        if length >= 6 and data[0] == 0x00:
+        cmd = (buf[i + 2] << 8) | buf[i + 3]
+        # Only inventory frames with status 0x00 carry a tag
+        if cmd == CMD_INVENTORY and length >= 6 and data[0] == 0x00:
             epc_len = data[5]
             epc = data[6:6 + epc_len]
             if len(epc) == epc_len and epc_len > 0:
@@ -103,24 +127,35 @@ def read_tags(seconds=None, debug=False):
 
         found = {}
         buf = b""
+
+        def collect(data):
+            nonlocal buf
+            if debug:
+                print(f"  received {len(data)} bytes: {data.hex(' ') if data else '(nothing)'}")
+            buf += data
+            epcs, buf = parse_epcs(buf)
+            for epc in epcs:
+                found[epc] = True  # keeps first-seen order, drops repeats
+
         try:
+            # Stop any scan left running (e.g. after a crash), then start a fresh one.
+            ser.write(STOP_INVENTORY)
+            time.sleep(0.1)
             ser.reset_input_buffer()
+            if debug:
+                print(f"  sent {START_INVENTORY.hex(' ')}")
+            ser.write(START_INVENTORY)
             deadline = time.monotonic() + seconds
-            while True:
-                ser.write(READ_TAGS_COMMAND)
-                time.sleep(RESPONSE_WAIT)          # let the reader finish answering
-                data = ser.read(ser.in_waiting)
-                if debug:
-                    print(f"  sent {READ_TAGS_COMMAND.hex(' ')}  ->  received {len(data)} bytes: "
-                          f"{data.hex(' ') if data else '(nothing)'}")
-                buf += data
-                epcs, buf = parse_epcs(buf)
-                for epc in epcs:
-                    found[epc] = True  # keeps first-seen order, drops repeats
-                if time.monotonic() >= deadline:
-                    break
+            while time.monotonic() < deadline:
+                time.sleep(RESPONSE_WAIT)
+                collect(ser.read(ser.in_waiting))
         finally:
-            ser.close()
+            try:
+                ser.write(STOP_INVENTORY)
+                time.sleep(0.2)
+                collect(ser.read(ser.in_waiting))  # tags sent just before the stop
+            finally:
+                ser.close()
         return list(found)
     finally:
         _port_lock.release()
