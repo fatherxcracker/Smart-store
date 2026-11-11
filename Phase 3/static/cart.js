@@ -15,6 +15,33 @@ const rfidButton = document.getElementById("rfid-scan");
 const rfidAuto = document.getElementById("rfid-auto");
 const rfidSection = document.querySelector(".rfid-scanner");
 
+// Automatically fill the membership number for logged-in customers
+async function loadMembershipNumber() {
+
+    try {
+        // Get the currently logged-in customer
+        const response = await fetch("/api/account/me", {
+            credentials: "same-origin"
+        });
+
+        // Guests do not have a membership number
+        if (!response.ok) {
+            membershipInput.value = "";
+            return;
+        }
+
+        // Read the customer information
+        const customer = await response.json();
+
+        // Fill the membership field
+        membershipInput.value = customer.membership_number || "";
+
+    } catch (error) {
+        // Leave the field empty if customer information cannot be loaded
+        console.error("Could not load membership number:", error);
+    }
+}
+
 // Remember the language chosen in the website
 let cartLanguage =
     localStorage.getItem("smartstore-language") === "fr" ? "fr" : "en";
@@ -724,7 +751,7 @@ checkoutForm.addEventListener("submit", async event => {
     renderCart(result.cart);
 
     // Clear membership field
-    membershipInput.value = "";
+    await loadMembershipNumber();
 
     // Get notifications from Flask
     const notes = result.notifications || [];
@@ -778,5 +805,6 @@ window.addEventListener("smartstore-language-change", event => {
 });
 
 
-// Load the cart when the page opens
+// Load the cart and membership number when the page opens
 loadCart();
+loadMembershipNumber();
