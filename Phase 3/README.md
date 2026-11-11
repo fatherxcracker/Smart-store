@@ -115,6 +115,56 @@ Stop the app before running `python rfid_reader.py`, because only one program ca
 - **A sold tag can't be scanned again.** The cart shows *"Already sold: … (receipt …)"*. To put that tag on a new item, assign it again in **Manage tags**; it becomes available.
 - **Testing with the same tags over and over?** Set `RFID_REUSE_SOLD_TAGS=1` in `.env` and restart the app. Checkout then doesn't use up tags. Set it back to `0` for the real demo.
 
+### Resetting tags (before a demo or after testing)
+
+Run these from the `Phase 3` folder. The app can stay running; afterwards click **Reset cart** on `/cart`.
+
+**Make every sold tag available again**, for example after practice checkouts:
+
+```bash
+sqlite3 smartstore.db "UPDATE product_tags SET sold_purchase_id = NULL;"
+```
+
+Old receipts and the Sold / In stock numbers don't change, because they come from the purchase records.
+
+**Reset only one tag:**
+
+```bash
+sqlite3 smartstore.db "UPDATE product_tags SET sold_purchase_id = NULL WHERE epc = 'A00000000000000000004994';"
+```
+
+**See every tag and whether it's sold:**
+
+```bash
+sqlite3 -header smartstore.db "SELECT t.epc, p.name, CASE WHEN t.sold_purchase_id IS NULL THEN 'Available' ELSE 'Sold' END AS status FROM product_tags t JOIN products p ON p.id = t.product_id ORDER BY p.id;"
+```
+
+**Remove a tag** (to move it to another product, then assign it in that product's **Manage tags**):
+
+```bash
+sqlite3 smartstore.db "DELETE FROM product_tags WHERE epc = 'A00000000000000000004994';"
+```
+
+**Assign your real tags after a fresh database.** The sample data only has made-up EPCs (`E2801170…`), so real tags show as "Unknown" until they're assigned. Use **Manage tags** in the website, or add them all at once. Replace the EPCs with your own; read them with `python rfid_reader.py` while the app is stopped:
+
+```bash
+sqlite3 smartstore.db "
+INSERT OR REPLACE INTO product_tags (epc, product_id) SELECT 'A00000000000000000004994', id FROM products WHERE name = 'Coca-Cola 500ml';
+INSERT OR REPLACE INTO product_tags (epc, product_id) SELECT 'A00000000000000000004996', id FROM products WHERE name = 'Natrel Milk 2% 2L';
+INSERT OR REPLACE INTO product_tags (epc, product_id) SELECT 'A00000000000000000004991', id FROM products WHERE name = 'Kit Kat 45g';
+INSERT OR REPLACE INTO product_tags (epc, product_id) SELECT 'A00000000000000000004988', id FROM products WHERE name = 'Dasani Water 591ml';
+"
+```
+
+**Start over with a fresh database** (erases all accounts, purchases, stock and tags). Stop the app first, keep a backup outside the project folder so it's never committed, then start the app to rebuild the sample data:
+
+```bash
+mkdir -p ~/smartstore-backups
+cp smartstore.db ~/smartstore-backups/smartstore-$(date +%Y%m%d-%H%M%S).db
+rm smartstore.db
+python app.py
+```
+
 ---
 
 ## 5. How each requirement is covered
