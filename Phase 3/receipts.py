@@ -208,14 +208,14 @@ def send_receipt_email(purchase_id, lang=None):
 # ---------------------------------------------------------------------------
 # One call for the whole end of checkout (steps 4-6 of the workflow)
 # ---------------------------------------------------------------------------
-def complete_checkout(cart, customer_id=None, payment_method="card", lang="en", send_email=True):
+def complete_checkout(cart, customer_id=None, payment_method="card", lang="en", send_email=True, epcs=None):
     """Payment simulation -> save purchase -> add points -> receipt -> email.
 
     cart = [{"product_id": 1, "quantity": 2}, ...]
     Raises db.DatabaseError (e.g. not enough stock) - wrap it with
     notifications.notify_error(str(error), lang) in the route.
     """
-    purchase_id = db.create_purchase(cart, customer_id=customer_id, payment_method=payment_method)
+    purchase_id = db.create_purchase(cart, customer_id=customer_id, payment_method=payment_method, epcs=epcs)
     receipt = db.get_purchase(purchase_id)
 
     notes = [notify("payment_approved", lang, total=receipt["total"])]

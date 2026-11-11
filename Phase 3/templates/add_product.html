@@ -541,35 +541,6 @@
                    required>
 
 
-            <!-- EPC is the RFID tag identifier -->
-            <!-- RFID tag is optional -->
-            <label for="epc" data-i18n="epcLabel">
-                EPC — RFID Tag (optional, maximum 24 characters)
-            </label>
-
-            <input id="epc"
-                   name="epc"
-                   type="text"
-                   maxlength="24"
-                   value="{{ values.get('epc', '') }}">
-
-
-            <!-- Reads tag from RFID reader -->
-            <!-- rfid_tag.js handles the scanning -->
-            <button id="read-tag"
-                    type="button"
-                    class="read-tag-button"
-                    data-i18n="readTag">
-                Read Tag from RFID Reader
-            </button>
-
-            <!-- Displays RFID reader messages -->
-            <p id="tag-status"
-               class="tag-status"
-               role="status"
-               aria-live="polite"></p>
-
-
             <!-- Producer company -->
             <label for="producer" data-i18n="producer">
                 Producer Company
@@ -609,7 +580,7 @@
 
 
 <!-- Connects JavaScript for RFID scanning -->
-<script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
+
 
 
 <!-- Navigation and translation functionality -->

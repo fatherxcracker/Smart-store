@@ -607,6 +607,68 @@ rfidAuto.addEventListener("click", () => {
 });
 
 
+// USB barcode scanners usually type digits quickly and finish with Enter.
+// Detect a complete UPC anywhere on this page without moving focus while the
+// customer is typing into the membership field or choosing a payment method.
+let scannerBuffer = "";
+let scannerLastKey = 0;
+let scannerTarget = null;
+let scannerOriginalValue = null;
+let scannerSelection = null;
+
+function resetScannerBuffer() {
+    scannerBuffer = "";
+    scannerLastKey = 0;
+    scannerTarget = null;
+    scannerOriginalValue = null;
+    scannerSelection = null;
+}
+
+document.addEventListener("keydown", event => {
+    if (event.isComposing || event.ctrlKey || event.altKey || event.metaKey) {
+        resetScannerBuffer();
+        return;
+    }
+
+    const now = performance.now();
+    if (/^[0-9]$/.test(event.key)) {
+        if (!scannerBuffer || now - scannerLastKey > 80 || scannerTarget !== event.target) {
+            resetScannerBuffer();
+            scannerTarget = event.target;
+            if (event.target instanceof HTMLInputElement && event.target.type === "text") {
+                scannerOriginalValue = event.target.value;
+                scannerSelection = [event.target.selectionStart, event.target.selectionEnd];
+            }
+        }
+        scannerBuffer += event.key;
+        scannerLastKey = now;
+        if (scannerBuffer.length > 13) resetScannerBuffer();
+        return;
+    }
+
+    if (event.key === "Enter" && now - scannerLastKey <= 150 &&
+        (scannerBuffer.length === 12 || scannerBuffer.length === 13)) {
+        const upc = scannerBuffer;
+        // Undo scanner keystrokes in another text field, preserving user input.
+        if (scannerOriginalValue !== null && scannerTarget !== barcodeInput) {
+            scannerTarget.value = scannerOriginalValue;
+            if (scannerSelection[0] !== null) {
+                scannerTarget.setSelectionRange(...scannerSelection);
+            }
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        resetScannerBuffer();
+        if (busy) {
+            showMessage("Please wait until the current action finishes, then scan again.", "error");
+        } else {
+            updateCart("/api/cart/barcode", "POST", { upc }, "added");
+        }
+        return;
+    }
+    resetScannerBuffer();
+}, true);
+
 // Add a product when barcode form is submitted
 barcodeForm.addEventListener("submit", event => {
 
@@ -804,6 +866,9 @@ window.addEventListener("smartstore-language-change", event => {
     }
 });
 
+
+// Make the scanner field ready on page load without interrupting later input.
+barcodeInput.focus();
 
 // Load the cart and membership number when the page opens
 loadCart();

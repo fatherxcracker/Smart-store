@@ -218,6 +218,9 @@ def add_epcs_to_cart(epcs):
 
     save_cart(cart)
     session["rfid_seen"] = sorted(seen | set(known))
+    active = session.get("rfid_cart_tags", {})
+    active.update({epc: products[epc]["id"] for epc in known})
+    session["rfid_cart_tags"] = active
 
     message = f"{len(known)} RFID item(s) added to your cart."
     if unknown:
@@ -272,6 +275,8 @@ def remove_item(product_id):
     del cart[str(product_id)]
     save_cart(cart)
 
+    # Keep scan history, but remove these tags from the active cart.
+    session["rfid_cart_tags"] = {epc: pid for epc, pid in session.get("rfid_cart_tags", {}).items() if pid != product_id}
     # Keep RFID history so repeated readings do not restore removed items.
     return cart_response("Item removed from your cart.")
 
@@ -279,6 +284,7 @@ def remove_item(product_id):
 @cart_api.delete("/api/cart")
 def reset_cart():
     session.pop("shopping_cart", None)
+    session.pop("rfid_cart_tags", None)
     session.pop("rfid_seen", None)
     session.pop("rfid_unknown", None)
 

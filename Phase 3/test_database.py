@@ -79,8 +79,8 @@ check("password hash never returned", "password_hash" not in db.get_customer(acc
 check("lookup by membership card", db.find_customer_by_membership(acct["membership_number"])["id"] == acct["id"])
 
 print("\nCheckout -> receipt")
-coke = db.find_by_upc("049000042566")
-chips = db.find_by_upc("060410013410")
+coke = db.find_by_upc("123456789012")
+chips = db.find_by_upc("123456789029")
 cart = [{"product_id": coke["id"], "quantity": 2}, {"product_id": chips["id"], "quantity": 1},
         {"product_id": coke["id"], "quantity": 1}]  # coke scanned again -> merged
 result = receipts.complete_checkout(cart, customer_id=acct["id"], lang="fr", send_email=False)

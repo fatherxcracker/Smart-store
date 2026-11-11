@@ -589,7 +589,7 @@
                             <th data-i18n="category">Category</th>
                             <th data-i18n="price">Price</th>
                             <th>UPC</th>
-                            <th>EPC</th>
+                            {% if is_admin %}<th>RFID tags</th>{% endif %}
                             <th data-i18n="producer">Producer</th>
                             <th data-i18n="inStock">In Stock</th>
                             {% if is_admin %}<th data-i18n="actions">Actions</th>{% endif %}
@@ -619,10 +619,10 @@
                                 </td>
 
                                 <!-- Barcode -->
-                                <td>{{ product.upc or '—' }}</td>
+                                <td>{% if is_admin %}<a href="{{ url_for('manage_product_tags', product_id=product.id) }}">{{ product.upc }}</a>{% else %}{{ product.upc or '—' }}{% endif %}</td>
 
                                 <!-- RFID tag -->
-                                <td>{{ product.epc or '—' }}</td>
+                                {% if is_admin %}<td><a href="{{ url_for('manage_product_tags', product_id=product.id) }}">Manage tags</a></td>{% endif %}
 
                                 <!-- Producer company -->
                                 <td>{{ product.producer or '—' }}</td>

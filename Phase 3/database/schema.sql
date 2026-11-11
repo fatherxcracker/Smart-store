@@ -56,6 +56,15 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- One RFID tag identifies one physical item. A tag remains recorded after sale.
+CREATE TABLE IF NOT EXISTS product_tags (
+    epc TEXT PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    reception_id INTEGER REFERENCES receptions(id),
+    sold_purchase_id INTEGER REFERENCES purchases(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ---------------------------------------------------------------------
 -- Purchases: one row per completed checkout = one receipt.
 -- customer_id is NULL for guests (no membership card).

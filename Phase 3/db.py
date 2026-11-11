@@ -58,6 +58,11 @@ def init_db(seed=True):
     if seed and conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0:
         with open(SEED_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())
+    tag_columns = {row["name"] for row in conn.execute("PRAGMA table_info(product_tags)")}
+    if "reception_id" not in tag_columns:
+        conn.execute("ALTER TABLE product_tags ADD COLUMN reception_id INTEGER REFERENCES receptions(id)")
+    # Preserve each legacy product EPC as an individual tag, once.
+    conn.execute("INSERT OR IGNORE INTO product_tags (epc, product_id) SELECT UPPER(epc), id FROM products WHERE epc IS NOT NULL AND is_active = 1")
     conn.commit()
     conn.close()
     print(f"[database] Ready at {DATABASE_PATH}")
@@ -97,6 +102,8 @@ def add_product(name, category, price, upc, epc, producer, image_url=None, expir
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (name.strip(), category.strip(), price, upc, epc, producer.strip(), image_url, expiry_date),
         )
+        if epc:
+            conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, cur.lastrowid))
         conn.commit()
         return cur.lastrowid
     except sqlite3.IntegrityError as error:
@@ -171,53 +178,91 @@ def find_by_upc(upc):
 
 
 def find_by_epc(epc):
-    """RFID reader lookup."""
-    conn = get_connection()
-    row = conn.execute("SELECT * FROM inventory WHERE epc = ?", ((epc or "").strip().upper(),)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    return find_by_epcs([epc]).get((epc or "").strip().upper())
 
 
 def find_by_epcs(epcs):
-    """Look up many RFID tags at once (all items scanned simultaneously).
-    Returns {epc: product_dict}; unknown tags are simply left out."""
     epcs = [e.strip().upper() for e in epcs if e and e.strip()]
     if not epcs:
         return {}
     conn = get_connection()
-    placeholders = ",".join("?" for _ in epcs)
-    rows = conn.execute(f"SELECT * FROM inventory WHERE epc IN ({placeholders})", epcs).fetchall()
-    conn.close()
-    return {r["epc"]: dict(r) for r in rows}
+    try:
+        placeholders = ",".join("?" for _ in epcs)
+        rows = conn.execute(f"SELECT i.*, t.epc AS tag_epc FROM product_tags t JOIN inventory i ON i.id = t.product_id WHERE t.sold_purchase_id IS NULL AND t.epc IN ({placeholders})", epcs).fetchall()
+        return {row["tag_epc"]: dict(row) for row in rows}
+    finally:
+        conn.close()
+
+
+def get_product_tags(product_id):
+    conn = get_connection()
+    try:
+        return _rows(conn.execute("SELECT t.epc, t.sold_purchase_id, r.received_at FROM product_tags t LEFT JOIN receptions r ON r.id = t.reception_id WHERE t.product_id = ? ORDER BY t.epc", (product_id,)).fetchall())
+    finally:
+        conn.close()
+
+
+def register_product_tag(product_id, epc):
+    epc = (epc or "").strip().upper()
+    if not epc or len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc):
+        raise DatabaseError("EPC must contain 1 to 24 hexadecimal characters.")
+    conn = get_connection()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        product = conn.execute("SELECT * FROM inventory WHERE id = ?", (product_id,)).fetchone()
+        if not product:
+            raise DatabaseError("Product not found.")
+        tagged = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ? AND sold_purchase_id IS NULL", (product_id,)).fetchone()[0]
+        if tagged >= product["in_stock"]:
+            raise DatabaseError("Receive more stock before assigning another tag.")
+        conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, product_id))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        raise DatabaseError("This EPC is already registered.")
+    finally:
+        conn.close()
 
 
 # ---------------------------------------------------------------------------
 # Inventory
 # ---------------------------------------------------------------------------
-def receive_stock(product_id, quantity, note=None, received_at=None):
-    """Record a reception (quantity + date received)."""
+def receive_stock(product_id, quantity, note=None, received_at=None, epcs=None):
+    """Record a delivery and optional individual tags atomically."""
     try:
         quantity = int(quantity)
     except (TypeError, ValueError):
         raise DatabaseError("Quantity must be a whole number.")
     if quantity <= 0:
         raise DatabaseError("Quantity must be greater than 0.")
-    if not get_product(product_id):
-        raise DatabaseError("Product not found.")
+    tags = [(epc or "").strip().upper() for epc in (epcs or [])]
+    if len(tags) > quantity:
+        raise DatabaseError("The number of EPCs cannot exceed the quantity received.")
+    if len(tags) != len(set(tags)):
+        raise DatabaseError("Each EPC must be unique in this delivery.")
+    if any(not epc or len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc) for epc in tags):
+        raise DatabaseError("Each EPC must contain 1 to 24 hexadecimal characters.")
     conn = get_connection()
-    if received_at:
-        cur = conn.execute(
-            "INSERT INTO receptions (product_id, quantity, note, received_at) VALUES (?, ?, ?, ?)",
-            (product_id, quantity, note, received_at),
-        )
-    else:
-        cur = conn.execute(
-            "INSERT INTO receptions (product_id, quantity, note) VALUES (?, ?, ?)",
-            (product_id, quantity, note),
-        )
-    conn.commit()
-    conn.close()
-    return cur.lastrowid
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        if not conn.execute("SELECT 1 FROM products WHERE id = ? AND is_active = 1", (product_id,)).fetchone():
+            raise DatabaseError("Product not found.")
+        if received_at:
+            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note, received_at) VALUES (?, ?, ?, ?)", (product_id, quantity, note, received_at))
+        else:
+            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note) VALUES (?, ?, ?)", (product_id, quantity, note))
+        reception_id = cur.lastrowid
+        conn.executemany("INSERT INTO product_tags (epc, product_id, reception_id) VALUES (?, ?, ?)", [(epc, product_id, reception_id) for epc in tags])
+        conn.commit()
+        return reception_id
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        raise DatabaseError("An EPC is already registered; no stock was received.")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def get_inventory():
@@ -231,7 +276,8 @@ def get_inventory():
 
 def get_receptions(product_id=None):
     conn = get_connection()
-    sql = """SELECT r.*, p.name AS product_name
+    sql = """SELECT r.*, p.name AS product_name,
+             (SELECT GROUP_CONCAT(epc, ", ") FROM product_tags WHERE reception_id = r.id) AS epcs
              FROM receptions r JOIN products p ON p.id = r.product_id"""
     if product_id:
         rows = conn.execute(sql + " WHERE r.product_id = ? ORDER BY r.received_at DESC", (product_id,)).fetchall()
@@ -336,7 +382,7 @@ def calculate_totals(subtotal):
     return {"subtotal": subtotal, "gst": gst, "qst": qst, "total": total, "points_earned": points}
 
 
-def create_purchase(cart, customer_id=None, payment_method="card"):
+def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
     """Turn the confirmed shopping list into a receipt.
 
     cart = [{"product_id": 1, "quantity": 2}, ...]
@@ -359,6 +405,15 @@ def create_purchase(cart, customer_id=None, payment_method="card"):
     try:
         conn.execute("BEGIN IMMEDIATE")  # lock so two checkouts can't oversell
 
+        epcs = list(epcs or [])
+        if len(epcs) != len(set(epcs)):
+            raise DatabaseError("Duplicate RFID tag in cart.")
+        tagged_counts = {}
+        for epc in epcs:
+            tag = conn.execute("SELECT product_id FROM product_tags WHERE epc = ? AND sold_purchase_id IS NULL", (epc,)).fetchone()
+            if not tag or tag["product_id"] not in quantities:
+                raise DatabaseError("An RFID tag is no longer available. Reset and rescan the cart.")
+            tagged_counts[tag["product_id"]] = tagged_counts.get(tag["product_id"], 0) + 1
         lines = []
         subtotal = 0.0
         for pid, qty in quantities.items():
@@ -367,6 +422,12 @@ def create_purchase(cart, customer_id=None, payment_method="card"):
                 raise DatabaseError(f"Product #{pid} is no longer available.")
             if product["in_stock"] < qty:
                 raise DatabaseError(f"Only {product['in_stock']} '{product['name']}' left in stock.")
+            tagged_sold = tagged_counts.get(pid, 0)
+            if tagged_sold > qty:
+                raise DatabaseError("RFID tags do not match cart quantities.")
+            available_tagged = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ? AND sold_purchase_id IS NULL", (pid,)).fetchone()[0]
+            if qty - tagged_sold > product["in_stock"] - available_tagged:
+                raise DatabaseError("Scan the RFID tags for tagged items; barcode sales require untagged stock.")
             line_total = round(product["price"] * qty, 2)
             subtotal += line_total
             lines.append((pid, product["name"], qty, product["price"], line_total))
@@ -395,6 +456,9 @@ def create_purchase(cart, customer_id=None, payment_method="card"):
                VALUES (?, ?, ?, ?, ?, ?)""",
             [(purchase_id, *line) for line in lines],
         )
+
+        for epc in epcs:
+            conn.execute("UPDATE product_tags SET sold_purchase_id = ? WHERE epc = ?", (purchase_id, epc))
 
         if customer_id is not None and totals["points_earned"]:
             conn.execute(

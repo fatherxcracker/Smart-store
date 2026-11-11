@@ -65,7 +65,7 @@ def create_app():
 
     @app.before_request
     def protect_inventory_management():
-        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history"}
+        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags"}
         if request.endpoint in protected:
             customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
             if not customer or not customer.get("is_admin"):
@@ -155,7 +155,7 @@ def create_app():
                     category=request.form.get("category", "").strip(),
                     price=request.form.get("price", ""),
                     upc=request.form.get("upc", "").strip(),
-                    epc=request.form.get("epc", "").strip(),
+                    epc=None,
                     producer=request.form.get("producer", "").strip(),
                 )
 
@@ -218,7 +218,7 @@ def create_app():
                     category=request.form.get("category", "").strip(),
                     price=request.form.get("price", ""),
                     upc=request.form.get("upc", "").strip(),
-                    epc=request.form.get("epc", "").strip(),
+                    epc=product.get("epc"),
                     producer=request.form.get("producer", "").strip(),
                 )
 
@@ -276,6 +276,21 @@ def create_app():
 
         return redirect(url_for("inventory"))
 
+
+    @app.route("/products/<int:product_id>/tags", methods=["GET", "POST"])
+    def manage_product_tags(product_id):
+        product = db.get_product(product_id)
+        if not product:
+            abort(404)
+        error = None
+        if request.method == "POST":
+            try:
+                db.register_product_tag(product_id, request.form.get("epc", ""))
+                flash("RFID tag assigned to this item.", "success")
+                return redirect(url_for("manage_product_tags", product_id=product_id))
+            except db.DatabaseError as exc:
+                error = str(exc)
+        return render_template("product_tags.html", product=product, tags=db.get_product_tags(product_id), error=error)
 
     # Inventory
 
@@ -361,6 +376,7 @@ def create_app():
                     product_id=product_id,
                     quantity=quantity,
                     note=request.form.get("note", "").strip() or None,
+                    epcs=[line.strip() for line in request.form.get("epcs", "").splitlines() if line.strip()],
                     received_at=received_date.astimezone(
                         timezone.utc
                     ).strftime("%Y-%m-%d %H:%M:%S"),

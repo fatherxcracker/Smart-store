@@ -583,6 +583,7 @@
                                 Reception Date
                             </th>
 
+                            <th>RFID EPCs</th>
                             <th data-i18n="note">
                                 Note
                             </th>
@@ -615,6 +616,8 @@
                                     {{ reception.received_at|local_time }}
                                 </td>
 
+                                <td>{{ reception.epcs or '—' }}</td>
+
                                 <!-- Optional delivery note -->
                                 <td>
                                     {{ reception.note or '—' }}
@@ -626,7 +629,7 @@
 
                             <!-- Display message if no receptions exist -->
                             <tr>
-                                <td colspan="4"
+                                <td colspan="5"
                                     class="empty-history"
                                     data-i18n="noReceptions">
                                     No reception records found

@@ -84,6 +84,7 @@ def complete_checkout():
             customer_id=customer_id,
             payment_method=payment_method,
             lang=language,
+            epcs=list(session.get("rfid_cart_tags", {})),
         )
     except db.DatabaseError as error:
         # Validation failed: leave the cart and RFID history intact.
@@ -94,6 +95,7 @@ def complete_checkout():
     # Clear shopping state only after checkout completes.
     # Keep customer login information in the session.
     session.pop("shopping_cart", None)
+    session.pop("rfid_cart_tags", None)
     session.pop("rfid_seen", None)
     session.pop("rfid_unknown", None)
 

@@ -18,7 +18,7 @@ All three pages link to each other in their navigation bars.
 |---|---|---|
 | Chafon **CF600** UHF RFID reader | Pi USB port | Reading every tag on the reader at once (checkout) and reading one tag's EPC (product form) |
 | USB **barcode scanner** | The computer showing the page | Reading UPCs. It acts like a keyboard: click a UPC/barcode field and scan. No driver or code needed. |
-| UHF RFID tags | One per product | The EPC links each tag to a product |
+| UHF RFID tags | One per physical item | Each unique EPC links one item to a product type |
 
 The Flask app must run **on the Pi**, because the RFID reader is plugged into it. The pages can be opened on the Pi itself or on any laptop/phone on the same network.
 
@@ -93,44 +93,34 @@ These publicly documented credentials are for testing only. Do not use them for 
 
 The self-checkout only recognises a tag if its **EPC** is saved on a product. The sample products use made-up EPCs (`E28011700000020A1B2C3D01`…), so **you must link your real tags before the checkout will find them**.
 
-### Option A: read the tag from the product form (recommended)
+### Option A: read tags in the website
 
-1. Start the app on the Pi (`python app.py`) with the CF600 plugged in.
-2. Log in on `/` as an **administrator** (e.g. `admin@smartstore.local`). Product pages are admin-only.
-3. Go to `/inventory` and click **Edit** on the product (or **Add product** for a new one).
-4. Put **only that product's tag** on the reader. Keep other tags away, because the reader picks up tags several cm away.
-5. Click **Read tag from RFID reader**. The EPC field fills in by itself.
-   - *"No RFID tag detected"*: move the tag closer and click again.
-   - *"N tags detected"*: take the extra tags off the reader.
-   - *"It already belongs to …"*: that tag is already on another product. Clear the EPC on that product first, or use a different tag.
-6. Click **Save**. Repeat for each product.
-7. Test it: open `/cart`, put the tagged item on the reader, and click **Scan all items**. The product should appear in the list.
+1. Start the app on the Pi with the CF600 connected and log in as an administrator.
+2. Open **Inventory** and click the product UPC or **Manage tags**. Receive stock first if necessary.
+3. Place one item on the reader, click **Read tag from RFID reader**, then **Assign tag**. Repeat for each physical item. Alternatively, enter or read one EPC per line when recording a delivery.
+4. Open checkout and scan the tagged items. Two different EPCs assigned to the same product add two units.
 
-### Option B: find the EPC from the terminal and type it in
+If no tag is detected, move it closer; if several are detected, remove the extra tags. A duplicate EPC cannot be assigned again.
 
-1. **Stop the app** first (Ctrl+C), because only one program can use the reader at a time.
-2. Run `python rfid_reader.py`, hold one tag on the reader, and copy the EPC it prints (e.g. `E2801170000002...`). Press Ctrl+C.
-3. Start the app again, open the product's **Edit** page, paste the EPC into the **EPC** field, and click **Save**.
+### Option B: read EPCs from the terminal
 
-### Option C: put the EPCs in the sample data (fresh database)
-
-Replace the EPC values in `database/seed.sql` with your tags' EPCs, then stop the app, delete `smartstore.db` and start the app again. The database is rebuilt with your EPCs. **This erases all existing data** (accounts, purchases, stock).
+Stop the app before running `python rfid_reader.py`, because only one program can use the reader at a time. Hold a tag on the reader, copy its EPC, then stop the script and restart the app. Paste the EPC into **Manage tags** or the receive-stock form.
 
 ### Rules
 
-- EPC = up to **24 hexadecimal characters** (`0-9`, `A-F`). Spaces are trimmed and letters are uppercased automatically.
-- **One tag per product.** Each EPC can belong to only one product, and each product stores one EPC. A second physical tag on another copy of the same product shows up as "Unknown RFID tag" unless it gets its own product entry.
-- The EPC field is optional. A product without one can still be sold with the barcode scanner (UPC).
-- No reader? With `RFID_SIMULATE=1`, **Scan all items** pretends the EPCs in `RFID_SIMULATED_TAGS` (comma-separated, in `.env`) are on the reader. Use EPCs that are saved on your products.
+- EPCs have up to **24 hexadecimal characters** (`0-9`, `A-F`); each identifies one physical item. A product UPC identifies its type and can have many EPCs.
+- Existing product EPCs are migrated to individual tag records on startup. Existing accounts, stock and purchases are preserved.
+- With `RFID_SIMULATE=1`, checkout uses the EPCs in `RFID_SIMULATED_TAGS`. Use tags that exist in the database.
+- Tagged items must be checked out using RFID, so their individual tags can be marked sold. Barcode checkout is available for untagged stock.
 
 ---
 
 ## 5. How each requirement is covered
 
 ### Product management (admin) — `/inventory`
-- **Register / edit / delete** products with name, category, price, **UPC** (≤ 13), **EPC** (≤ 24) and producer.
+- **Register / edit / delete** products with name, category, price, **UPC** (≤ 13) and producer; assign individual EPCs separately after receiving stock.
 - **UPC via barcode scanner:** click the UPC field and scan.
-- **EPC via the RFID reader:** put one tag on the reader and click **Read tag from RFID reader**; the EPC is filled in. The app warns if 0 or several tags are on the reader, or if the tag already belongs to another product.
+- **EPC via the RFID reader:** receive stock, open **Manage tags** for the product, then read and assign each physical item’s tag. The app warns if 0 or several tags are on the reader.
 - Duplicate UPC/EPC and invalid values are rejected with a clear message.
 - Deleting a product hides it from the store and inventory, but old receipts that contain it stay correct.
 
@@ -183,7 +173,7 @@ See `docs/ER_diagram.png`.
 - **Passwords are hashed**, never stored in plain text.
 - **Times are stored in UTC** and shown in local time on every page and receipt.
 - **Taxes:** GST 5 % + QST 9.975 % (Quebec).
-- **One EPC per product** (as in the spec). Each physical tag has its own EPC, so for the demo use one tagged item per product; scanning the same tag again doesn't add it twice.
+- **One EPC per physical item:** multiple tags can share one product and UPC. Administrators can enter or scan EPCs while receiving stock, or click the UPC / **Manage tags** in inventory to assign them later. The delivery history shows EPCs recorded with each delivery. Sold tags cannot be sold again. Barcode checkout is available for untagged stock; tagged stock must be scanned by RFID so the app knows which physical item was sold.
 
 ---
 
@@ -244,8 +234,8 @@ Phase 3/
 
 ## 9. Demo script
 
-1. **Before class:** delete `smartstore.db`, then `python app.py`. Use **Read tag from RFID reader** on each sample product's **Edit** page so the products have your real tags' EPCs (see section 4).
-2. **Admin** (`/inventory`): add a product, scanning its barcode into UPC and reading its tag into EPC → notification. Edit its price → notification. **Receive stock** for it → stock goes up. Show **Reception history**. Delete a test product.
+1. **Before class:** start `python app.py`. Receive stock and assign each item's real EPC through **Manage tags** or the receive-stock form. Existing product EPCs are migrated automatically.
+2. **Admin** (`/inventory`): add a product with its UPC, receive stock, assign individual EPCs, and show reception history. Edit a price or delete a test product.
 3. **Customer account** (`/`): create an account → membership number shown. Switch to **FR** and back.
 4. **Self-checkout** (`/cart`): put 3 tagged items on the reader → **Scan all items** → all 3 appear at once. Scan one more with the barcode scanner. **Remove** one item. Enter the membership number → **Proceed to payment** → receipt on screen.
 5. Show the **receipt email** in the inbox, then the customer portal: **points** went up and the receipt is in **Purchase history**.
@@ -258,7 +248,7 @@ Phase 3/
 | "No RFID tags detected" / `(no tags)` | Hold the tags flat on top of the reader. Run `python rfid_reader.py --raw`: if it shows **received 0 bytes**, the reader isn't answering (check `RFID_PORT`, unplug/replug, try `RFID_RESPONSE_WAIT=0.8` in `.env`); if bytes arrive but no EPCs, send the output to the team. |
 | "RFID reader not found on /dev/ttyUSB0" | Reader unplugged, or the usbserial setup wasn't done. Check `ls /dev/ttyUSB*`. |
 | "No permission to open /dev/ttyUSB0" | Run `sudo usermod -aG dialout $USER`, then log out and in. |
-| "Unknown RFID tag(s)" | That tag isn't registered. Read it into a product with **Read tag from RFID reader** (see section 4). |
+| "Unknown RFID tag(s)" | That tag is unavailable or not registered. Assign an available tag through **Manage tags** (see section 4). |
 | "The receipt could not be emailed" | Check `SMTP_EMAIL` / `SMTP_APP_PASSWORD` in `.env`; the purchase is still saved. |
 | Page won't open from a laptop | Same network as the Pi? Use `http://<pi-ip>:5002` and `HOST=0.0.0.0`. |
 
