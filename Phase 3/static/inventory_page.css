@@ -1,0 +1,418 @@
+/* Styles the inventory page to match the customer account */
+
+        /* Keeps header same size and position as customer account */
+        body .app > .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            max-width: none;
+            height: 90px;
+            min-height: 90px;
+            max-height: 90px;
+            margin: 0;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            background: white;
+            border-bottom: 1px solid #e5eaf2;
+            flex-wrap: nowrap;
+        }
+
+        /* Keeps store name same size */
+        .topbar .brand {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .topbar .brand strong {
+            display: block;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.15;
+            color: #101218;
+            max-width: 100px;
+        }
+
+        /* Keeps navigation controls aligned */
+        .topbar .top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            flex: 1;
+            flex-wrap: nowrap;
+            min-width: 0;
+        }
+
+        .topbar #account-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Styles navigation links */
+        .topbar .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 4px;
+            border: none;
+            background: none;
+            color: #566176;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* Highlights selected navigation */
+        .topbar .nav-link:hover,
+        .topbar .nav-link.active {
+            color: #1769ff;
+        }
+
+        /* Keeps language buttons same size */
+        .topbar .language-switch {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 48px;
+            padding: 4px;
+            background: #f0f3f8;
+            border-radius: 9px;
+        }
+
+        .topbar .language-switch button {
+            min-width: 50px;
+            height: 40px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #6d7687;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .topbar .language-switch button.selected {
+            background: #1769ff;
+            color: white;
+        }
+
+        /* Styles logout button */
+        .topbar .logout {
+            min-width: 98px;
+            min-height: 48px;
+            padding: 11px 16px;
+            background: #101218;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Keeps hidden buttons hidden */
+        .topbar [hidden] {
+            display: none !important;
+        }
+
+        /* Keeps inventory content centered */
+        .inventory-main {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Styles back button */
+        .inventory-main .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 16px;
+            margin-bottom: 28px;
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .inventory-main .back-button:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* Page heading */
+        .inventory-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .inventory-heading h1 {
+            font-size: 33px;
+            color: #171b26;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        .inventory-heading p {
+            color: #737e91;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* Product action buttons */
+        .inventory-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .inventory-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #1769ff;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 17px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .inventory-actions a:hover {
+            background: #0954db;
+        }
+
+        .inventory-actions a.secondary {
+            background: white;
+            color: #171b26;
+            border: 1px solid #e5eaf2;
+        }
+
+        .inventory-actions a.secondary:hover {
+            color: #1769ff;
+            border-color: #1769ff;
+        }
+
+        /* White card containing inventory table */
+        .inventory-card {
+            background: white;
+            border: 1px solid #e5eaf2;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(18,33,60,.04);
+        }
+
+        /* Table scrolls on smaller screens */
+        .inventory-card .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Inventory table */
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .inventory-table thead {
+            background: #f0f4fa;
+        }
+
+        .inventory-table th {
+            text-align: left;
+            padding: 17px 18px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #526079;
+            white-space: nowrap;
+        }
+
+        .inventory-table td {
+            padding: 17px 18px;
+            font-size: 12px;
+            border-top: 1px solid #e5eaf2;
+            color: #171b26;
+            vertical-align: middle;
+        }
+
+        .inventory-table tbody tr:hover {
+            background: #f8faff;
+        }
+
+        /* Product name */
+        .product-name {
+            font-weight: 700;
+            color: #171b26;
+        }
+
+        /* Stock quantity */
+        .stock-number {
+            font-weight: 700;
+            color: #1769ff;
+        }
+
+        /* Makes UPC and RFID tag links match the website blue theme */
+        .inventory-tag-link {
+            color: var(--blue);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .inventory-tag-link:hover,
+        .inventory-tag-link:focus-visible {
+            color: var(--blue-hover);
+            text-decoration: underline;
+        }
+
+        .inventory-tag-link:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 3px;
+            border-radius: 2px;
+        }
+
+        /* Edit and Delete buttons */
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 9px 13px;
+            background: #edf4ff;
+            color: #1769ff;
+            border: none;
+            border-radius: 7px;
+            font-weight: 700;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .edit-button:hover {
+            background: #dceaff;
+        }
+
+        .delete-button {
+            background: #fff0f0;
+            color: #c12d3a;
+            border: none;
+            border-radius: 7px;
+            padding: 9px 13px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #ffe0e0;
+        }
+
+        /* Notification messages */
+        .inventory-message {
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border-radius: 9px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .inventory-message.success {
+            background: #eaf2ff;
+            color: #154da5;
+        }
+
+        .inventory-message.error {
+            background: #fff0f0;
+            color: #b42332;
+        }
+
+        /* Empty inventory message */
+        .empty-inventory {
+            padding: 30px;
+            color: #737e91;
+            text-align: center;
+        }
+
+        /* Adjusts navigation on smaller screens */
+        @media (max-width: 1100px) {
+            body .app > .topbar {
+                gap: 12px;
+                padding: 0 20px;
+            }
+
+            .topbar .top-actions,
+            .topbar #account-nav {
+                gap: 10px;
+            }
+
+            .topbar .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .topbar .top-actions {
+                overflow-x: auto;
+                scrollbar-width: thin;
+            }
+        }
+
+        /* Adjusts layout for phones */
+        @media (max-width: 650px) {
+            body .app > .topbar {
+                padding: 0 14px;
+                gap: 10px;
+            }
+
+            .topbar .brand {
+                min-width: 85px;
+            }
+
+            .topbar .brand strong {
+                font-size: 14px;
+            }
+
+            .topbar .nav-link {
+                font-size: 12px;
+            }
+
+            .inventory-main {
+                padding: 24px 14px;
+            }
+
+            .inventory-heading h1 {
+                font-size: 27px;
+            }
+
+            .inventory-actions {
+                width: 100%;
+            }
+
+            .inventory-actions a {
+                flex: 1;
+            }
+        }
+    

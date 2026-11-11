@@ -879,3 +879,8 @@ footer {
         padding: 20px;
     }
 }
+
+/* Adds space around the message when there are no purchases */
+.empty-purchase-history {
+    padding: 24px;
+}

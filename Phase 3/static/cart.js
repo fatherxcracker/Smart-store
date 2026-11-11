@@ -456,17 +456,18 @@ async function updateCart(url, method, body = null, messageKey = null) {
 function displayReceipt(html) {
 
     // Display the receipt in the iframe
-    receiptFrame.srcdoc = `
-        <!DOCTYPE html>
-        <html lang="${cartLanguage}">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport"
-                  content="width=device-width, initial-scale=1">
-        </head>
-        <body>${html}</body>
-        </html>
-    `;
+    // Build a separate receipt page using the settings from the HTML template
+    const receiptDocument = document.implementation.createHTMLDocument("");
+    receiptDocument.documentElement.lang = cartLanguage;
+    receiptDocument.head.replaceChildren(
+        document.getElementById("receipt-document").content.cloneNode(true)
+    );
+    // Put the receipt returned by Flask inside the receipt page
+    const receiptContent = new DOMParser().parseFromString(html, "text/html");
+    receiptDocument.body.replaceChildren(...receiptContent.body.childNodes);
+    receiptFrame.srcdoc =
+        new XMLSerializer().serializeToString(receiptDocument.doctype) +
+        receiptDocument.documentElement.outerHTML;
 
     // Show receipt panel
     receiptPanel.hidden = false;

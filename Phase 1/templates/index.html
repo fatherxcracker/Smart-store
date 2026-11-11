@@ -72,6 +72,17 @@
         </main>
     </div>
 
+    <!-- Row layout that JavaScript copies for each customer -->
+    <template id="customer-row">
+        <tr>
+            <td data-field="customer_id"></td>
+            <td data-field="full_name"></td>
+            <td data-field="address"></td>
+            <td data-field="telephone_number"></td>
+            <td data-field="email_address"></td>
+        </tr>
+    </template>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

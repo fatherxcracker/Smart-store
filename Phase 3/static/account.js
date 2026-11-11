@@ -514,7 +514,7 @@ async function showHistory() {
         if (purchases.length === 0) {
 
             const empty = document.createElement("p");
-            empty.style.padding = "24px";
+            empty.classList.add("empty-purchase-history");
             empty.textContent = t("noPurchases");
 
             container.appendChild(empty);

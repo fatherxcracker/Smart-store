@@ -34,25 +34,16 @@ async function loadCustomers() {
 
         customersBody.innerHTML = "";
         customers.forEach((c) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${c.customer_id}</td>
-                <td>${escapeHtml(c.full_name)}</td>
-                <td>${escapeHtml(c.address)}</td>
-                <td>${escapeHtml(c.telephone_number)}</td>
-                <td>${escapeHtml(c.email_address)}</td>
-            `;
+            // Copy the HTML row and fill each cell with customer information
+            const row = document.getElementById("customer-row").content.firstElementChild.cloneNode(true);
+            row.querySelectorAll("[data-field]").forEach(cell => {
+                cell.textContent = c[cell.dataset.field] ?? "";
+            });
             customersBody.appendChild(row);
         });
     } catch (err) {
         console.error("Failed to load customers:", err);
     }
-}
-
-function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str ?? "";
-    return div.innerHTML;
 }
 
 form.addEventListener("submit", async (event) => {

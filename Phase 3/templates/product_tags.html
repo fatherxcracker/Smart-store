@@ -1,6 +1,182 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RFID tags | Smart Store</title><style>body{font:16px Arial,sans-serif;color:#202d40;background:#f4f7fb;margin:0}main{max-width:760px;margin:3rem auto;background:white;padding:2rem;border-radius:12px}input,button{font:inherit;padding:.7rem;margin:.3rem 0}input{width:min(95%,360px)}button{cursor:pointer}table{border-collapse:collapse;width:100%;margin-top:1rem}td,th{padding:.6rem;text-align:left;border-bottom:1px solid #ddd}.error{color:#a00}</style></head>
-<body><main><a href="{{ url_for('inventory') }}">← Back to inventory</a><h1>RFID tags: {{ product.name }}</h1><p>UPC: {{ product.upc }}</p><p>Each tag identifies one physical item. Receive stock first, then assign one unique EPC to each tagged item.</p><p>Available stock: {{ product.in_stock }}</p>
-{% for category, message in get_flashed_messages(with_categories=true) %}<p>{{ message }}</p>{% endfor %}{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-<form method="post"><label for="epc">EPC (up to 24 hexadecimal characters)</label><br><input id="epc" name="epc" maxlength="24" required autocomplete="off"><br><button id="read-tag" type="button">Read tag from RFID reader</button><p id="tag-status" role="status"></p><button type="submit">Assign tag</button></form>
-<h2>Assigned tags</h2><table><thead><tr><th>EPC</th><th>Status</th><th>Received</th></tr></thead><tbody>{% for tag in tags %}<tr><td>{{ tag.epc }}</td><td>{{ 'Sold' if tag.sold_purchase_id else 'Available' }}</td><td>{{ tag.received_at|local_time if tag.received_at else 'Not recorded' }}</td></tr>{% else %}<tr><td colspan="3">No tags assigned.</td></tr>{% endfor %}</tbody></table></main><script src="{{ url_for('static', filename='rfid_tag.js') }}"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RFID Tags | Smart Store</title>
+    <!-- Connects the shared website styles and tag page styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='inventory.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='receive_stock_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='product_tags_page.css') }}">
+</head>
+<body data-home-url="{{ url_for('home') }}">
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- Product information and tag assignment -->
+    <main class="stock-main">
+        <a class="back-button" href="{{ url_for('inventory') }}" data-i18n="backInventory">← Back to Inventory</a>
+
+        <div class="stock-heading">
+            <span class="eyebrow" data-i18n="productManagement">PRODUCT MANAGEMENT</span>
+            <h1 data-i18n="tagsTitle">RFID Tags</h1>
+            <p data-i18n="tagsDescription">Assign one unique EPC to each physical item after receiving stock.</p>
+        </div>
+
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="inventory-success" role="status">{{ message }}</p>
+        {% endfor %}
+        {% if error %}
+            <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <div class="tags-content">
+            <!-- Sends the assigned tag to Flask -->
+            <form method="post" class="product-form tags-form">
+                <h2 data-i18n="assignTitle">Assign a Tag</h2>
+                <p class="form-description" data-i18n="assignDescription">Place one item on the reader or enter its EPC below.</p>
+                <!-- Shows the product and stock before assigning a tag -->
+                <label for="tag-product" data-i18n="product">Product</label>
+                <input id="tag-product" value="{{ product.name }}" readonly>
+                <label for="tag-upc">UPC</label>
+                <input id="tag-upc" value="{{ product.upc or '—' }}" readonly>
+                <label for="tag-stock" data-i18n="availableStock">Available stock</label>
+                <input id="tag-stock" value="{{ product.in_stock }}" readonly>
+
+                <label for="epc" data-i18n="epcLabel">EPC (up to 24 hexadecimal characters)</label>
+                <input id="epc" name="epc" maxlength="24" required autocomplete="off" aria-describedby="epc-help" placeholder="E28011700000020A1B2C3D01">
+                <p id="epc-help" class="form-description" data-i18n="epcHelp">Use only numbers 0–9 and letters A–F.</p>
+                <button id="read-tag" type="button" data-i18n="readTag">Read tag from RFID reader</button>
+                <p id="tag-status" class="tag-status" role="status" aria-live="polite"></p>
+                <button type="submit" class="save-button" data-i18n="assignTag">Assign tag</button>
+            </form>
+
+            <!-- Lists the tags already assigned to this product -->
+            <section class="inventory-card" aria-labelledby="assigned-tags-title">
+                <div class="inventory-card-heading">
+                    <h2 id="assigned-tags-title" data-i18n="assignedTags">Assigned Tags</h2>
+                    <p data-i18n="tableDescription">Check availability and reception dates for each item.</p>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr>
+                            <th scope="col">EPC</th>
+                            <th scope="col" data-i18n="status">Status</th>
+                            <th scope="col" data-i18n="received">Received</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for tag in tags %}
+                            <tr>
+                                <td class="tag-epc">{{ tag.epc }}</td>
+                                <td><span class="tag-badge{{ ' sold' if tag.sold_purchase_id else '' }}" data-i18n="{{ 'sold' if tag.sold_purchase_id else 'available' }}">{{ 'Sold' if tag.sold_purchase_id else 'Available' }}</span></td>
+                                <td>{% if tag.received_at %}{{ tag.received_at|local_time }}{% else %}<span data-i18n="notRecorded">Not recorded</span>{% endif %}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="empty-message" data-i18n="noTags">No tags assigned.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<!-- Navigation and translation functionality -->
+<script src="{{ url_for('static', filename='product_tags_page.js') }}"></script>
+<script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
+</body>
+</html>

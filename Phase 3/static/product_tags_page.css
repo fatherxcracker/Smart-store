@@ -1,0 +1,43 @@
+/* Styles the tag assignment form and assigned tags table */
+/* Uses the same form layout as the receive stock page */
+.tags-content {
+    width: 100%;
+    max-width: 560px;
+}
+
+.tags-form input[readonly] {
+    color: var(--muted);
+}
+
+.tags-form button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.tags-form .tag-status:not(:empty) {
+    margin-top: 12px;
+}
+
+/* Keeps assigned tags below the form at the same width */
+.tags-content .inventory-card {
+    margin-top: 28px;
+}
+
+.tag-epc {
+    font-family: ui-monospace, monospace;
+}
+
+/* Makes tag status match the inventory stock labels */
+.tag-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: #eaf2ff;
+    color: #154da5;
+    font-weight: 700;
+}
+
+.tag-badge.sold {
+    background: #f0f4fa;
+    color: #526079;
+}

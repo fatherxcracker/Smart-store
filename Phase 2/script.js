@@ -41,16 +41,15 @@ function updateGauge(fridgeId, type, value) {
 
     if (value === null || value === undefined) {
         text.textContent = type === "temperature" ? "--°C" : "--%";
-        gauge.style.background = "conic-gradient(#e2e8f0 0% 100%)";
+        gauge.style.setProperty("--gauge-progress", "0%");
         return;
     }
 
     const max = type === "temperature" ? 40 : 100;
     const progress = Math.max(0, Math.min(100, (value / max) * 100));
-    const color = type === "temperature" ? "#14b8a6" : "#60a5fa";
 
-    gauge.style.background =
-        `conic-gradient(${color} 0% ${progress}%, #e2e8f0 ${progress}% 100%)`;
+    // Send the reading percentage to CSS to fill the gauge
+    gauge.style.setProperty("--gauge-progress", `${progress}%`);
 
     text.textContent = type === "temperature"
         ? value.toFixed(1) + "°C"
@@ -311,3 +310,13 @@ refreshNotifications();
 setInterval(refreshReadings, READINGS_POLL_MS);
 setInterval(refreshNotifications, NOTIFICATIONS_POLL_MS);
 setInterval(loadFanStatus, FAN_POLL_MS);
+
+
+// Connect each Save button to the correct fridge
+document.querySelectorAll("[data-save-threshold]").forEach(button => {
+    button.addEventListener("click", () => saveThreshold(Number(button.dataset.saveThreshold)));
+});
+// Connect the fan button and speed slider to their actions
+document.getElementById("powerButton").addEventListener("click", toggleFan);
+document.getElementById("fanSlider").addEventListener("input", updateFanSpeed);
+document.getElementById("fanSlider").addEventListener("change", saveFanSpeed);

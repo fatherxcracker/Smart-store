@@ -4,8 +4,10 @@ const epcInput = document.getElementById("epc");
 const tagStatus = document.getElementById("tag-status");
 
 readTagButton.addEventListener("click", async () => {
+    // Remember the button text so scanning keeps the selected language
+    const readTagLabel = readTagButton.textContent;
     readTagButton.disabled = true;
-    readTagButton.textContent = "Reading...";
+    readTagButton.textContent = document.documentElement.lang === "fr" ? "Lecture..." : "Reading...";
     tagStatus.textContent = "";
     tagStatus.className = "tag-status";
 
@@ -25,6 +27,6 @@ readTagButton.addEventListener("click", async () => {
         tagStatus.textContent = "Cannot reach the server.";
     } finally {
         readTagButton.disabled = false;
-        readTagButton.textContent = "Read tag from RFID reader";
+        readTagButton.textContent = readTagLabel;
     }
 });
