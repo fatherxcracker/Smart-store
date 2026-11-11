@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS product_tags (
 CREATE TABLE IF NOT EXISTS purchases (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     receipt_number  TEXT    NOT NULL UNIQUE,   -- e.g. R-20261104-000012
+    checkout_key    TEXT    UNIQUE,            -- one sale per signed cart identity
     customer_id     INTEGER REFERENCES customers(id) ON DELETE SET NULL,
     subtotal        REAL    NOT NULL,
     gst             REAL    NOT NULL,          -- 5 %

@@ -15,6 +15,7 @@ writing SQL directly, so the whole group works against the same schema.
 import os
 import secrets
 import sqlite3
+import math
 from datetime import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -55,6 +56,10 @@ def init_db(seed=True):
     columns = {row["name"] for row in conn.execute("PRAGMA table_info(customers)")}
     if "is_admin" not in columns:
         conn.execute("ALTER TABLE customers ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+    purchase_columns = {row["name"] for row in conn.execute("PRAGMA table_info(purchases)")}
+    if "checkout_key" not in purchase_columns:
+        conn.execute("ALTER TABLE purchases ADD COLUMN checkout_key TEXT")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_checkout_key ON purchases(checkout_key)")
     if seed and conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0:
         with open(SEED_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())
@@ -82,6 +87,8 @@ def _validate_product(name, category, price, upc, epc, producer):
         price = round(float(price), 2)
     except (TypeError, ValueError):
         raise DatabaseError("Price must be a number.")
+    if not math.isfinite(price):
+        raise DatabaseError("Price must be a finite number.")
     if price < 0:
         raise DatabaseError("Price can't be negative.")
     upc = (upc or "").strip()
@@ -243,6 +250,19 @@ def get_product_tags(product_id):
     conn = get_connection()
     try:
         return _rows(conn.execute("SELECT t.epc, t.sold_purchase_id, r.received_at FROM product_tags t LEFT JOIN receptions r ON r.id = t.reception_id WHERE t.product_id = ? ORDER BY t.epc", (product_id,)).fetchall())
+    finally:
+        conn.close()
+
+
+def get_untagged_stock(product_id):
+    """Units eligible for barcode checkout, excluding unsold RFID tags."""
+    conn = get_connection()
+    try:
+        row = conn.execute("""SELECT i.in_stock -
+            (SELECT COUNT(*) FROM product_tags t WHERE t.product_id = i.id
+             AND t.sold_purchase_id IS NULL) AS available
+            FROM inventory i WHERE i.id = ?""", (product_id,)).fetchone()
+        return max(0, row["available"]) if row else 0
     finally:
         conn.close()
 
@@ -435,7 +455,7 @@ def calculate_totals(subtotal):
     return {"subtotal": subtotal, "gst": gst, "qst": qst, "total": total, "points_earned": points}
 
 
-def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
+def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, checkout_key=None, return_status=False):
     """Turn the confirmed shopping list into a receipt.
 
     cart = [{"product_id": 1, "quantity": 2}, ...]
@@ -457,6 +477,12 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
     conn = get_connection()
     try:
         conn.execute("BEGIN IMMEDIATE")  # lock so two checkouts can't oversell
+
+        # A retry with the same signed cart identity returns the original sale.
+        if checkout_key:
+            existing = conn.execute("SELECT id FROM purchases WHERE checkout_key = ?", (checkout_key,)).fetchone()
+            if existing:
+                return (existing["id"], False) if return_status else existing["id"]
 
         epcs = list(epcs or [])
         if len(epcs) != len(set(epcs)):
@@ -497,10 +523,10 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
         receipt_number = f"R-{datetime.now():%Y%m%d}-{secrets.token_hex(3).upper()}"
         cur = conn.execute(
             """INSERT INTO purchases (receipt_number, customer_id, subtotal, gst, qst, total,
-                                      points_earned, payment_method)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                                      points_earned, payment_method, checkout_key)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (receipt_number, customer_id, totals["subtotal"], totals["gst"], totals["qst"],
-             totals["total"], totals["points_earned"], payment_method),
+             totals["total"], totals["points_earned"], payment_method, checkout_key),
         )
         purchase_id = cur.lastrowid
 
@@ -521,7 +547,7 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None):
             )
 
         conn.commit()
-        return purchase_id
+        return (purchase_id, True) if return_status else purchase_id
     except Exception:
         conn.rollback()
         raise
@@ -544,6 +570,7 @@ def get_purchase(purchase_id):
         customer = conn.execute("SELECT * FROM customers WHERE id = ?", (purchase["customer_id"],)).fetchone()
     conn.close()
     receipt = dict(purchase)
+    receipt.pop("checkout_key", None)
     receipt["items"] = _rows(items)
     receipt["customer"] = _public_customer(customer)
     return receipt
