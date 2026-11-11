@@ -249,11 +249,9 @@ function refreshControls() {
     membershipInput.disabled = busy;
     paymentSelect.disabled = busy;
 
-    // Disable Reset Cart if the cart is empty
-    resetButton.disabled =
-        busy ||
-        !currentCart ||
-        currentCart.items.length === 0;
+    // Reset Cart stays available even when the cart is empty: it also
+    // clears the remembered RFID tags (removed items stay "already read").
+    resetButton.disabled = busy;
 
     // Disable checkout if Flask says checkout is unavailable
     checkoutButton.disabled =
