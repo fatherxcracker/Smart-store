@@ -495,9 +495,11 @@ async function scanRfid({ quiet = false } = {}) {
 
     try {
         // Ask Flask to scan RFID tags
+        // A manual scan re-adds removed items; auto-scan (quiet) does not.
         const result = await cartRequest(
             "/api/cart/rfid/scan",
-            "POST"
+            "POST",
+            { manual: !quiet }
         );
 
         // Update cart with scanned products

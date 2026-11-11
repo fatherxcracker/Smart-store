@@ -125,7 +125,7 @@ def scan_barcode():
     return cart_response(f"{product['name']} added to your cart.")
 
 
-def add_epcs_to_cart(epcs):
+def add_epcs_to_cart(epcs, manual=False):
     """Add each new EPC once, ignoring repeated RFID readings.
     Used by both the RFID reader scan and the JSON endpoint."""
     if not isinstance(epcs, list) or len(epcs) > 100:
@@ -164,8 +164,14 @@ def add_epcs_to_cart(epcs):
     # Remember tags across requests and page refreshes.
     # Unknown tags are remembered too, so a stray tag left on the reader
     # is reported once instead of on every auto-scan.
-    seen = set(session.get("rfid_seen", []))
-    unknown_seen = set(session.get("rfid_unknown", []))
+    if manual:
+        # The customer pressed "Scan all items": add every tag on the reader
+        # that isn't in the cart right now, including items removed earlier.
+        seen = set(session.get("rfid_cart_tags", {}))
+        unknown_seen = set()
+    else:
+        seen = set(session.get("rfid_seen", []))
+        unknown_seen = set(session.get("rfid_unknown", []))
     new_epcs = normalized - seen - unknown_seen
 
     if not new_epcs:
@@ -266,7 +272,8 @@ def scan_rfid_reader():
     except rfid_reader.RFIDError as error:
         return jsonify(success=False, message=str(error)), 503
 
-    return add_epcs_to_cart(epcs)
+    data = request.get_json(silent=True) or {}
+    return add_epcs_to_cart(epcs, manual=data.get("manual") is True)
 
 
 @cart_api.delete("/api/cart/items/<int:product_id>")
