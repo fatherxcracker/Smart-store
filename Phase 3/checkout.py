@@ -22,10 +22,10 @@ def complete_checkout():
 
     payment_method = data.get("payment_method", "card")
 
-    if payment_method not in ("card", "cash", "tap"):
+    if payment_method not in ("credit", "debit", "cash"):
         return jsonify(
             success=False,
-            message="Choose card, cash, or tap.",
+            message="Choose Credit Card, Debit Card, or Cash.",
         ), 400
 
     membership_number = data.get("membership_number", "")
