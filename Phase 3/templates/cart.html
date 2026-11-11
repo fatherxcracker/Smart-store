@@ -987,14 +987,33 @@
         );
     }
 
+    async function saveStoreLanguage() {
+        try {
+            const response = await fetch("/api/account/language", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language: storeLanguage })
+            });
+            // Guests keep their language in this browser only.
+            if (!response.ok && response.status !== 401) throw new Error();
+        } catch {
+            showMessage(storeLanguage === "fr"
+                ? "La préférence de langue n'a pas pu être enregistrée."
+                : "Could not save your language preference.", "error");
+        }
+    }
+
     // English button
     document.getElementById("lang-en").addEventListener("click", () => {
         changeStoreLanguage("en");
+        saveStoreLanguage();
     });
 
     // French button
     document.getElementById("lang-fr").addEventListener("click", () => {
         changeStoreLanguage("fr");
+        saveStoreLanguage();
     });
 
     // Check if customer is logged in

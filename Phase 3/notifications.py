@@ -98,6 +98,7 @@ MESSAGES = {
 
 # French versions of the DatabaseError messages raised in db.py
 ERROR_TRANSLATIONS = {
+    "Price must be a finite number.": "Le prix doit être un nombre fini.",
     "Name, category and producer are required.": "Le nom, la catégorie et le producteur sont obligatoires.",
     "Price must be a number.": "Le prix doit être un nombre.",
     "Price can't be negative.": "Le prix ne peut pas être négatif.",

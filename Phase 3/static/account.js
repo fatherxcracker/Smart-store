@@ -196,6 +196,10 @@ function changeLanguage(lang) {
     // Save chosen language in the browser
     // This remembers it after refreshing the website
     localStorage.setItem("smartstore-language", currentLanguage);
+    if (loggedIn) {
+        api("/api/account/language", "POST", { language: currentLanguage })
+            .catch(error => { message.textContent = error.message; });
+    }
 
     // Update the language attribute of the HTML page
     document.documentElement.lang = currentLanguage;

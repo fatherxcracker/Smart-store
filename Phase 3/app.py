@@ -65,7 +65,7 @@ def create_app():
 
     @app.before_request
     def protect_inventory_management():
-        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags"}
+        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags", "notifications_log"}
         if request.endpoint in protected:
             customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
             if not customer or not customer.get("is_admin"):
@@ -573,6 +573,22 @@ def create_app():
             name=customer["name"],
         ))
 
+
+    @app.post("/api/account/language")
+    def update_language():
+        customer_id = session.get("customer_id")
+        if not customer_id or not db.get_customer(customer_id):
+            return jsonify(success=False, message="Please log in."), 401
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or data.get("language") not in ("en", "fr"):
+            return jsonify(success=False, message="Choose English or French."), 400
+        conn = db.get_connection()
+        try:
+            conn.execute("UPDATE customers SET language = ? WHERE id = ?", (data["language"], customer_id))
+            conn.commit()
+        finally:
+            conn.close()
+        return jsonify(success=True)
 
     # Customer info.
 

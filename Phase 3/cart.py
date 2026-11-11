@@ -1,5 +1,7 @@
 """Shopping-cart API for Smart Store Phase 3."""
 
+import secrets
+
 from flask import Blueprint, jsonify, request, session
 
 import db
@@ -15,6 +17,7 @@ def get_cart():
 
 def save_cart(cart):
     session["shopping_cart"] = cart
+    session["checkout_key"] = secrets.token_hex(32)
 
 
 def build_cart(cart):
@@ -39,13 +42,16 @@ def build_cart(cart):
         line_total = round(product["price"] * quantity, 2)
         subtotal += line_total
 
+        tagged_quantity = sum(1 for pid in session.get("rfid_cart_tags", {}).values() if pid == product["id"])
+        eligible = (tagged_quantity <= quantity and
+                    quantity - tagged_quantity <= db.get_untagged_stock(product["id"]))
         items.append({
             "product_id": product["id"],
             "name": product["name"],
             "quantity": quantity,
             "unit_price": product["price"],
             "line_total": line_total,
-            "available": quantity <= product["in_stock"],
+            "available": quantity <= product["in_stock"] and eligible,
         })
 
     totals = db.calculate_totals(subtotal)
@@ -73,6 +79,8 @@ def cart_response(message=""):
 
 @cart_api.get("/api/cart")
 def view_cart():
+    if get_cart() and not session.get("checkout_key"):
+        session["checkout_key"] = secrets.token_hex(32)
     return cart_response()
 
 
@@ -105,6 +113,10 @@ def scan_barcode():
     cart = get_cart()
     product_id = str(product["id"])
     quantity = cart.get(product_id, 0) + 1
+
+    tagged_quantity = sum(1 for pid in session.get("rfid_cart_tags", {}).values() if pid == product["id"])
+    if quantity - tagged_quantity > db.get_untagged_stock(product["id"]):
+        return jsonify(success=False, message="No more untagged stock available. Scan the RFID tags for tagged items."), 400
 
     if quantity > product["in_stock"]:
         return jsonify(
@@ -283,6 +295,7 @@ def remove_item(product_id):
 
 @cart_api.delete("/api/cart")
 def reset_cart():
+    session.pop("checkout_key", None)
     session.pop("shopping_cart", None)
     session.pop("rfid_cart_tags", None)
     session.pop("rfid_seen", None)

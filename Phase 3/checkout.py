@@ -54,6 +54,10 @@ def complete_checkout():
             message="Your cart is empty.",
         ), 400
 
+    checkout_key = session.get("checkout_key")
+    if not checkout_key:
+        return jsonify(success=False, message="Reload the cart before checking out."), 409
+
     # A blank membership number means guest checkout.
     customer_id = None
 
@@ -67,7 +71,8 @@ def complete_checkout():
             ), 404
 
         customer_id = customer["id"]
-        language = customer["language"]
+        if "language" not in data:
+            language = customer["language"]
 
     # Only send IDs and quantities. Prices come from the database.
     purchase_items = [
@@ -85,6 +90,7 @@ def complete_checkout():
             payment_method=payment_method,
             lang=language,
             epcs=list(session.get("rfid_cart_tags", {})),
+            checkout_key=checkout_key,
         )
     except db.DatabaseError as error:
         # Validation failed: leave the cart and RFID history intact.
@@ -98,13 +104,39 @@ def complete_checkout():
     session.pop("rfid_cart_tags", None)
     session.pop("rfid_seen", None)
     session.pop("rfid_unknown", None)
+    session.pop("checkout_key", None)
+
+    # Membership cards identify loyalty accounts; they do not authorize access
+    # to private profile fields. Only the signed-in owner sees their details.
+    receipt = result["receipt"]
+    # Never fall back to HTML built from the full internal customer profile.
+    receipt_html = "<p>Purchase saved. Receipt display is temporarily unavailable.</p>"
+    if receipt:
+        receipt = dict(receipt)
+        customer = receipt.get("customer")
+        if customer:
+            fields = ("name", "membership_number", "points") if session.get("customer_id") == receipt["customer_id"] else ("membership_number",)
+            receipt["customer"] = {key: customer[key] for key in fields}
+        receipt.pop("checkout_key", None)
+        receipt.pop("customer_id", None)
+        try:
+            receipt_html = receipts.build_receipt_html(receipt, language)
+        except Exception:
+            receipt_html = "<p>Purchase saved. Receipt display is temporarily unavailable.</p>"
+
+    # Email delivery notifications must not disclose the address at a kiosk.
+    notes = []
+    for note in result["notifications"]:
+        if note.get("event") == "receipt_emailed":
+            note = {"success": True, "level": "success", "message": "Receipt emailed." if language == "en" else "Reçu envoyé par courriel."}
+        notes.append(note)
 
     return jsonify({
         "success": True,
         "message": "Checkout completed successfully.",
         "cart": build_cart({}),
         "purchase_id": result["purchase_id"],
-        "receipt": result["receipt"],
-        "receipt_html": result["receipt_html"],
-        "notifications": result["notifications"],
+        "receipt": receipt,
+        "receipt_html": receipt_html,
+        "notifications": notes,
     })

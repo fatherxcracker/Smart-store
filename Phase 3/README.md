@@ -254,7 +254,21 @@ Phase 3/
 
 ### Tests
 
+Checkout retries use a unique cart identity saved with the purchase, so retrying
+the same cart returns the original sale without deducting stock or awarding
+points again. Existing databases gain this field automatically on startup.
+If receipt, notification, or email processing fails after a sale is saved, the
+checkout returns success with a warning. Failed email delivery is not retried
+automatically.
+
+At checkout, a membership number alone shows only that number and points earned
+on this purchase. The signed-in account owner can also see their name and points
+balance. Email receipts retain the full receipt details. The store-wide
+notification log requires administrator access. EN/FR switches save the language
+preference for signed-in customers; an explicit checkout language takes priority.
+
 ```bash
 python test_database.py                          # 40 checks of the database, receipts, notifications
+python -m unittest -v test_checkout               # checkout retries, privacy, failures, stock, language, migration
 python test_database.py --email you@gmail.com    # also sends a real receipt email
 ```
