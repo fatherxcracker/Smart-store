@@ -175,12 +175,19 @@ def build_receipt_html(receipt, lang=None):
 # ---------------------------------------------------------------------------
 def send_receipt_email(purchase_id, lang=None):
     """Email the receipt to the customer if they have an email.
+
+    The EMAIL is always written in the language saved on the customer's
+    account (the EN/FR choice in the customer portal). `lang` is only the
+    language of the on-screen notification at the checkout.
     Returns a notification dict, or None for guests (no email to send to)."""
     receipt = db.get_purchase(purchase_id)
     if not receipt or not receipt.get("customer") or not receipt["customer"].get("email"):
         return None
 
-    lang = _lang_for(receipt, lang)
+    email_lang = receipt["customer"].get("language")
+    if email_lang not in ("en", "fr"):
+        email_lang = _lang_for(receipt, lang)
+    lang = lang if lang in ("en", "fr") else email_lang   # notification language
     to_email = receipt["customer"]["email"]
 
     if not SMTP_EMAIL or not SMTP_APP_PASSWORD:
@@ -188,11 +195,11 @@ def send_receipt_email(purchase_id, lang=None):
         return notify("receipt_email_failed", lang)
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = LABELS[lang]["subject"].format(store=STORE_NAME, number=receipt["receipt_number"])
+    msg["Subject"] = LABELS[email_lang]["subject"].format(store=STORE_NAME, number=receipt["receipt_number"])
     msg["From"] = f"{STORE_NAME} <{SMTP_EMAIL}>"
     msg["To"] = to_email
-    msg.attach(MIMEText(build_receipt_text(receipt, lang), "plain", "utf-8"))
-    msg.attach(MIMEText(build_receipt_html(receipt, lang), "html", "utf-8"))
+    msg.attach(MIMEText(build_receipt_text(receipt, email_lang), "plain", "utf-8"))
+    msg.attach(MIMEText(build_receipt_html(receipt, email_lang), "html", "utf-8"))
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:

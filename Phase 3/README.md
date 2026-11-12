@@ -117,9 +117,23 @@ Stop the app before running `python rfid_reader.py`, because only one program ca
 
 ### Resetting tags (before a demo or after testing)
 
-Run these from the `Phase 3` folder. The app can stay running; afterwards click **Reset cart** on `/cart`.
+Log in with an **admin** account. Afterwards click **Reset cart** on `/cart`, so the checkout forgets the tags it already read.
 
-**Make every sold tag available again**, for example after practice checkouts:
+| What you want | Where | Button |
+|---|---|---|
+| Make **every** sold tag in the store available again (after practice checkouts) | **Inventory** page | **Reset sold RFID tags** (asks to confirm) |
+| Make all sold tags of **one product** available again | **Manage tags** of that product | **Make all sold tags available** |
+| Make **one** sold tag available again | **Manage tags** → the tag's row | **Make available** |
+| **Remove** a tag from a product (e.g. to put it on another product) | **Manage tags** → the tag's row | **Remove** (asks to confirm), then assign it in the other product's **Manage tags** |
+
+Old receipts and the Sold / In stock numbers don't change, because they come from the purchase records. Every reset/remove shows a notification and is saved in the notifications log.
+
+<details>
+<summary>Same thing with SQL commands (optional)</summary>
+
+Run these from the `Phase 3` folder. The app can stay running.
+
+**Make every sold tag available again:**
 
 ```bash
 sqlite3 smartstore.db "UPDATE product_tags SET sold_purchase_id = NULL;"
@@ -144,6 +158,8 @@ sqlite3 -header smartstore.db "SELECT t.epc, p.name, CASE WHEN t.sold_purchase_i
 ```bash
 sqlite3 smartstore.db "DELETE FROM product_tags WHERE epc = 'A00000000000000000004994';"
 ```
+
+</details>
 
 **Assign your real tags after a fresh database.** The sample data only has made-up EPCs (`E2801170…`), so real tags show as "Unknown" until they're assigned. Use **Manage tags** in the website, or add them all at once. Replace the EPCs with your own; read them with `python rfid_reader.py` while the app is stopped:
 
@@ -189,12 +205,12 @@ python app.py
 4. Enter the **membership number** (from the customer's membership card), or leave it blank to check out as a guest.
 5. **Proceed to payment:** simulated payment (card / tap / cash) after a confirmation.
 6. **Points** are added to the member's account: **1 point per full dollar** of the subtotal (guests earn none).
-7. A **receipt** is shown on screen and **emailed automatically** to the member's email, in the member's language.
+7. A **receipt** is shown on screen and **emailed automatically** to the member's email. The email is in the language saved on the member's account (the EN/FR choice in the customer portal), whatever language the checkout screen is in.
 
 ### Customer accounts — `/`
 - **Create an account:** name, email, password, optional phone. A **membership number** (e.g. `SS-48213907`) is generated automatically.
 - **Log in** to see the membership card, **total points** and **purchase history**; each past receipt can be opened.
-- **Bilingual:** EN/FR switch (bonus). The choice also sets the language of the checkout notifications and receipt.
+- **Bilingual:** EN/FR switch (bonus). The choice is saved on the account (also when it was picked before logging in), and receipt emails are sent in that language.
 
 ### Receipts and notifications
 - The **receipt** has the product list (name, quantity, unit price, amount), subtotal, GST, QST, **total**, payment method, **points earned**, the member's total points and the **date and time**.
@@ -262,6 +278,9 @@ Phase 3/
 | DELETE | `/api/cart/items/<id>` | Remove an item |
 | DELETE | `/api/cart` | Reset the cart |
 | POST | `/api/checkout` | Pay `{"membership_number", "payment_method", "language"}` → receipt |
+| POST | `/inventory/tags/reset` | Admin: make every sold RFID tag available again |
+| POST | `/products/<id>/tags/reset` | Admin: make one sold tag (`epc`) or all sold tags of a product available again |
+| POST | `/products/<id>/tags/remove` | Admin: remove a tag (`epc`) from a product |
 | GET | `/api/rfid/read` | Read one tag's EPC (product form) |
 | POST | `/api/account/register` · `/login` · `/logout` | Customer accounts |
 | GET | `/api/account/me` · `/history` · `/receipt/<id>` | Profile, purchase history, one receipt |

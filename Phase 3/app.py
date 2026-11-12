@@ -65,7 +65,8 @@ def create_app():
 
     @app.before_request
     def protect_inventory_management():
-        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags", "notifications_log"}
+        protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags", "notifications_log",
+                     "reset_product_tags", "remove_product_tag", "reset_all_tags"}
         if request.endpoint in protected:
             customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
             if not customer or not customer.get("is_admin"):
@@ -291,6 +292,45 @@ def create_app():
             except db.DatabaseError as exc:
                 error = str(exc)
         return render_template("product_tags.html", product=product, tags=db.get_product_tags(product_id), error=error)
+
+    # Reset / remove RFID tags (admin buttons instead of SQL commands)
+
+    def _language():
+        return "fr" if request.form.get("language") == "fr" else "en"
+
+    def _flash_reset(count, lang):
+        if count:
+            flash(notify("tags_reset", lang, count=count)["message"], "success")
+        else:
+            flash(notify("tags_reset_none", lang, save=False)["message"], "success")
+
+    @app.post("/products/<int:product_id>/tags/reset")
+    def reset_product_tags(product_id):
+        """One sold tag (form field epc) or all sold tags of this product."""
+        if not db.get_product(product_id):
+            abort(404)
+        lang = _language()
+        count = db.reset_sold_tags(product_id=product_id, epc=request.form.get("epc") or None)
+        _flash_reset(count, lang)
+        return redirect(url_for("manage_product_tags", product_id=product_id))
+
+    @app.post("/products/<int:product_id>/tags/remove")
+    def remove_product_tag(product_id):
+        lang = _language()
+        epc = request.form.get("epc", "")
+        try:
+            db.remove_product_tag(product_id, epc)
+            flash(notify("tag_removed", lang, epc=epc.strip().upper())["message"], "success")
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+        return redirect(url_for("manage_product_tags", product_id=product_id))
+
+    @app.post("/inventory/tags/reset")
+    def reset_all_tags():
+        """Every sold tag in the store becomes available again."""
+        lang = _language()
+        _flash_reset(db.reset_sold_tags(), lang)
+        return redirect(url_for("inventory"))
 
     # Inventory
 

@@ -455,6 +455,13 @@ async function loadAccount() {
         // Customer is now logged in
         loggedIn = true;
 
+        // Save the language the customer is viewing the portal in, so the
+        // receipt emails they get at checkout are in that language too.
+        if (customer.language !== currentLanguage) {
+            api("/api/account/language", "POST", { language: currentLanguage })
+                .catch(() => {});
+        }
+
         // Display the customer's name in the welcome message
         document.getElementById("welcome-name").textContent = customer.name;
 

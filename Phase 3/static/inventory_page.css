@@ -416,3 +416,27 @@
             }
         }
     
+
+        /* "Reset sold RFID tags" button, same size as the other actions */
+        .inventory-actions .tag-action-form {
+            margin: 0;
+        }
+
+        .reset-tags-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #a12b2b;
+            border: 1px solid #f2c9c9;
+            border-radius: 8px;
+            padding: 12px 17px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .reset-tags-button:hover {
+            border-color: #a12b2b;
+        }

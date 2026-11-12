@@ -158,6 +158,17 @@
                     Reception History
                 </a>
 
+                <!-- Makes every sold RFID tag available again (practice checkouts) -->
+                <form method="post"
+                      action="{{ url_for('reset_all_tags') }}"
+                      class="tag-action-form"
+                      data-confirm="confirmResetAll">
+                    <input type="hidden" name="language" value="en">
+                    <button type="submit" class="reset-tags-button" data-i18n="resetSoldTags">
+                        Reset sold RFID tags
+                    </button>
+                </form>
+
             </div>
             {% endif %}
         </div>
@@ -306,6 +317,7 @@
 
 <!-- Navigation and translation functionality -->
 <script src="{{ url_for('static', filename='inventory_page.js') }}"></script>
+<script src="{{ url_for('static', filename='tag_reset.js') }}"></script>
 
 </body>
 </html>

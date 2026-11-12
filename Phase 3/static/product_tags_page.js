@@ -32,6 +32,10 @@
         "available": "Available",
         "notRecorded": "Not recorded",
         "noTags": "No tags assigned.",
+        "actions": "Actions",
+        "makeAvailable": "Make available",
+        "removeTag": "Remove",
+        "resetAllSold": "Make all sold tags available",
         "footer": "Smart shopping, better rewards"
     },
     "fr": {
@@ -60,6 +64,10 @@
         "available": "Disponible",
         "notRecorded": "Non enregistré",
         "noTags": "Aucune étiquette attribuée.",
+        "actions": "Actions",
+        "makeAvailable": "Rendre disponible",
+        "removeTag": "Retirer",
+        "resetAllSold": "Rendre disponibles toutes les étiquettes vendues",
         "footer": "Magasinez mieux, gagnez plus"
     }
 };

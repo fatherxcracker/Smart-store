@@ -42,6 +42,17 @@ MESSAGES = {
         'Low stock: only {in_stock} "{name}" left.',
         'Stock faible : il reste seulement {in_stock} « {name} ».'),
 
+    # --- RFID tags (admin) ---
+    "tags_reset": ("success",
+        "{count} sold tag(s) are available again.",
+        "{count} étiquette(s) vendue(s) de nouveau disponible(s)."),
+    "tags_reset_none": ("info",
+        "There are no sold tags to reset.",
+        "Aucune étiquette vendue à réinitialiser."),
+    "tag_removed": ("success",
+        "Tag {epc} removed from this product.",
+        "Étiquette {epc} retirée de ce produit."),
+
     # --- Scanning ---
     "item_scanned": ("info",
         "{name} added to your list.",
@@ -112,6 +123,7 @@ ERROR_TRANSLATIONS = {
     "Quantities must be greater than 0.": "Les quantités doivent être supérieures à 0.",
     "The shopping list is empty.": "La liste d'achats est vide.",
     "Customer not found.": "Client introuvable.",
+    "Tag not found.": "Étiquette introuvable.",
     "Name, email and password are required.": "Le nom, le courriel et le mot de passe sont obligatoires.",
     "Enter a valid email address.": "Entrez une adresse courriel valide.",
     "Password must be at least 6 characters.": "Le mot de passe doit contenir au moins 6 caractères.",

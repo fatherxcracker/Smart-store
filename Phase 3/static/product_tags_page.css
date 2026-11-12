@@ -41,3 +41,49 @@
     background: #f0f4fa;
     color: #526079;
 }
+
+/* Reset / remove buttons for tags */
+/* Buttons stack so they fit in the narrow tags card */
+.tag-actions .tag-action-form {
+    display: block;
+    margin: 0 0 6px;
+}
+
+.tag-actions .tag-action-form:last-child {
+    margin-bottom: 0;
+}
+
+.tag-actions .tag-action {
+    width: 100%;
+    white-space: nowrap;
+}
+
+.tag-action {
+    border: 1px solid #c9d8f5;
+    background: #eaf2ff;
+    color: #154da5;
+    border-radius: 7px;
+    padding: 6px 11px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tag-action:hover {
+    border-color: #1769ff;
+}
+
+.tag-action.remove {
+    border-color: #f2c9c9;
+    background: #fff1f1;
+    color: #a12b2b;
+}
+
+.tag-action.remove:hover {
+    border-color: #a12b2b;
+}
+
+.tags-reset-all {
+    margin-top: 12px;
+}

@@ -104,7 +104,7 @@
         </div>
 
         {% for category, message in get_flashed_messages(with_categories=true) %}
-            <p class="inventory-success" role="status">{{ message }}</p>
+            <p class="{{ 'form-error' if category == 'error' else 'inventory-success' }}" role="status">{{ message }}</p>
         {% endfor %}
         {% if error %}
             <p class="form-error" role="alert">{{ error }}</p>
@@ -136,6 +136,15 @@
                 <div class="inventory-card-heading">
                     <h2 id="assigned-tags-title" data-i18n="assignedTags">Assigned Tags</h2>
                     <p data-i18n="tableDescription">Check availability and reception dates for each item.</p>
+                    {% if tags|selectattr('sold_purchase_id')|list %}
+                    <!-- Makes every sold tag of this product available again -->
+                    <form method="post" class="tag-action-form tags-reset-all"
+                          action="{{ url_for('reset_product_tags', product_id=product.id) }}"
+                          data-confirm="confirmResetProduct">
+                        <input type="hidden" name="language" value="en">
+                        <button type="submit" class="tag-action" data-i18n="resetAllSold">Make all sold tags available</button>
+                    </form>
+                    {% endif %}
                 </div>
                 <div class="table-wrapper">
                     <table>
@@ -143,6 +152,7 @@
                             <th scope="col">EPC</th>
                             <th scope="col" data-i18n="status">Status</th>
                             <th scope="col" data-i18n="received">Received</th>
+                            <th scope="col" data-i18n="actions">Actions</th>
                         </tr></thead>
                         <tbody>
                             {% for tag in tags %}
@@ -150,9 +160,28 @@
                                 <td class="tag-epc">{{ tag.epc }}</td>
                                 <td><span class="tag-badge{{ ' sold' if tag.sold_purchase_id else '' }}" data-i18n="{{ 'sold' if tag.sold_purchase_id else 'available' }}">{{ 'Sold' if tag.sold_purchase_id else 'Available' }}</span></td>
                                 <td>{% if tag.received_at %}{{ tag.received_at|local_time }}{% else %}<span data-i18n="notRecorded">Not recorded</span>{% endif %}</td>
+                                <td class="tag-actions">
+                                    {% if tag.sold_purchase_id %}
+                                    <!-- Sold tag: make it scannable and sellable again -->
+                                    <form method="post" class="tag-action-form"
+                                          action="{{ url_for('reset_product_tags', product_id=product.id) }}">
+                                        <input type="hidden" name="epc" value="{{ tag.epc }}">
+                                        <input type="hidden" name="language" value="en">
+                                        <button type="submit" class="tag-action" data-i18n="makeAvailable">Make available</button>
+                                    </form>
+                                    {% endif %}
+                                    <!-- Unassign the tag (e.g. to move it to another product) -->
+                                    <form method="post" class="tag-action-form"
+                                          action="{{ url_for('remove_product_tag', product_id=product.id) }}"
+                                          data-confirm="confirmRemoveTag">
+                                        <input type="hidden" name="epc" value="{{ tag.epc }}">
+                                        <input type="hidden" name="language" value="en">
+                                        <button type="submit" class="tag-action remove" data-i18n="removeTag">Remove</button>
+                                    </form>
+                                </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="3" class="empty-message" data-i18n="noTags">No tags assigned.</td></tr>
+                            <tr><td colspan="4" class="empty-message" data-i18n="noTags">No tags assigned.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -177,6 +206,7 @@
 
 <!-- Navigation and translation functionality -->
 <script src="{{ url_for('static', filename='product_tags_page.js') }}"></script>
+<script src="{{ url_for('static', filename='tag_reset.js') }}"></script>
 <script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
 </body>
 </html>

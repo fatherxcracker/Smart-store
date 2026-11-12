@@ -297,6 +297,53 @@ def register_product_tag(product_id, epc):
         conn.close()
 
 
+def reset_sold_tags(product_id=None, epc=None):
+    """Make sold RFID tags available again so they can be scanned and sold
+    again (for practice/demo checkouts). Old receipts and the Sold / In stock
+    numbers don't change, because they come from the purchase records.
+
+    reset_sold_tags()                    -> every sold tag in the store
+    reset_sold_tags(product_id=3)        -> every sold tag of one product
+    reset_sold_tags(product_id=3, epc=X) -> one tag
+    Returns how many tags were reset."""
+    sql = "UPDATE product_tags SET sold_purchase_id = NULL WHERE sold_purchase_id IS NOT NULL"
+    args = []
+    if product_id is not None:
+        sql += " AND product_id = ?"
+        args.append(product_id)
+    if epc:
+        sql += " AND epc = ?"
+        args.append(epc.strip().upper())
+    conn = get_connection()
+    try:
+        count = conn.execute(sql, args).rowcount
+        conn.commit()
+        return count
+    finally:
+        conn.close()
+
+
+def remove_product_tag(product_id, epc):
+    """Unassign a tag from a product (e.g. to put it on another product)."""
+    epc = (epc or "").strip().upper()
+    conn = get_connection()
+    try:
+        removed = conn.execute(
+            "DELETE FROM product_tags WHERE epc = ? AND product_id = ?", (epc, product_id)
+        ).rowcount
+        if not removed:
+            raise DatabaseError("Tag not found.")
+        # init_db() copies products.epc into product_tags at every start,
+        # so clear it there too or the tag would come back after a restart.
+        conn.execute(
+            "UPDATE products SET epc = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND epc = ?",
+            (product_id, epc),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Inventory
 # ---------------------------------------------------------------------------
