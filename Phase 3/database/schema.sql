@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS purchases (
     qst             REAL    NOT NULL,          -- 9.975 %
     total           REAL    NOT NULL,
     points_earned   INTEGER NOT NULL DEFAULT 0,
+    points_redeemed INTEGER NOT NULL DEFAULT 0 CHECK (points_redeemed >= 0),
+    points_discount REAL NOT NULL DEFAULT 0 CHECK (points_discount >= 0),
     payment_method  TEXT    NOT NULL DEFAULT 'card',  -- simulated: card / cash / tap
     email_sent      INTEGER NOT NULL DEFAULT 0,       -- 1 once the receipt email is sent
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -109,6 +109,9 @@ MESSAGES = {
 
 # French versions of the DatabaseError messages raised in db.py
 ERROR_TRANSLATIONS = {
+    "Points must be a non-negative whole number.": "Les points doivent être un nombre entier positif ou nul.",
+    "Points cannot exceed the purchase subtotal.": "Les points ne peuvent pas dépasser le sous-total de l'achat.",
+    "Not enough loyalty points available.": "Le solde de points de fidélité est insuffisant.",
     "Price must be a finite number.": "Le prix doit être un nombre fini.",
     "Name, category and producer are required.": "Le nom, la catégorie et le producteur sont obligatoires.",
     "Price must be a number.": "Le prix doit être un nombre.",

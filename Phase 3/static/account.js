@@ -81,7 +81,7 @@ const translations = {
         memberCard: "MEMBERSHIP CARD",
         memberNumber: "MEMBER NUMBER",
         loyaltyPoints: "LOYALTY POINTS",
-        pointsDesc: "Earn 1 point for every full dollar spent before tax.",
+        pointsDesc: "Earn 1 point per full dollar after discounts, before tax. Redeem each point for $0.10 at checkout.",
         profile: "MY PROFILE",
         yourPurchases: "Your purchases",
         purchaseDesc: "View receipts and track points earned.",
@@ -143,7 +143,7 @@ const translations = {
         memberCard: "CARTE DE MEMBRE",
         memberNumber: "NUMÉRO DE MEMBRE",
         loyaltyPoints: "POINTS DE FIDÉLITÉ",
-        pointsDesc: "Gagnez 1 point par dollar entier dépensé avant taxes.",
+        pointsDesc: "Gagnez 1 point par dollar entier après réductions, avant taxes. Chaque point vaut 0,10 $ à la caisse.",
         profile: "MON PROFIL",
         yourPurchases: "Vos achats",
         purchaseDesc: "Consultez vos reçus et vos points gagnés.",
@@ -607,6 +607,15 @@ async function showHistory() {
 
                     // Display the receipt list
                     details.appendChild(list);
+                    if (receipt.points_redeemed) {
+                        const discount = document.createElement("p");
+                        const amount = new Intl.NumberFormat(currentLanguage === "fr" ? "fr-CA" : "en-CA",
+                            { style: "currency", currency: "CAD" }).format(receipt.points_discount);
+                        discount.textContent = currentLanguage === "fr"
+                            ? `${receipt.points_redeemed} points utilisés : réduction de ${amount}`
+                            : `${receipt.points_redeemed} points redeemed: ${amount} discount`;
+                        details.appendChild(discount);
+                    }
 
                     // Make the receipt visible
                     details.hidden = false;

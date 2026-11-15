@@ -75,6 +75,14 @@ def complete_checkout():
             language = customer["language"]
 
     # Only send IDs and quantities. Prices come from the database.
+    # Recheck the chosen amount inside the purchase transaction; do not
+    # silently reduce a confirmed discount when another checkout spends points.
+    points_redeemed = session.get("points_to_redeem", 0) if session.get("points_owner") == session.get("customer_id") else 0
+    if points_redeemed:
+        owner = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
+        if not owner or (customer_id is not None and customer_id != owner["id"]):
+            return jsonify(success=False, message="You can only redeem points from your logged-in account."), 403
+        customer_id = owner["id"]
     purchase_items = [
         {
             "product_id": int(product_id),
@@ -91,6 +99,7 @@ def complete_checkout():
             lang=language,
             epcs=list(session.get("rfid_cart_tags", {})),
             checkout_key=checkout_key,
+            points_redeemed=points_redeemed,
         )
     except db.DatabaseError as error:
         # Validation failed: leave the cart and RFID history intact.
@@ -105,6 +114,8 @@ def complete_checkout():
     session.pop("rfid_seen", None)
     session.pop("rfid_unknown", None)
     session.pop("checkout_key", None)
+    session.pop("points_to_redeem", None)
+    session.pop("points_owner", None)
 
     # Membership cards identify loyalty accounts; they do not authorize access
     # to private profile fields. Only the signed-in owner sees their details.

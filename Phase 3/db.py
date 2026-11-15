@@ -17,6 +17,7 @@ import secrets
 import sqlite3
 import math
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -29,7 +30,7 @@ SEED_PATH = os.path.join(BASE_DIR, "database", "seed.sql")
 GST_RATE = 0.05
 QST_RATE = 0.09975
 
-# Loyalty strategy: 1 point for every full dollar of the subtotal (before tax).
+# Earn 1 point per full dollar after discounts, before tax; redeem at $0.10 each.
 POINTS_PER_DOLLAR = 1
 
 
@@ -60,6 +61,9 @@ def init_db(seed=True):
     if "checkout_key" not in purchase_columns:
         conn.execute("ALTER TABLE purchases ADD COLUMN checkout_key TEXT")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_checkout_key ON purchases(checkout_key)")
+    for column, definition in (("points_redeemed", "INTEGER NOT NULL DEFAULT 0"), ("points_discount", "REAL NOT NULL DEFAULT 0")):
+        if column not in purchase_columns:
+            conn.execute(f"ALTER TABLE purchases ADD COLUMN {column} {definition}")
     if seed and conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0:
         with open(SEED_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())
@@ -493,16 +497,23 @@ def get_purchase_history(customer_id):
 # ---------------------------------------------------------------------------
 # Checkout -> purchase (receipt)
 # ---------------------------------------------------------------------------
-def calculate_totals(subtotal):
-    subtotal = round(subtotal, 2)
-    gst = round(subtotal * GST_RATE, 2)
-    qst = round(subtotal * QST_RATE, 2)
-    total = round(subtotal + gst + qst, 2)
-    points = int(subtotal) * POINTS_PER_DOLLAR
-    return {"subtotal": subtotal, "gst": gst, "qst": qst, "total": total, "points_earned": points}
+def calculate_totals(subtotal, points_redeemed=0):
+    if type(points_redeemed) is not int or points_redeemed < 0:
+        raise DatabaseError("Points must be a non-negative whole number.")
+    original = Decimal(str(subtotal)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    discount = Decimal(points_redeemed) * Decimal("0.10")
+    if discount > original:
+        raise DatabaseError("Points cannot exceed the purchase subtotal.")
+    taxable = original - discount
+    gst = (taxable * Decimal(str(GST_RATE))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    qst = (taxable * Decimal(str(QST_RATE))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return {"subtotal": float(original), "points_redeemed": points_redeemed,
+            "points_discount": float(discount), "discounted_subtotal": float(taxable),
+            "gst": float(gst), "qst": float(qst), "total": float(taxable + gst + qst),
+            "points_earned": int(taxable) * POINTS_PER_DOLLAR}
 
 
-def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, checkout_key=None, return_status=False):
+def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, checkout_key=None, return_status=False, points_redeemed=0):
     """Turn the confirmed shopping list into a receipt.
 
     cart = [{"product_id": 1, "quantity": 2}, ...]
@@ -563,17 +574,21 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, ch
         ).fetchone():
             raise DatabaseError("Customer not found.")
 
-        totals = calculate_totals(subtotal)
+        totals = calculate_totals(subtotal, points_redeemed)
+        if points_redeemed:
+            customer = conn.execute("SELECT points FROM customers WHERE id = ?", (customer_id,)).fetchone()
+            if not customer or customer["points"] < points_redeemed:
+                raise DatabaseError("Not enough loyalty points available.")
         if customer_id is None:
             totals["points_earned"] = 0  # guests don't earn points
 
         receipt_number = f"R-{datetime.now():%Y%m%d}-{secrets.token_hex(3).upper()}"
         cur = conn.execute(
             """INSERT INTO purchases (receipt_number, customer_id, subtotal, gst, qst, total,
-                                      points_earned, payment_method, checkout_key)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                      points_earned, payment_method, checkout_key, points_redeemed, points_discount)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (receipt_number, customer_id, totals["subtotal"], totals["gst"], totals["qst"],
-             totals["total"], totals["points_earned"], payment_method, checkout_key),
+             totals["total"], totals["points_earned"], payment_method, checkout_key, points_redeemed, totals["points_discount"]),
         )
         purchase_id = cur.lastrowid
 
@@ -587,10 +602,10 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, ch
             for epc in epcs:
                 conn.execute("UPDATE product_tags SET sold_purchase_id = ? WHERE epc = ?", (purchase_id, epc))
 
-        if customer_id is not None and totals["points_earned"]:
+        if customer_id is not None:
             conn.execute(
-                "UPDATE customers SET points = points + ? WHERE id = ?",
-                (totals["points_earned"], customer_id),
+                "UPDATE customers SET points = points - ? + ? WHERE id = ?",
+                (points_redeemed, totals["points_earned"], customer_id),
             )
 
         conn.commit()

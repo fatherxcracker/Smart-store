@@ -54,7 +54,12 @@ def build_cart(cart):
             "available": quantity <= product["in_stock"] and eligible,
         })
 
-    totals = db.calculate_totals(subtotal)
+    customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
+    balance = customer["points"] if customer else 0
+    maximum = min(balance, int(round(subtotal * 100)) // 10)
+    selected = session.get("points_to_redeem", 0) if customer and session.get("points_owner") == customer["id"] else 0
+    redeemed = min(selected, maximum)
+    totals = db.calculate_totals(subtotal, redeemed)
 
     return {
         "items": items,
@@ -63,6 +68,11 @@ def build_cart(cart):
         "gst": totals["gst"],
         "qst": totals["qst"],
         "total": totals["total"],
+        "points_balance": balance,
+        "max_points": maximum,
+        "points_redeemed": redeemed,
+        "points_discount": totals["points_discount"],
+        "can_redeem": customer is not None,
         "can_checkout": bool(items) and all(
             item["available"] for item in items
         ),
@@ -70,10 +80,14 @@ def build_cart(cart):
 
 
 def cart_response(message=""):
+    cart = build_cart(get_cart())
+    # Keep a selected discount aligned with changes to cart quantities.
+    if session.get("points_owner") == session.get("customer_id"):
+        session["points_to_redeem"] = cart["points_redeemed"]
     return jsonify({
         "success": True,
         "message": message,
-        "cart": build_cart(get_cart()),
+        "cart": cart,
     })
 
 
@@ -135,6 +149,22 @@ def scan_barcode():
     save_cart(cart)
 
     return cart_response(f"{product['name']} added to your cart.")
+
+
+@cart_api.post("/api/cart/points")
+def redeem_points():
+    customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
+    if not customer:
+        return jsonify(success=False, message="Log in to redeem your points."), 401
+    data = request.get_json(silent=True)
+    points = data.get("points") if isinstance(data, dict) else None
+    if type(points) is not int or points < 0:
+        return jsonify(success=False, message="Points must be a non-negative whole number."), 400
+    if points > build_cart(get_cart())["max_points"]:
+        return jsonify(success=False, message="Choose points within your balance and purchase subtotal."), 400
+    session["points_to_redeem"] = points
+    session["points_owner"] = customer["id"]
+    return cart_response("Points discount updated.")
 
 
 def add_epcs_to_cart(epcs, manual=False):
@@ -309,6 +339,8 @@ def remove_item(product_id):
 
 @cart_api.delete("/api/cart")
 def reset_cart():
+    session.pop("points_to_redeem", None)
+    session.pop("points_owner", None)
     session.pop("checkout_key", None)
     session.pop("shopping_cart", None)
     session.pop("rfid_cart_tags", None)
