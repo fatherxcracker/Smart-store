@@ -281,6 +281,11 @@
 
                         <!-- Federal GST tax -->
                         <div class="total-row">
+                            <span id="points-discount-label">Points discount</span>
+                            <strong id="cart-points-discount">$0.00</strong>
+                        </div>
+
+                        <div class="total-row">
                             <span data-i18n="gst">GST (5%)</span>
                             <strong id="cart-gst">$0.00</strong>
                         </div>
@@ -321,6 +326,13 @@
 
 
                         <!-- Select payment method -->
+                        <div class="checkout-field">
+                            <label for="points-input" id="points-label">Use loyalty points</label>
+                            <p id="points-help" aria-live="polite"></p>
+                            <input id="points-input" type="number" min="0" step="1" value="0" disabled>
+                            <button id="apply-points" type="button" class="secondary-button" disabled>Apply points</button>
+                        </div>
+
                         <div class="checkout-field">
 
                             <label for="payment-method"

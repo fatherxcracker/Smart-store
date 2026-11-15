@@ -9,6 +9,8 @@ const checkoutButton = document.getElementById("checkout");
 const checkoutForm = document.getElementById("checkout-form");
 const membershipInput = document.getElementById("membership-number");
 const paymentSelect = document.getElementById("payment-method");
+const pointsInput = document.getElementById("points-input");
+const applyPointsButton = document.getElementById("apply-points");
 const receiptPanel = document.getElementById("receipt-panel");
 const receiptFrame = document.getElementById("receipt-frame");
 const rfidButton = document.getElementById("rfid-scan");
@@ -51,6 +53,13 @@ const cartWords = {
 
     // English translations
     en: {
+        pointsLabel: "Use loyalty points",
+        pointsApply: "Apply points",
+        pointsDiscount: "Points discount",
+        pointsHelp: "points available. Each point saves $0.10 before tax. New points are earned on the remaining subtotal.",
+        pointsLogin: "Log in to use your loyalty points.",
+        pointsInvalid: "Enter a whole number within the available limit.",
+        pointsUpdated: "Points discount updated.",
         server: "Cannot reach the server.",
         unexpected: "The server returned an unexpected response. Check the Flask terminal.",
         failed: "The request failed.",
@@ -83,6 +92,13 @@ const cartWords = {
 
     // French translations
     fr: {
+        pointsLabel: "Utiliser des points de fidélité",
+        pointsApply: "Appliquer les points",
+        pointsDiscount: "Réduction en points",
+        pointsHelp: "points disponibles. Chaque point réduit le sous-total de 0,10 $. Les nouveaux points sont calculés sur le sous-total restant.",
+        pointsLogin: "Connectez-vous pour utiliser vos points de fidélité.",
+        pointsInvalid: "Entrez un nombre entier dans la limite disponible.",
+        pointsUpdated: "Réduction en points mise à jour.",
         server: "Impossible de joindre le serveur.",
         unexpected: "Le serveur a renvoyé une réponse inattendue. Vérifiez le terminal Flask.",
         failed: "La requête a échoué.",
@@ -248,6 +264,8 @@ function refreshControls() {
     barcodeInput.disabled = busy;
     membershipInput.disabled = busy;
     paymentSelect.disabled = busy;
+    pointsInput.disabled = busy || !currentCart?.can_redeem;
+    applyPointsButton.disabled = busy || !currentCart?.can_redeem;
 
     // Reset Cart stays available even when the cart is empty: it also
     // clears the remembered RFID tags (removed items stay "already read").
@@ -299,6 +317,15 @@ function renderCart(cart) {
 
     // Remember the latest cart
     currentCart = cart;
+    pointsInput.value = cart.points_redeemed || 0;
+    pointsInput.max = cart.max_points || 0;
+    document.getElementById("points-label").textContent = cartText("pointsLabel");
+    document.getElementById("points-discount-label").textContent = cartText("pointsDiscount");
+    applyPointsButton.textContent = cartText("pointsApply");
+    document.getElementById("points-help").textContent = cart.can_redeem
+        ? `${cart.points_balance} ${cartText("pointsHelp")}`
+        : cartText("pointsLogin");
+    document.getElementById("cart-points-discount").textContent = "−" + formatMoney(cart.points_discount || 0);
 
     // Clear previous cart rows
     cartItems.replaceChildren();
@@ -692,6 +719,15 @@ barcodeForm.addEventListener("submit", event => {
 
 
 // Clear the cart after confirmation
+applyPointsButton.addEventListener("click", () => {
+    const points = Number(pointsInput.value);
+    if (!Number.isInteger(points) || points < 0 || points > (currentCart?.max_points || 0)) {
+        showMessage(cartText("pointsInvalid"), "error", "pointsInvalid");
+        return;
+    }
+    updateCart("/api/cart/points", "POST", { points }, "pointsUpdated");
+});
+
 resetButton.addEventListener("click", () => {
 
     // Do nothing if checkout is busy

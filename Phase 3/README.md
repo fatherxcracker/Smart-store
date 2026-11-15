@@ -325,6 +325,20 @@ Phase 3/
 | "The receipt could not be emailed" | Check `SMTP_EMAIL` / `SMTP_APP_PASSWORD` in `.env`; the purchase is still saved. |
 | Page won't open from a laptop | Same network as the Pi? Use `http://<pi-ip>:5002` and `HOST=0.0.0.0`. |
 
+### Spending loyalty points
+
+Sign in to the account that owns the points. At checkout, enter a whole number
+under **Use loyalty points** and click **Apply points** before confirming payment.
+Each point reduces the order subtotal by $0.10; taxes are calculated on the
+remaining subtotal. You cannot redeem more than your current balance or reduce
+the subtotal below zero. New points are earned at 1 point per full dollar of the
+remaining subtotal before tax. For example, a $10 subtotal with 20 points redeemed
+becomes $8 before tax and earns 8 new points.
+
+Redemption and earnings are saved together with the purchase. Retrying a checkout
+does not spend points twice. Receipts show points used and the discount. Existing
+receipts default to zero redeemed points when the database migrates on startup.
+
 ### Tests
 
 Checkout retries use a unique cart identity saved with the purchase, so retrying

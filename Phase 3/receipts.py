@@ -43,6 +43,7 @@ LABELS = {
         "guest": "Guest", "item": "Item", "qty": "Qty", "price": "Price", "amount": "Amount",
         "subtotal": "Subtotal", "gst": "GST (5%)", "qst": "QST (9.975%)", "total": "Total",
         "payment": "Payment", "points_earned": "Points earned", "points_total": "Total points",
+        "points_discount": "Points discount", "points_redeemed": "Points redeemed",
         "thanks": "Thank you for shopping with us!",
         "subject": "Your {store} receipt {number}",
     },
@@ -51,6 +52,7 @@ LABELS = {
         "guest": "Invité", "item": "Article", "qty": "Qté", "price": "Prix", "amount": "Montant",
         "subtotal": "Sous-total", "gst": "TPS (5 %)", "qst": "TVQ (9,975 %)", "total": "Total",
         "payment": "Paiement", "points_earned": "Points gagnés", "points_total": "Total des points",
+        "points_discount": "Réduction en points", "points_redeemed": "Points utilisés",
         "thanks": "Merci de votre visite !",
         "subject": "Votre reçu {store} {number}",
     },
@@ -102,6 +104,8 @@ def build_receipt_text(receipt, lang=None):
     lines += [
         "-" * 44,
         f"{L['subtotal']:<30}{_money(receipt['subtotal'], lang):>14}",
+        f"{L['points_discount']:<30}{'-' + _money(receipt.get('points_discount', 0), lang):>14}",
+        f"{L['points_redeemed']:<30}{receipt.get('points_redeemed', 0):>14}",
         f"{L['gst']:<30}{_money(receipt['gst'], lang):>14}",
         f"{L['qst']:<30}{_money(receipt['qst'], lang):>14}",
         f"{L['total']:<30}{_money(receipt['total'], lang):>14}",
@@ -160,6 +164,8 @@ def build_receipt_html(receipt, lang=None):
     {rows}
     <tr><td colspan="4" style="border-top:1px solid #cbd5e1"></td></tr>
     {total_row(L['subtotal'], _money(receipt['subtotal'], lang))}
+    {total_row(L['points_discount'], '-' + _money(receipt.get('points_discount', 0), lang))}
+    {total_row(L['points_redeemed'], str(receipt.get('points_redeemed', 0)))}
     {total_row(L['gst'], _money(receipt['gst'], lang))}
     {total_row(L['qst'], _money(receipt['qst'], lang))}
     {total_row(L['total'], _money(receipt['total'], lang), bold=True)}
@@ -218,7 +224,7 @@ def send_receipt_email(purchase_id, lang=None):
 # ---------------------------------------------------------------------------
 # One call for the whole end of checkout (steps 4-6 of the workflow)
 # ---------------------------------------------------------------------------
-def complete_checkout(cart, customer_id=None, payment_method="card", lang="en", send_email=True, epcs=None, checkout_key=None):
+def complete_checkout(cart, customer_id=None, payment_method="card", lang="en", send_email=True, epcs=None, checkout_key=None, points_redeemed=0):
     """Payment simulation -> save purchase -> add points -> receipt -> email.
 
     cart = [{"product_id": 1, "quantity": 2}, ...]
@@ -227,7 +233,7 @@ def complete_checkout(cart, customer_id=None, payment_method="card", lang="en", 
     """
     purchase_id, created = db.create_purchase(
         cart, customer_id=customer_id, payment_method=payment_method, epcs=epcs,
-        checkout_key=checkout_key, return_status=True,
+        checkout_key=checkout_key, return_status=True, points_redeemed=points_redeemed,
     )
     # From here on the sale is committed. Notification/email/render failures
     # must never tell the customer that payment failed or invite another sale.
