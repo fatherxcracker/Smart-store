@@ -104,8 +104,14 @@ def build_receipt_text(receipt, lang=None):
     lines += [
         "-" * 44,
         f"{L['subtotal']:<30}{_money(receipt['subtotal'], lang):>14}",
-        f"{L['points_discount']:<30}{'-' + _money(receipt.get('points_discount', 0), lang):>14}",
-        f"{L['points_redeemed']:<30}{receipt.get('points_redeemed', 0):>14}",
+    ]
+    # Points discount lines only when points were used
+    if receipt.get("points_redeemed"):
+        lines += [
+            f"{L['points_discount']:<30}{'-' + _money(receipt.get('points_discount', 0), lang):>14}",
+            f"{L['points_redeemed']:<30}{receipt.get('points_redeemed', 0):>14}",
+        ]
+    lines += [
         f"{L['gst']:<30}{_money(receipt['gst'], lang):>14}",
         f"{L['qst']:<30}{_money(receipt['qst'], lang):>14}",
         f"{L['total']:<30}{_money(receipt['total'], lang):>14}",
@@ -142,6 +148,14 @@ def build_receipt_html(receipt, lang=None):
         return (f"<tr><td colspan='3' style='padding:4px 0;{weight}'>{label}</td>"
                 f"<td style='text-align:right;{weight}'>{value}</td></tr>")
 
+    # Points discount lines only when points were used
+    points_rows = ""
+    if receipt.get("points_redeemed"):
+        points_rows = (
+            total_row(L['points_discount'], '-' + _money(receipt.get('points_discount', 0), lang))
+            + total_row(L['points_redeemed'], str(receipt.get('points_redeemed', 0)))
+        )
+
     points_html = ""
     if customer:
         points_html = (
@@ -164,8 +178,7 @@ def build_receipt_html(receipt, lang=None):
     {rows}
     <tr><td colspan="4" style="border-top:1px solid #cbd5e1"></td></tr>
     {total_row(L['subtotal'], _money(receipt['subtotal'], lang))}
-    {total_row(L['points_discount'], '-' + _money(receipt.get('points_discount', 0), lang))}
-    {total_row(L['points_redeemed'], str(receipt.get('points_redeemed', 0)))}
+    {points_rows}
     {total_row(L['gst'], _money(receipt['gst'], lang))}
     {total_row(L['qst'], _money(receipt['qst'], lang))}
     {total_row(L['total'], _money(receipt['total'], lang), bold=True)}

@@ -480,6 +480,146 @@ def find_customer_by_membership(membership_number):
     return _public_customer(row)
 
 
+# ---------------------------------------------------------------------------
+# User management (admin)
+# ---------------------------------------------------------------------------
+def list_customers(search=None):
+    """Every account with its purchase count, total spent and last purchase.
+    search matches name, email, phone or membership number."""
+    sql = """SELECT c.*,
+                    COUNT(p.id)                 AS purchase_count,
+                    COALESCE(SUM(p.total), 0)   AS total_spent,
+                    MAX(p.created_at)           AS last_purchase_at
+             FROM customers c
+             LEFT JOIN purchases p ON p.customer_id = c.id"""
+    args = []
+    search = (search or "").strip()
+    if search:
+        like = f"%{search.lower()}%"
+        sql += """ WHERE lower(c.name) LIKE ? OR lower(c.email) LIKE ?
+                   OR lower(COALESCE(c.phone, '')) LIKE ? OR lower(c.membership_number) LIKE ?"""
+        args = [like, like, like, like]
+    sql += " GROUP BY c.id ORDER BY c.is_admin DESC, c.created_at DESC, c.id DESC"
+    conn = get_connection()
+    rows = conn.execute(sql, args).fetchall()
+    conn.close()
+    return [_public_customer(r) for r in rows]
+
+
+def count_admins():
+    conn = get_connection()
+    count = conn.execute("SELECT COUNT(*) FROM customers WHERE is_admin = 1").fetchone()[0]
+    conn.close()
+    return count
+
+
+def admin_update_customer(customer_id, name, email, phone=None, language="en"):
+    """Edit an account's profile (admin)."""
+    name = (name or "").strip()
+    email = (email or "").strip().lower()
+    phone = (phone or "").strip() or None
+    if not name or not email:
+        raise DatabaseError("Name and email are required.")
+    if "@" not in email:
+        raise DatabaseError("Enter a valid email address.")
+    if language not in ("en", "fr"):
+        language = "en"
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            "UPDATE customers SET name = ?, email = ?, phone = ?, language = ? WHERE id = ?",
+            (name, email, phone, language, customer_id),
+        )
+        conn.commit()
+        if cur.rowcount == 0:
+            raise DatabaseError("Customer not found.")
+    except sqlite3.IntegrityError:
+        raise DatabaseError("An account with this email already exists.")
+    finally:
+        conn.close()
+
+
+def set_customer_points(customer_id, points):
+    """Set a loyalty balance directly (admin correction)."""
+    try:
+        points = int(str(points).strip())
+    except (TypeError, ValueError):
+        raise DatabaseError("Points must be a whole number of 0 or more.")
+    if points < 0:
+        raise DatabaseError("Points must be a whole number of 0 or more.")
+    conn = get_connection()
+    cur = conn.execute("UPDATE customers SET points = ? WHERE id = ?", (points, customer_id))
+    conn.commit()
+    conn.close()
+    if cur.rowcount == 0:
+        raise DatabaseError("Customer not found.")
+    return points
+
+
+def set_customer_password(customer_id, password):
+    """Reset an account's password (admin)."""
+    if not password or len(password) < 6:
+        raise DatabaseError("Password must be at least 6 characters.")
+    conn = get_connection()
+    cur = conn.execute(
+        "UPDATE customers SET password_hash = ? WHERE id = ?",
+        (generate_password_hash(password), customer_id),
+    )
+    conn.commit()
+    conn.close()
+    if cur.rowcount == 0:
+        raise DatabaseError("Customer not found.")
+
+
+def set_customer_admin(customer_id, is_admin, acting_admin_id=None):
+    """Grant or remove administrator access. The store always keeps at least
+    one administrator, and an admin can't remove their own access here."""
+    conn = get_connection()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute("SELECT is_admin FROM customers WHERE id = ?", (customer_id,)).fetchone()
+        if not row:
+            raise DatabaseError("Customer not found.")
+        if not is_admin and row["is_admin"]:
+            if acting_admin_id is not None and int(customer_id) == int(acting_admin_id):
+                raise DatabaseError("You can't remove your own administrator access.")
+            if conn.execute("SELECT COUNT(*) FROM customers WHERE is_admin = 1").fetchone()[0] <= 1:
+                raise DatabaseError("The store must keep at least one administrator.")
+        conn.execute("UPDATE customers SET is_admin = ? WHERE id = ?", (1 if is_admin else 0, customer_id))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def delete_customer(customer_id, acting_admin_id=None):
+    """Delete an account. Its receipts are kept (they become guest receipts)
+    so sales totals and stock stay correct."""
+    if acting_admin_id is not None and int(customer_id) == int(acting_admin_id):
+        raise DatabaseError("You can't delete your own account here.")
+    conn = get_connection()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute("SELECT is_admin FROM customers WHERE id = ?", (customer_id,)).fetchone()
+        if not row:
+            raise DatabaseError("Customer not found.")
+        if row["is_admin"] and conn.execute(
+            "SELECT COUNT(*) FROM customers WHERE is_admin = 1"
+        ).fetchone()[0] <= 1:
+            raise DatabaseError("The store must keep at least one administrator.")
+        # Keep the receipts, unlinked from the account (same as ON DELETE SET NULL)
+        conn.execute("UPDATE purchases SET customer_id = NULL WHERE customer_id = ?", (customer_id,))
+        conn.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def get_purchase_history(customer_id):
     """List of past receipts for the customer account page (newest first)."""
     conn = get_connection()

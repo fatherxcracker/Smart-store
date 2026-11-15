@@ -7,8 +7,9 @@ A web-based smart store running on the Raspberry Pi: product and inventory manag
 | Customer portal | `http://<pi-ip>:5002/` | Customers: create an account, log in, see points + purchase history (EN/FR) |
 | Inventory dashboard | `http://<pi-ip>:5002/inventory` | Admin: add / edit / delete products, receive stock, reception history |
 | Self-checkout | `http://<pi-ip>:5002/cart` | Customers: scan, review list, remove items, membership card, pay, receipt |
+| User management | `http://<pi-ip>:5002/admin/users` | Admin: see every account, edit details, set points, reset passwords, manage admin roles, delete accounts |
 
-All three pages link to each other in their navigation bars.
+The pages link to each other in their navigation bars; admins open **User management** with **Manage Users** on the Inventory page.
 
 ---
 
@@ -85,7 +86,7 @@ The initial seed creates these demo accounts:
 | Administrator | `admin@smartstore.local` | `eUL1b-l0PhnHW9WDo8A6Dw` |
 | Customer | `john@gmail.com` | `123456` |
 
-These publicly documented credentials are for testing only. Do not use them for a network-accessible or real store. The seed runs when the product database is empty; it does not add accounts to an existing populated database or change existing passwords. To grant an existing account administrator access, run `python manage_admin.py email@example.com` from Phase 3. Add `--revoke` to remove access.
+These publicly documented credentials are for testing only. Do not use them for a network-accessible or real store. The seed runs when the product database is empty; it does not add accounts to an existing populated database or change existing passwords. To grant an existing account administrator access, log in as an admin and use **Make administrator** on that user's page in **User management** (or run `python manage_admin.py email@example.com` from Phase 3; add `--revoke` to remove access).
 
 ---
 
@@ -212,6 +213,19 @@ python app.py
 - **Log in** to see the membership card, **total points** and **purchase history**; each past receipt can be opened.
 - **Bilingual:** EN/FR switch (bonus). The choice is saved on the account (also when it was picked before logging in), and receipt emails are sent in that language.
 
+### User management (admin) — `/admin/users`
+- **All accounts in one table:** name, email, membership number, points, number of purchases, total spent, date joined, and an **Admin** badge. **Search** by name, email, phone or membership number.
+- **Add user:** create an account for a customer (with a temporary password), optionally as an administrator.
+- **Manage** a user:
+  - edit name, email, phone and receipt language
+  - set the loyalty **points** balance (corrections)
+  - **reset the password**
+  - **make administrator / remove administrator access**
+  - **delete the account** — their receipts are kept as guest receipts, so sales totals and stock stay correct
+  - see their **purchase history** and open any receipt
+- **Safety rules:** an admin can't remove their own admin access or delete their own account, and the store always keeps at least one administrator.
+- Every action shows a notification (EN/FR) and confirmations appear before role changes and deletion. Only administrators can open these pages.
+
 ### Receipts and notifications
 - The **receipt** has the product list (name, quantity, unit price, amount), subtotal, GST, QST, **total**, payment method, **points earned**, the member's total points and the **date and time**.
 - **Notifications** appear after every action: product added/updated/deleted, stock received, item scanned/removed, payment approved, checkout completed, receipt emailed, account created, login, errors. Every notification is also saved in the `notifications` table (`/api/notifications` shows the last 20).
@@ -258,11 +272,13 @@ Phase 3/
 ├── notifications.py       # bilingual notifications (EN/FR) + log
 ├── database/schema.sql    # tables, relationships, inventory view
 ├── database/seed.sql      # 5 sample products + initial stock
-├── templates/             # account, inventory, add/edit product, receive stock, reception history, cart
+├── templates/             # account, inventory, add/edit product, receive stock, reception history, product tags, cart,
+│                          # users (user management list) + user_detail (one account)
 ├── static/                # CSS + JS for each page (rfid_tag.js = "Read tag" button)
 ├── docs/ER_diagram.png    # ER diagram (+ .mmd source)
 ├── test_database.py       # 40 automatic checks of the database/receipt logic
-├── ProjectTasksDescriptionPhase3.docx
+├── ProjectTasksDescriptionPhase3.docx   # who did what (open during the demo)
+├── ProjectTasksDescriptionPhase3.pdf    # PDF copy of the same document
 ├── requirements.txt
 └── .env.example
 ```
@@ -282,6 +298,9 @@ Phase 3/
 | POST | `/products/<id>/tags/reset` | Admin: make one sold tag (`epc`) or all sold tags of a product available again |
 | POST | `/products/<id>/tags/remove` | Admin: remove a tag (`epc`) from a product |
 | GET | `/api/rfid/read` | Read one tag's EPC (product form) |
+| GET / POST | `/admin/users` | Admin: list / search all accounts · create an account |
+| GET | `/admin/users/<id>` | Admin: one account (details, points, role, purchases) |
+| POST | `/admin/users/<id>/update` · `/points` · `/password` · `/admin` · `/delete` | Admin: edit profile · set points · reset password · grant/remove admin · delete account |
 | POST | `/api/account/register` · `/login` · `/logout` | Customer accounts |
 | GET | `/api/account/me` · `/history` · `/receipt/<id>` | Profile, purchase history, one receipt |
 | GET | `/api/notifications` | Last 20 notifications |
@@ -312,6 +331,7 @@ Phase 3/
 4. **Self-checkout** (`/cart`): put 3 tagged items on the reader → **Scan all items** → all 3 appear at once. Scan one more with the barcode scanner. **Remove** one item. Enter the membership number → **Proceed to payment** → receipt on screen.
 5. Show the **receipt email** in the inbox, then the customer portal: **points** went up and the receipt is in **Purchase history**.
 6. Back on `/inventory`: **Sold** and **In stock** have changed.
+7. **Manage Users** (`/admin/users`): the new customer is listed with their points, purchases and total spent. Open them, show their receipt, adjust points, and make them an administrator (then remove it again).
 
 ### Troubleshooting
 

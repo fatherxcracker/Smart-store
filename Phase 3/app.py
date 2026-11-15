@@ -37,6 +37,7 @@ load_dotenv()
 # Database functions for customers and products
 import db
 # Functions for reading RFID tags
+import receipts
 import rfid_reader
 # Functions for success and error messages
 from notifications import notify, notify_error
@@ -66,7 +67,9 @@ def create_app():
     @app.before_request
     def protect_inventory_management():
         protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags", "notifications_log",
-                     "reset_product_tags", "remove_product_tag", "reset_all_tags"}
+                     "reset_product_tags", "remove_product_tag", "reset_all_tags",
+                     "manage_users", "create_user", "user_detail", "update_user", "set_user_points",
+                     "reset_user_password", "set_user_admin", "delete_user"}
         if request.endpoint in protected:
             customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
             if not customer or not customer.get("is_admin"):
@@ -331,6 +334,136 @@ def create_app():
         lang = _language()
         _flash_reset(db.reset_sold_tags(), lang)
         return redirect(url_for("inventory"))
+
+    # ---------------------------------------------------------
+    # User management (admin): see and manage every account
+    # ---------------------------------------------------------
+
+    def _current_admin_id():
+        return session.get("customer_id")
+
+    def _user_or_404(customer_id):
+        user = db.get_customer(customer_id)
+        if not user:
+            abort(404)
+        return user
+
+    @app.get("/admin/users")
+    def manage_users():
+        search = request.args.get("q", "")
+        users = db.list_customers(search)
+        return render_template(
+            "users.html",
+            users=users,
+            search=search,
+            total_users=len(db.list_customers()) if search else len(users),
+            admin_count=db.count_admins(),
+            current_admin_id=_current_admin_id(),
+            values={},
+        )
+
+    @app.post("/admin/users")
+    def create_user():
+        lang = _language()
+        values = {key: request.form.get(key, "").strip() for key in ("name", "email", "phone", "user_language")}
+        try:
+            account = db.create_customer(
+                values["name"], values["email"], request.form.get("password", ""),
+                values["phone"] or None, values["user_language"] or "en",
+            )
+            if request.form.get("is_admin") == "1":
+                db.set_customer_admin(account["id"], True)
+            flash(notify("user_created", lang, name=values["name"],
+                         membership_number=account["membership_number"])["message"], "success")
+            return redirect(url_for("user_detail", customer_id=account["id"]))
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+            users = db.list_customers()
+            return render_template(
+                "users.html", users=users, search="", total_users=len(users),
+                admin_count=db.count_admins(), current_admin_id=_current_admin_id(),
+                values=values, show_add_form=True,
+            ), 400
+
+    @app.get("/admin/users/<int:customer_id>")
+    def user_detail(customer_id):
+        user = _user_or_404(customer_id)
+        stats = next((u for u in db.list_customers() if u["id"] == customer_id), user)
+        purchases = db.get_purchase_history(customer_id)
+        receipts_html = {
+            p["id"]: receipts.build_receipt_html(db.get_purchase(p["id"]), user.get("language"))
+            for p in purchases
+        }
+        return render_template(
+            "user_detail.html",
+            user=user,
+            stats=stats,
+            purchases=purchases,
+            receipts_html=receipts_html,
+            is_self=customer_id == _current_admin_id(),
+            admin_count=db.count_admins(),
+        )
+
+    @app.post("/admin/users/<int:customer_id>/update")
+    def update_user(customer_id):
+        _user_or_404(customer_id)
+        lang = _language()
+        try:
+            db.admin_update_customer(
+                customer_id, request.form.get("name"), request.form.get("email"),
+                request.form.get("phone"), request.form.get("user_language", "en"),
+            )
+            flash(notify("user_updated", lang, name=request.form.get("name", "").strip())["message"], "success")
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+        return redirect(url_for("user_detail", customer_id=customer_id))
+
+    @app.post("/admin/users/<int:customer_id>/points")
+    def set_user_points(customer_id):
+        user = _user_or_404(customer_id)
+        lang = _language()
+        try:
+            points = db.set_customer_points(customer_id, request.form.get("points"))
+            flash(notify("user_points_set", lang, name=user["name"], points=points)["message"], "success")
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+        return redirect(url_for("user_detail", customer_id=customer_id))
+
+    @app.post("/admin/users/<int:customer_id>/password")
+    def reset_user_password(customer_id):
+        user = _user_or_404(customer_id)
+        lang = _language()
+        try:
+            db.set_customer_password(customer_id, request.form.get("password", ""))
+            flash(notify("user_password_reset", lang, name=user["name"])["message"], "success")
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+        return redirect(url_for("user_detail", customer_id=customer_id))
+
+    @app.post("/admin/users/<int:customer_id>/admin")
+    def set_user_admin(customer_id):
+        user = _user_or_404(customer_id)
+        lang = _language()
+        make_admin = request.form.get("is_admin") == "1"
+        try:
+            db.set_customer_admin(customer_id, make_admin, acting_admin_id=_current_admin_id())
+            key = "user_admin_granted" if make_admin else "user_admin_removed"
+            flash(notify(key, lang, name=user["name"])["message"], "success")
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+        return redirect(url_for("user_detail", customer_id=customer_id))
+
+    @app.post("/admin/users/<int:customer_id>/delete")
+    def delete_user(customer_id):
+        user = _user_or_404(customer_id)
+        lang = _language()
+        try:
+            db.delete_customer(customer_id, acting_admin_id=_current_admin_id())
+            flash(notify("user_deleted", lang, name=user["name"])["message"], "success")
+            return redirect(url_for("manage_users"))
+        except db.DatabaseError as exc:
+            flash(notify_error(str(exc), lang)["message"], "error")
+            return redirect(url_for("user_detail", customer_id=customer_id))
 
     # Inventory
 
