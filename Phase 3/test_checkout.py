@@ -27,15 +27,21 @@ class CheckoutTests(unittest.TestCase):
         self.email.start()
         self.addCleanup(self.email.stop)
         self.pid = db.add_product("Test item", "Test", 10, "900000000001", None, "Test producer")
-        db.receive_stock(self.pid, 10)
+        # Every unit received has its own RFID tag
+        self.tags = [f"5E{index:02X}" for index in range(10)]
+        self.next_tag = 0
+        db.receive_stock(self.pid, 10, epcs=self.tags)
         self.customer = db.create_customer("Private Name", "private@example.com", "secret123", phone="555-1234")
 
     def tearDown(self):
         db.DATABASE_PATH = self.original_db
         self.temp.cleanup()
 
-    def add_barcode(self):
-        response = self.client.post("/api/cart/barcode", json={"upc": "900000000001"})
+    def add_item(self):
+        """Put the next tagged unit on the RFID reader."""
+        epc = self.tags[self.next_tag]
+        self.next_tag += 1
+        response = self.client.post("/api/cart/rfid", json={"epcs": [epc]})
         self.assertEqual(response.status_code, 200)
         return response.get_json()
 
@@ -47,7 +53,7 @@ class CheckoutTests(unittest.TestCase):
             return conn.execute("SELECT COUNT(*) FROM purchases").fetchone()[0]
 
     def test_stale_cookie_retry_returns_same_purchase(self):
-        self.add_barcode()
+        self.add_item()
         with self.client.session_transaction() as session:
             old_session = dict(session)
         second_client = self.application.test_client()
@@ -67,7 +73,7 @@ class CheckoutTests(unittest.TestCase):
     def test_concurrent_database_retries_create_one_sale(self):
         def pay(_):
             return db.create_purchase([{"product_id": self.pid, "quantity": 1}],
-                                      customer_id=self.customer["id"], checkout_key="same-cart")
+                                      customer_id=self.customer["id"], checkout_key="same-cart", epcs=[self.tags[0]])
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             ids = list(pool.map(pay, range(2)))
         self.assertEqual(ids[0], ids[1])
@@ -75,16 +81,15 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(db.get_customer(self.customer["id"])["points"], 10)
 
     def test_new_cart_can_purchase_again(self):
-        self.add_barcode()
+        self.add_item()
         first = self.checkout()
-        self.add_barcode()
+        self.add_item()
         second = self.checkout()
         self.assertNotEqual(first.json["purchase_id"], second.json["purchase_id"])
         self.assertEqual(self.purchase_count(), 2)
 
     def test_rfid_retry_returns_sale_even_after_tags_are_sold(self):
-        db.register_product_tag(self.pid, "CC01")
-        self.client.post("/api/cart/rfid", json={"epcs": ["CC01"]})
+        self.add_item()
         second_client = self.application.test_client()
         with self.client.session_transaction() as session:
             old_session = dict(session)
@@ -97,7 +102,7 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(self.purchase_count(), 1)
 
     def test_membership_card_does_not_expose_profile(self):
-        self.add_barcode()
+        self.add_item()
         receipts.send_receipt_email.return_value = {
             "event": "receipt_emailed", "message": "Sent to private@example.com",
             "message_en": "Sent to private@example.com", "message_fr": "private@example.com",
@@ -113,13 +118,13 @@ class CheckoutTests(unittest.TestCase):
     def test_owner_receipt_uses_minimum_profile_fields(self):
         with self.client.session_transaction() as session:
             session["customer_id"] = self.customer["id"]
-        self.add_barcode()
+        self.add_item()
         response = self.checkout(membership_number=self.customer["membership_number"])
         self.assertEqual(set(response.json["receipt"]["customer"]), {"name", "membership_number", "points"})
         self.assertNotIn("private@example.com", response.get_data(as_text=True))
 
     def test_notification_failure_keeps_sale_successful(self):
-        self.add_barcode()
+        self.add_item()
         with patch("receipts.notify", side_effect=sqlite3.OperationalError("locked")), self.assertLogs(level="ERROR"):
             response = self.checkout()
         self.assertEqual(response.status_code, 200)
@@ -129,7 +134,7 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/cart").json["cart"]["items"], [])
 
     def test_receipt_lookup_failure_after_commit_keeps_sale_successful(self):
-        self.add_barcode()
+        self.add_item()
         with patch("receipts.db.get_purchase", side_effect=sqlite3.OperationalError("locked")), self.assertLogs(level="ERROR"):
             response = self.checkout()
         self.assertEqual(response.status_code, 200)
@@ -138,7 +143,7 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/cart").json["cart"]["items"], [])
 
     def test_email_failure_keeps_sale_successful(self):
-        self.add_barcode()
+        self.add_item()
         receipts.send_receipt_email.side_effect = RuntimeError("email service unavailable")
         with self.assertLogs(level="ERROR"):
             response = self.checkout(membership_number=self.customer["membership_number"])
@@ -147,34 +152,34 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(response.json["notifications"][-1]["level"], "warning")
 
     def test_receipt_render_failure_keeps_sale_successful(self):
-        self.add_barcode()
+        self.add_item()
         with patch("receipts.build_receipt_html", side_effect=RuntimeError("render unavailable")), self.assertLogs(level="ERROR"):
             response = self.checkout(membership_number=self.customer["membership_number"])
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("Private Name", response.json["receipt_html"])
         self.assertEqual(self.purchase_count(), 1)
 
-    def test_tagged_stock_requires_rfid_before_payment(self):
-        for index in range(10):
-            db.register_product_tag(self.pid, f"AA{index:02X}")
+    def test_receiving_stock_requires_one_epc_per_unit(self):
+        before = db.get_product(self.pid)["in_stock"]
+        with self.assertRaises(db.DatabaseError):
+            db.receive_stock(self.pid, 40, epcs=["DD01", "DD02", "DD03", "DD04"])
+        with self.assertRaises(db.DatabaseError):
+            db.receive_stock(self.pid, 2)
+        self.assertEqual(db.get_product(self.pid)["in_stock"], before)
+        db.receive_stock(self.pid, 2, epcs=["DD01", "DD02"])
+        self.assertEqual(db.get_product(self.pid)["in_stock"], before + 2)
+
+    def test_barcode_cart_endpoint_removed(self):
         response = self.client.post("/api/cart/barcode", json={"upc": "900000000001"})
-        self.assertEqual(response.status_code, 400)
+        self.assertIn(response.status_code, (404, 405))
+
+    def test_cart_quantity_without_tags_cannot_checkout(self):
         with self.client.session_transaction() as session:
             session["shopping_cart"] = {str(self.pid): 1}
         self.assertFalse(self.client.get("/api/cart").json["cart"]["can_checkout"])
         self.client.delete("/api/cart")
-        response = self.client.post("/api/cart/rfid", json={"epcs": ["AA00"]})
+        response = self.client.post("/api/cart/rfid", json={"epcs": [self.tags[0]]})
         self.assertTrue(response.json["cart"]["can_checkout"])
-        self.assertEqual(self.checkout().status_code, 200)
-
-    def test_mixed_barcode_and_rfid_quantities(self):
-        for index in range(9):
-            db.register_product_tag(self.pid, f"BB{index:02X}")
-        self.add_barcode()
-        self.assertEqual(self.client.post("/api/cart/barcode", json={"upc": "900000000001"}).status_code, 400)
-        scanned = self.client.post("/api/cart/rfid", json={"epcs": ["BB00", "BB01"]})
-        self.assertTrue(scanned.json["cart"]["can_checkout"])
-        self.assertEqual(scanned.json["cart"]["item_count"], 3)
         self.assertEqual(self.checkout().status_code, 200)
 
     def test_notifications_require_admin(self):
@@ -196,7 +201,7 @@ class CheckoutTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/account/language", json={"language": "xx"}).status_code, 400)
 
     def test_checkout_honors_selected_language(self):
-        self.add_barcode()
+        self.add_item()
         response = self.checkout(membership_number=self.customer["membership_number"], language="fr")
         self.assertIn("Paiement", response.json["receipt_html"])
 
@@ -214,7 +219,7 @@ class CheckoutTests(unittest.TestCase):
 
     def test_redeem_points_reduces_total_and_earning(self):
         self.enable_points()
-        self.add_barcode()
+        self.add_item()
         preview = self.client.post("/api/cart/points", json={"points": 20})
         self.assertEqual(preview.status_code, 200)
         self.assertEqual(preview.json["cart"]["points_discount"], 2)
@@ -229,7 +234,7 @@ class CheckoutTests(unittest.TestCase):
         self.assertIn("Points redeemed", receipts.build_receipt_text(db.get_purchase(receipt["id"])))
 
     def test_redemption_requires_login_and_matching_member(self):
-        self.add_barcode()
+        self.add_item()
         self.assertEqual(self.client.post("/api/cart/points", json={"points": 10}).status_code, 401)
         self.enable_points()
         self.client.post("/api/cart/points", json={"points": 10})
@@ -243,7 +248,7 @@ class CheckoutTests(unittest.TestCase):
 
     def test_invalid_redemption_amounts_rejected(self):
         self.enable_points(15)
-        self.add_barcode()
+        self.add_item()
         for points in (-1, 1.5, True, "10", 16):
             with self.subTest(points=points):
                 self.assertEqual(self.client.post("/api/cart/points", json={"points": points}).status_code, 400)
@@ -251,7 +256,7 @@ class CheckoutTests(unittest.TestCase):
 
     def test_points_cannot_exceed_subtotal_or_use_newly_earned_points(self):
         self.enable_points(200)
-        self.add_barcode()
+        self.add_item()
         self.assertEqual(self.client.post("/api/cart/points", json={"points": 101}).status_code, 400)
         self.assertEqual(self.client.post("/api/cart/points", json={"points": 100}).status_code, 200)
         receipt = self.checkout().json["receipt"]
@@ -263,7 +268,7 @@ class CheckoutTests(unittest.TestCase):
 
     def test_redemption_retry_deducts_points_once(self):
         self.enable_points()
-        self.add_barcode()
+        self.add_item()
         self.client.post("/api/cart/points", json={"points": 20})
         second = self.application.test_client()
         with self.client.session_transaction() as session:
@@ -280,7 +285,7 @@ class CheckoutTests(unittest.TestCase):
         def redeem(key):
             try:
                 return db.create_purchase([{"product_id": self.pid}], customer_id=self.customer["id"],
-                                          points_redeemed=100, checkout_key=key)
+                                          points_redeemed=100, checkout_key=key, epcs=[self.tags[0]])
             except db.DatabaseError:
                 return None
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:

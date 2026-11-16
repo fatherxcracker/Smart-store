@@ -30,3 +30,12 @@ readTagButton.addEventListener("click", async () => {
         readTagButton.textContent = readTagLabel;
     }
 });
+
+// Reader in keyboard mode: holding a tag on the reader fills the EPC field directly
+document.addEventListener("rfid-scan", event => {
+    epcInput.value = event.detail.epc;
+    tagStatus.className = "tag-status success";
+    tagStatus.textContent = document.documentElement.lang === "fr"
+        ? `Étiquette ${event.detail.epc} lue. Cliquez sur « Attribuer l’étiquette ».`
+        : `Tag ${event.detail.epc} read. Click "Assign tag" to save it.`;
+});

@@ -98,59 +98,6 @@ def view_cart():
     return cart_response()
 
 
-@cart_api.post("/api/cart/barcode")
-def scan_barcode():
-    data = request.get_json(silent=True)
-
-    if not isinstance(data, dict):
-        return jsonify(
-            success=False,
-            message="Send a barcode as JSON.",
-        ), 400
-
-    upc = data.get("upc")
-
-    if not isinstance(upc, str) or not upc.strip():
-        return jsonify(
-            success=False,
-            message="Scan or enter a barcode.",
-        ), 400
-
-    product = db.find_by_upc(upc)
-
-    if product is None:
-        return jsonify(
-            success=False,
-            message="No product matches this barcode.",
-        ), 404
-
-    cart = get_cart()
-    product_id = str(product["id"])
-    quantity = cart.get(product_id, 0) + 1
-
-    tagged_quantity = sum(1 for pid in session.get("rfid_cart_tags", {}).values() if pid == product["id"])
-    if quantity - tagged_quantity > db.get_untagged_stock(product["id"]):
-        return jsonify(success=False, message="No more untagged stock available. Scan the RFID tags for tagged items."), 400
-
-    if quantity > product["in_stock"]:
-        return jsonify(
-            success=False,
-            message=f"Only {product['in_stock']} units available.",
-        ), 400
-
-    # Keep the session cookie small enough for a classroom demo.
-    if product_id not in cart and len(cart) >= 40:
-        return jsonify(
-            success=False,
-            message="The cart can contain at most 40 different products.",
-        ), 400
-
-    cart[product_id] = quantity
-    save_cart(cart)
-
-    return cart_response(f"{product['name']} added to your cart.")
-
-
 @cart_api.post("/api/cart/points")
 def redeem_points():
     customer = db.get_customer(session.get("customer_id")) if session.get("customer_id") else None
@@ -303,7 +250,9 @@ def scan_rfid():
             message="Send between 1 and 100 EPC readings.",
         ), 400
 
-    return add_epcs_to_cart(epcs)
+    # manual=True: re-add any tag that is on the reader but not in the cart right now
+    # (used by the reader's keyboard mode, which re-sends the tags on it every second)
+    return add_epcs_to_cart(epcs, manual=data.get("manual") is True)
 
 
 @cart_api.post("/api/cart/rfid/scan")

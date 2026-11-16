@@ -2,8 +2,6 @@
  // Get the checkout elements from cart.html
 const cartItems = document.getElementById("cart-items");
 const cartMessage = document.getElementById("cart-message");
-const barcodeForm = document.getElementById("barcode-form");
-const barcodeInput = document.getElementById("barcode-input");
 const resetButton = document.getElementById("reset-cart");
 const checkoutButton = document.getElementById("checkout");
 const checkoutForm = document.getElementById("checkout-form");
@@ -233,9 +231,6 @@ async function cartRequest(url, method = "GET", body = null) {
 // Update buttons when scanning or checkout is busy
 function refreshControls() {
 
-    // Disable barcode button while busy
-    barcodeForm.querySelector("button").disabled = busy;
-
     // Disable RFID button while busy
     rfidButton.disabled = busy;
 
@@ -261,7 +256,6 @@ function refreshControls() {
     );
 
     // Disable inputs while busy
-    barcodeInput.disabled = busy;
     membershipInput.disabled = busy;
     paymentSelect.disabled = busy;
     pointsInput.disabled = busy || !currentCart?.can_redeem;
@@ -457,9 +451,6 @@ async function updateCart(url, method, body = null, messageKey = null) {
             messageKey
         );
 
-        // Clear barcode input
-        barcodeInput.value = "";
-
         // Hide old receipt
         receiptPanel.hidden = true;
 
@@ -474,7 +465,6 @@ async function updateCart(url, method, body = null, messageKey = null) {
 
         setBusy(false);
 
-        barcodeInput.focus();
     }
 }
 
@@ -631,89 +621,6 @@ rfidAuto.addEventListener("click", () => {
     } else {
         // Start automatic scanning
         startAutoScan();
-    }
-});
-
-
-// USB barcode scanners usually type digits quickly and finish with Enter.
-// Detect a complete UPC anywhere on this page without moving focus while the
-// customer is typing into the membership field or choosing a payment method.
-let scannerBuffer = "";
-let scannerLastKey = 0;
-let scannerTarget = null;
-let scannerOriginalValue = null;
-let scannerSelection = null;
-
-function resetScannerBuffer() {
-    scannerBuffer = "";
-    scannerLastKey = 0;
-    scannerTarget = null;
-    scannerOriginalValue = null;
-    scannerSelection = null;
-}
-
-document.addEventListener("keydown", event => {
-    if (event.isComposing || event.ctrlKey || event.altKey || event.metaKey) {
-        resetScannerBuffer();
-        return;
-    }
-
-    const now = performance.now();
-    if (/^[0-9]$/.test(event.key)) {
-        if (!scannerBuffer || now - scannerLastKey > 80 || scannerTarget !== event.target) {
-            resetScannerBuffer();
-            scannerTarget = event.target;
-            if (event.target instanceof HTMLInputElement && event.target.type === "text") {
-                scannerOriginalValue = event.target.value;
-                scannerSelection = [event.target.selectionStart, event.target.selectionEnd];
-            }
-        }
-        scannerBuffer += event.key;
-        scannerLastKey = now;
-        if (scannerBuffer.length > 13) resetScannerBuffer();
-        return;
-    }
-
-    if (event.key === "Enter" && now - scannerLastKey <= 150 &&
-        (scannerBuffer.length === 12 || scannerBuffer.length === 13)) {
-        const upc = scannerBuffer;
-        // Undo scanner keystrokes in another text field, preserving user input.
-        if (scannerOriginalValue !== null && scannerTarget !== barcodeInput) {
-            scannerTarget.value = scannerOriginalValue;
-            if (scannerSelection[0] !== null) {
-                scannerTarget.setSelectionRange(...scannerSelection);
-            }
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        resetScannerBuffer();
-        if (busy) {
-            showMessage("Please wait until the current action finishes, then scan again.", "error");
-        } else {
-            updateCart("/api/cart/barcode", "POST", { upc }, "added");
-        }
-        return;
-    }
-    resetScannerBuffer();
-}, true);
-
-// Add a product when barcode form is submitted
-barcodeForm.addEventListener("submit", event => {
-
-    // Stop page refresh
-    event.preventDefault();
-
-    // Get barcode entered by customer
-    const upc = barcodeInput.value.trim();
-
-    // Add product through Flask
-    if (upc) {
-        updateCart(
-            "/api/cart/barcode",
-            "POST",
-            { upc },
-            "added"
-        );
     }
 });
 
@@ -904,9 +811,49 @@ window.addEventListener("smartstore-language-change", event => {
 });
 
 
-// Make the scanner field ready on page load without interrupting later input.
-barcodeInput.focus();
-
 // Load the cart and membership number when the page opens
 loadCart();
 loadMembershipNumber();
+
+
+// CF600 in keyboard mode: rfid_keyboard.js fires "rfid-scan" for every tag the reader types.
+// With several tags on the reader it types them one after another (and repeats them about
+// once a second), so tags arriving close together are collected and added in one request.
+// Any tag on the reader that isn't in the cart (new, removed earlier, or after Reset Cart)
+// is added; tags already in the cart are ignored.
+const KEYBOARD_BATCH_MS = 400;
+const keyboardTagQueue = new Set();
+let keyboardTimer = null;
+
+async function flushKeyboardTags() {
+    keyboardTimer = null;
+    if (!keyboardTagQueue.size) return;
+    if (busy) {
+        keyboardTimer = setTimeout(flushKeyboardTags, 200);
+        return;
+    }
+    const epcs = [...keyboardTagQueue];
+    keyboardTagQueue.clear();
+
+    setBusy(true);
+    try {
+        const result = await cartRequest("/api/cart/rfid", "POST", { epcs, manual: true });
+        // Repeats of tags already in the cart: nothing to show
+        if ((result.message || "").includes("already been read")) return;
+        renderCart(result.cart);
+        showMessage(result.message, result.message.includes("Ignored:") ? "warning" : "success");
+        receiptPanel.hidden = true;
+    } catch (error) {
+        // Sold items still on the reader right after checkout: keep the receipt message
+        if (receiptPanel.hidden) showMessage(error.message, "error");
+    } finally {
+        setBusy(false);
+    }
+}
+
+document.addEventListener("rfid-scan", event => {
+    const epc = event.detail.epc;
+    keyboardTagQueue.add(epc);
+    // Fixed window from the first tag (the reader's repeats must not keep postponing it)
+    if (!keyboardTimer) keyboardTimer = setTimeout(flushKeyboardTags, KEYBOARD_BATCH_MS);
+});

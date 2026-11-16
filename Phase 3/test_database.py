@@ -63,11 +63,12 @@ found = db.find_by_epcs(["E28011700000020A1B2C3D01", "E28011700000020A1B2C3D02",
 check("find many RFID tags at once (unknown ignored)", len(found) == 2)
 
 print("\nInventory (one product, many receptions)")
-db.receive_stock(pid, 10, note="Invoice 1001")
-db.receive_stock(pid, 6, note="Invoice 1002")
+db.receive_stock(pid, 10, note="Invoice 1001", epcs=[f"AB{i:02X}" for i in range(10)])
+db.receive_stock(pid, 6, note="Invoice 1002", epcs=[f"AC{i:02X}" for i in range(6)])
 check("two receptions recorded", len(db.get_receptions(pid)) == 2)
 check("total in stock = 16", db.get_product(pid)["in_stock"] == 16)
 expect_error("receive 0 rejected", db.receive_stock, pid, 0)
+expect_error("40 items with only 4 EPCs rejected", db.receive_stock, pid, 40, None, None, ["AD01", "AD02", "AD03", "AD04"])
 
 print("\nCustomer accounts")
 acct = db.create_customer("Kiara Bartuccio", "Kiara@Example.com", "secret123", language="fr")

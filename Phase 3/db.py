@@ -7,7 +7,7 @@ writing SQL directly, so the whole group works against the same schema.
     import db
     db.init_db()                      # creates smartstore.db + tables (safe to run every start)
     db.add_product(name=..., ...)     # products
-    db.receive_stock(product_id, 24)  # inventory
+    db.receive_stock(product_id, 2, epcs=["E2801170...01", "E2801170...02"])  # inventory: one EPC per unit
     db.create_customer(...)           # accounts
     db.create_purchase(cart, ...)     # checkout -> receipt
 """
@@ -352,7 +352,7 @@ def remove_product_tag(product_id, epc):
 # Inventory
 # ---------------------------------------------------------------------------
 def receive_stock(product_id, quantity, note=None, received_at=None, epcs=None):
-    """Record a delivery and optional individual tags atomically."""
+    """Record a delivery and its RFID tags (exactly one EPC per unit) atomically."""
     try:
         quantity = int(quantity)
     except (TypeError, ValueError):
@@ -360,8 +360,12 @@ def receive_stock(product_id, quantity, note=None, received_at=None, epcs=None):
     if quantity <= 0:
         raise DatabaseError("Quantity must be greater than 0.")
     tags = [(epc or "").strip().upper() for epc in (epcs or [])]
-    if len(tags) > quantity:
-        raise DatabaseError("The number of EPCs cannot exceed the quantity received.")
+    # Every item received needs its own RFID tag: one EPC per unit, no more, no less.
+    if len(tags) != quantity:
+        raise DatabaseError(
+            f"Every item needs one RFID tag: you are receiving {quantity} item(s) "
+            f"but entered {len(tags)} EPC(s). No stock was received."
+        )
     if len(tags) != len(set(tags)):
         raise DatabaseError("Each EPC must be unique in this delivery.")
     if any(not epc or len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc) for epc in tags):

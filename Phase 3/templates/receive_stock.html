@@ -207,10 +207,11 @@
                        required>
 
 
-                <label for="epcs">RFID EPCs (optional, one per line)</label>
-                <p class="form-description">Enter or scan each tagged item. Leave blank for barcode-only items; any items without an EPC are recorded as untagged.</p>
-                <textarea id="epcs" name="epcs" rows="5" placeholder="One EPC per line" class="receive_stock-inline-1">{{ values.get('epcs', '') }}</textarea>
+                <label for="epcs">RFID EPCs (required, one per item, one per line)</label>
+                <p class="form-description">Scan or enter one EPC for every item received. The number of EPCs must match the quantity.</p>
+                <textarea id="epcs" name="epcs" rows="5" placeholder="One EPC per line" class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
                 <button type="button" id="receive-read-tag">Read one RFID tag</button>
+                <p id="epc-count" class="form-description" aria-live="polite"></p>
                 <p id="receive-tag-status" role="status" aria-live="polite"></p>
 
                 <!-- Date and time of delivery -->
@@ -283,6 +284,7 @@
 </div>
 
 
+<script src="{{ url_for('static', filename='rfid_keyboard.js') }}"></script>
 <script src="{{ url_for('static', filename='receive_stock_rfid.js') }}"></script>
 
 <!-- Navigation and translation functionality -->

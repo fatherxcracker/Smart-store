@@ -21,6 +21,7 @@
           href="{{ url_for('static', filename='cart.css') }}">
 
     <!-- Connects JavaScript for shopping cart -->
+    <script src="{{ url_for('static', filename='rfid_keyboard.js') }}" defer></script>
     <script src="{{ url_for('static', filename='cart.js') }}"
             defer></script>
 
@@ -159,7 +160,7 @@
                     </h2>
 
                     <p data-i18n="scanDesc">
-                        Scan an RFID tag or enter a product barcode
+                        Place your items on the RFID reader
                     </p>
 
                     <!-- RFID scanning controls -->
@@ -183,36 +184,6 @@
 
                     </div>
 
-
-                    <!-- Barcode scanning form -->
-                    <form id="barcode-form">
-
-                        <label for="barcode-input"
-                               data-i18n="productBarcode">
-                            Product Barcode
-                        </label>
-
-                        <div class="scan-actions">
-
-                            <!-- Barcode input -->
-                            <input id="barcode-input"
-                                   name="barcode"
-                                   type="text"
-                                   placeholder="Scan or enter barcode"
-                                   data-i18n-placeholder="barcodePlaceholder"
-                                   autocomplete="off"
-                                   required>
-
-                            <!-- Adds scanned barcode -->
-                            <button class="primary-button"
-                                    type="submit"
-                                    data-i18n="addProduct">
-                                Add Product
-                            </button>
-
-                        </div>
-
-                    </form>
 
                 </section>
 
