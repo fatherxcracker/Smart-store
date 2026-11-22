@@ -12,10 +12,10 @@ load_dotenv(BASE_DIR / ".env")
 class Config:
     HOST = os.environ.get("HOST", "127.0.0.1")
     PORT = int(os.environ.get("PORT", "5003"))
-    # Phase 4 owns its database. Never point it at an earlier phase's database.
-    DATABASE_PATH = Path(os.environ.get("PHASE4_DATABASE_PATH", str(BASE_DIR / "database" / "smartstore.db")))
-    if not DATABASE_PATH.is_absolute():
-        DATABASE_PATH = BASE_DIR / DATABASE_PATH
+    # Reuse the existing store database for reports and checkout.
+    PHASE3_DATABASE_PATH = Path(os.environ.get(
+        "PHASE3_DATABASE_PATH", str(BASE_DIR.parent / "Phase 3" / "smartstore.db")
+    ))
     # Future BLE observation storage, separate from store transactions.
     SENSOR_DATABASE_PATH = BASE_DIR / "database" / "sensors.db"
     MINEW_DEVICE_ADDRESS = os.environ.get("MINEW_DEVICE_ADDRESS", "")

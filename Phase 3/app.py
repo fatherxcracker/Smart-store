@@ -48,7 +48,7 @@ from checkout import checkout_api
 
 # Create flask app
 
-def create_app():
+def create_app(config=None):
 
     # Create the Flask application
     app = Flask(__name__)
@@ -61,8 +61,10 @@ def create_app():
         or secrets.token_hex(32)
     )
 
-    # Create database tables if needed
-    db.init_db()
+    app.config.update(config or {})
+    # Use the configured database in integrated deployments and tests.
+    with app.app_context():
+        db.init_db()
 
     @app.before_request
     def protect_inventory_management():

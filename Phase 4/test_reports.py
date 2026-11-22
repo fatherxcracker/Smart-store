@@ -203,13 +203,6 @@ class ReportTests(unittest.TestCase):
             self.assertIsNone(self.db.find_by_upc("999001"))
         self.assertIsNotNone(self.db.find_by_upc("999001"))
 
-    def test_phase4_uses_only_its_own_store_code_and_rejects_previous_databases(self):
-        root = Path(__file__).resolve().parent
-        self.assertTrue(Path(self.db.__file__).resolve().is_relative_to(root / "store"))
-        for phase in ("Phase 1", "Phase 2", "Phase 3"):
-            with self.subTest(phase=phase), self.assertRaises(ValueError):
-                create_app({"DATABASE_PATH": str(root.parent / phase / "smartstore.db")})
-
     def test_login_route_uses_shared_session(self):
         response = self.client.post("/api/account/login", json={"email":"other@example.com", "password":"secret123"})
         self.assertEqual(response.status_code, 200)

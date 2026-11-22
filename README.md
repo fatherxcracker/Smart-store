@@ -14,9 +14,9 @@ Open each phase's own README for its full setup, wiring, and run instructions.
 
 ## Phase 4 workspace
 
-[`Phase 4/`](./Phase%204/README.md) runs its own copies of the store workflows and
-the new admin and customer reports on port 5003. Its database is an independent
-snapshot; earlier phases remain unchanged. Reports include inventory, sales, customer activity, filtered
+[`Phase 4/`](./Phase%204/README.md) runs Phase 3 store workflows and the new admin
+and customer reports together on port 5003, using the existing store database
+and login accounts. Reports include inventory, sales, customer activity, filtered
 receipts and product price history. BLE hardware and Phase 2 monitoring integration
 remain pending. The teacher's requirements are in `Phase 4/docs/Phase-4-.pdf`.
 

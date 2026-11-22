@@ -1,4 +1,3 @@
 -- Reserved for Phase 4 sensor-observation storage when BLE is implemented.
--- The Phase 4 business database is database/smartstore.db, independent of
--- previous phases. Its copied schema and seed live in store/database/.
--- This file is reserved for future BLE storage migrations.
+-- Business reports reuse the existing Phase 3 database. No duplicate store
+-- tables are needed here. This file is reserved for future BLE storage migrations.

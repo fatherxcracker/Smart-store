@@ -20,6 +20,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app, has_app_context
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_PATH = os.environ.get("DATABASE_PATH", os.path.join(BASE_DIR, "smartstore.db"))
@@ -41,8 +42,12 @@ class DatabaseError(Exception):
 # ---------------------------------------------------------------------------
 # Connection / setup
 # ---------------------------------------------------------------------------
+def get_database_path():
+    return current_app.config.get("DATABASE_PATH", DATABASE_PATH) if has_app_context() else DATABASE_PATH
+
+
 def get_connection():
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = sqlite3.connect(get_database_path())
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -74,7 +79,7 @@ def init_db(seed=True):
     conn.execute("INSERT OR IGNORE INTO product_tags (epc, product_id) SELECT UPPER(epc), id FROM products WHERE epc IS NOT NULL AND is_active = 1")
     conn.commit()
     conn.close()
-    print(f"[database] Ready at {DATABASE_PATH}")
+    print(f"[database] Ready at {get_database_path()}")
 
 
 def _rows(rows):
