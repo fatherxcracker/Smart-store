@@ -1,0 +1,4 @@
+-- Reserved for Phase 4 sensor-observation storage when BLE is implemented.
+-- Business reports must reuse Phase 3 products, receptions, customers,
+-- purchases and purchase_items. Do not recreate or seed those tables here.
+-- No schema changes are applied by the starter application.

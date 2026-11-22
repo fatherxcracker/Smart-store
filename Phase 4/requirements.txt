@@ -1,0 +1,3 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+# Add the BLE dependency when the MSP01 receiver is implemented and verified.
