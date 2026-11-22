@@ -65,6 +65,11 @@ CMD_STOP = 0x0002
 # Start inventory: the reader then keeps sending one frame per tag it sees until STOP.
 START_INVENTORY = _command(CMD_INVENTORY, bytes([0x00, 0x00, 0x00, 0x00, 0x00]))
 STOP_INVENTORY = _command(CMD_STOP)
+# Older single-shot inventory command from the class setup guide (simple_read.py).
+# Some CF600 firmware only answers this one; the answer uses the same 0xCF frames.
+LEGACY_READ_TAGS = bytes([0x04, 0xFF, 0x01, 0x1B, 0xB4])
+# If the reader sends nothing this long after START, switch to the legacy command
+FALLBACK_AFTER = float(os.environ.get("RFID_FALLBACK_AFTER", "0.6"))
 
 # Only one request may use the serial port at a time.
 _port_lock = threading.Lock()
@@ -175,10 +180,25 @@ def read_tags(seconds=None, debug=False):
             if debug:
                 print(f"  sent {START_INVENTORY.hex(' ')}")
             ser.write(START_INVENTORY)
-            deadline = time.monotonic() + seconds
+            started = time.monotonic()
+            deadline = started + seconds
+            got_data = False
+            legacy = False
+            last_poll = 0.0
             while time.monotonic() < deadline:
                 time.sleep(RESPONSE_WAIT)
-                collect(ser.read(ser.in_waiting))
+                data = ser.read(ser.in_waiting)
+                got_data = got_data or bool(data)
+                collect(data)
+                now = time.monotonic()
+                # Reader silent after START: use the guide's command, re-sent every 0.5 s
+                if not got_data and not legacy and now - started >= FALLBACK_AFTER:
+                    legacy = True
+                    if debug:
+                        print(f"  no answer to START; using legacy command {LEGACY_READ_TAGS.hex(' ')}")
+                if legacy and now - last_poll >= 0.5:
+                    ser.write(LEGACY_READ_TAGS)
+                    last_poll = now
         finally:
             try:
                 ser.write(STOP_INVENTORY)
