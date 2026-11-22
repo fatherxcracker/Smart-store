@@ -1,15 +1,12 @@
--- Sample data for testing / the demo. Replace the UPC/EPC values with the
--- codes your real barcode labels and RFID tags return when scanned.
-INSERT OR IGNORE INTO products (name, category, price, upc, epc, producer, expiry_date) VALUES
- ('Coca-Cola 500ml',          'Beverage',  2.49, '123456789012', 'E28011700000020A1B2C3D01', 'Coca-Cola Company',   '2027-06-30'),
- ('Lay''s Classic Chips 235g','Snacks',    4.99, '123456789029', 'E28011700000020A1B2C3D02', 'PepsiCo',             '2027-02-15'),
- ('Natrel Milk 2% 2L',        'Dairy',     5.79, '123456789036', 'E28011700000020A1B2C3D03', 'Agropur',             '2026-11-20'),
- ('Kit Kat 45g',              'Candy',     1.99, '123456789043', 'E28011700000020A1B2C3D04', 'Nestle',              '2027-09-01'),
- ('Dasani Water 591ml',       'Beverage',  1.79, '123456789050', 'E28011700000020A1B2C3D05', 'Coca-Cola Company',   '2028-01-01');
-
-INSERT INTO receptions (product_id, quantity, note)
-SELECT id, 24, 'Initial stock' FROM products
-WHERE NOT EXISTS (SELECT 1 FROM receptions);
+-- Sample products (defined once). They start with 0 in stock: every item in
+-- stock needs its own RFID tag, so stock is added with "Receive stock" by
+-- reading the EPC of each tagged item. Replace the UPCs with your real barcodes.
+INSERT OR IGNORE INTO products (name, category, price, upc, producer, expiry_date) VALUES
+ ('Coca-Cola 500ml',          'Beverages', 2.49, '123456789012', 'Coca-Cola Company',   '2027-06-30'),
+ ('Lay''s Classic Chips 235g','Snacks',    4.99, '123456789029', 'PepsiCo',             '2027-02-15'),
+ ('Natrel Milk 2% 2L',        'Dairy',     5.79, '123456789036', 'Agropur',             '2026-11-20'),
+ ('Kit Kat 45g',              'Candy',     1.99, '123456789043', 'Nestle',              '2027-09-01'),
+ ('Dasani Water 591ml',       'Beverages', 1.79, '123456789050', 'Coca-Cola Company',   '2028-01-01');
 
 -- Demo accounts only. Passwords are hashed; see README for test credentials.
 INSERT OR IGNORE INTO customers (name, email, membership_number, password_hash, is_admin) VALUES

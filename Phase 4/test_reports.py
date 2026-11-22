@@ -26,8 +26,8 @@ class ReportTests(unittest.TestCase):
             conn.execute("UPDATE customers SET points=100 WHERE id=?", (self.member,))
         conn.close()
         self.other = db.create_customer("Other Person", "other@example.com", "secret123")["id"]
-        self.tea = db.add_product("Tea", "Drinks", 10, "999001", None, "Test")
-        self.coffee = db.add_product("Coffee", "Drinks", 5, "999002", None, "Test")
+        self.tea = db.add_product("Tea", "Pantry", 10, "999001", None, "Test")
+        self.coffee = db.add_product("Coffee", "Pantry", 5, "999002", None, "Test")
         db.receive_stock(self.tea, 20, epcs=[f"A{i:04X}" for i in range(20)])
         db.receive_stock(self.coffee, 20, epcs=[f"B{i:04X}" for i in range(20)])
         self.before = self.sale(self.member, [(self.tea, 1)], "2026-10-31 16:00:00")
@@ -35,7 +35,7 @@ class ReportTests(unittest.TestCase):
         self.second = self.sale(self.other, [(self.tea, 1), (self.coffee, 1)], "2026-11-02 15:00:00")
         self.third = self.sale(self.member, [(self.tea, 1)], "2026-11-02 17:00:00")
         self.guest = self.sale(None, [(self.coffee, 1)], "2026-11-03 15:00:00")
-        self.db.update_product(self.tea, "Tea changed", "Drinks", 99, "999001", None, "Test")
+        self.db.update_product(self.tea, "Tea changed", "Pantry", 99, "999001", None, "Test")
 
     def sale(self, customer, items, timestamp, points=0):
         tags = []
@@ -140,12 +140,12 @@ class ReportTests(unittest.TestCase):
         from reports.common import snapshot
         from reports.inventory import generate
         with snapshot() as conn:
-            before = generate(conn, "Drinks")
+            before = generate(conn, "Pantry")
         self.assertEqual({p["id"] for p in before["products"]}, {self.tea, self.coffee})
         self.assertEqual(next(p for p in before["products"] if p["id"] == self.tea)["in_stock"], 15)
         self.sale(None, [(self.tea, 1)], "2026-11-03 16:00:00")
         with snapshot() as conn:
-            after = generate(conn, "Drinks")
+            after = generate(conn, "Pantry")
         self.assertEqual(after["units"], before["units"] - 1)
 
     def test_price_chart_records_price_changes_at_purchase_time(self):

@@ -42,9 +42,9 @@ def build_cart(cart):
         line_total = round(product["price"] * quantity, 2)
         subtotal += line_total
 
+        # Items are sold only by their RFID tag: every unit in the cart is a scanned tag
         tagged_quantity = sum(1 for pid in session.get("rfid_cart_tags", {}).values() if pid == product["id"])
-        eligible = (tagged_quantity <= quantity and
-                    quantity - tagged_quantity <= db.get_untagged_stock(product["id"]))
+        eligible = tagged_quantity == quantity
         items.append({
             "product_id": product["id"],
             "name": product["name"],

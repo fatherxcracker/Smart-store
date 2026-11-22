@@ -6,7 +6,12 @@ Chafon CF600 UHF RFID reader (USB serial), using the Chafon CF protocol
     import rfid_reader
     epcs = rfid_reader.read_tags()   # every tag on the reader right now, e.g. ["E280...01", "E280...02"]
 
-Pi setup (once): see README "RFID reader setup" (usbserial driver + dialout group).
+The reader must be in CDC mode (USB serial, also called "USB virtual COM").
+In that mode the app asks the reader for tags (one controlled scan at a time);
+in keyboard (HID) mode the reader has no serial port and types tags instead,
+which the web pages ignore (static/rfid_keyboard.js).
+
+Pi setup (once): see README "RFID reader setup" (CDC mode + dialout group).
 
 No reader plugged in (e.g. testing on a laptop)? Set RFID_SIMULATE=1 in .env:
 read_tags() then returns the EPCs listed in RFID_SIMULATED_TAGS instead.
@@ -20,7 +25,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PORT = os.environ.get("RFID_PORT", "/dev/ttyUSB0")   # /dev/ttyACM0 on some Pis
+# "auto" finds the reader's CDC serial port: /dev/ttyACM*, /dev/ttyUSB* (Pi) or COMx (Windows).
+# Set RFID_PORT=/dev/ttyACM0 (or COM5, ...) in .env to force one.
+PORT = os.environ.get("RFID_PORT", "auto").strip() or "auto"
 BAUD = int(os.environ.get("RFID_BAUD", "115200"))
 SCAN_SECONDS = float(os.environ.get("RFID_SCAN_SECONDS", "2"))
 # How often we collect what the reader has sent while it is scanning
@@ -65,6 +72,31 @@ _port_lock = threading.Lock()
 
 class RFIDError(Exception):
     """Raised with a message that can be shown to the user."""
+
+
+NOT_FOUND = ("RFID reader not found. Plug it in and make sure it is in CDC mode "
+             "(USB serial). In keyboard (HID) mode it has no serial port - see README "
+             "\"RFID reader setup\".")
+
+
+def find_port():
+    """The serial (CDC) port of the reader, or raise RFIDError."""
+    if PORT.lower() != "auto":
+        return PORT
+    import glob
+    candidates = sorted(glob.glob("/dev/ttyACM*")) + sorted(glob.glob("/dev/ttyUSB*"))
+    if not candidates:
+        try:
+            from serial.tools import list_ports
+            ports = list(list_ports.comports())
+            # Prefer USB serial / CDC devices (Windows shows them as COMx)
+            ports.sort(key=lambda p: 0 if (p.vid or "USB" in (p.hwid or "")) else 1)
+            candidates = [p.device for p in ports]
+        except Exception:
+            candidates = []
+    if not candidates:
+        raise RFIDError(NOT_FOUND)
+    return candidates[0]
 
 
 def parse_epcs(buf):
@@ -112,18 +144,16 @@ def read_tags(seconds=None, debug=False):
         raise RFIDError("The RFID reader is busy. Try again.")
 
     try:
+        port = find_port()
         try:
-            ser = serial.Serial(PORT, BAUD, timeout=0.5)
+            ser = serial.Serial(port, BAUD, timeout=0.5)
         except serial.SerialException as error:
             text = str(error)
             if "Permission denied" in text:
                 raise RFIDError(
-                    f"No permission to open {PORT}. Run: sudo usermod -aG dialout $USER, then log out and in."
+                    f"No permission to open {port}. Run: sudo usermod -aG dialout $USER, then log out and in."
                 )
-            raise RFIDError(
-                f"RFID reader not found on {PORT}. Check the USB cable and run the usbserial "
-                f"setup from the README (or set RFID_PORT in .env)."
-            )
+            raise RFIDError(f"{NOT_FOUND} (tried {port})")
 
         found = {}
         buf = b""
@@ -163,7 +193,11 @@ def read_tags(seconds=None, debug=False):
 
 def status():
     """Small summary for the UI / README checks."""
-    return {"simulate": SIMULATE, "port": PORT, "baud": BAUD, "scan_seconds": SCAN_SECONDS}
+    try:
+        port = "simulated" if SIMULATE else find_port()
+    except RFIDError:
+        port = None
+    return {"simulate": SIMULATE, "mode": "CDC (USB serial)", "port": port, "baud": BAUD, "scan_seconds": SCAN_SECONDS}
 
 
 if __name__ == "__main__":
@@ -172,9 +206,9 @@ if __name__ == "__main__":
     #   python rfid_reader.py --raw    -> also prints the raw bytes (for troubleshooting)
     import sys
     raw = "--raw" in sys.argv
-    print(f"Reading from {'SIMULATED reader' if SIMULATE else PORT} at {BAUD} baud ... "
-          f"hold tags on the reader (Ctrl+C to stop)")
     try:
+        where = "SIMULATED reader" if SIMULATE else find_port()
+        print(f"Reading from {where} (CDC mode) at {BAUD} baud ... hold tags on the reader (Ctrl+C to stop)")
         while True:
             tags = read_tags(debug=raw)
             print(tags if tags else "(no tags)")

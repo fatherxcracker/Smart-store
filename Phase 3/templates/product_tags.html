@@ -100,7 +100,7 @@
         <div class="stock-heading">
             <span class="eyebrow" data-i18n="productManagement">PRODUCT MANAGEMENT</span>
             <h1 data-i18n="tagsTitle">RFID Tags</h1>
-            <p data-i18n="tagsDescription">Assign one unique EPC to each physical item after receiving stock.</p>
+            <p data-i18n="tagsDescription">Every item in stock has its own RFID tag. Stock = tags not sold yet.</p>
         </div>
 
         {% for category, message in get_flashed_messages(with_categories=true) %}
@@ -113,8 +113,8 @@
         <div class="tags-content">
             <!-- Sends the assigned tag to Flask -->
             <form method="post" class="product-form tags-form">
-                <h2 data-i18n="assignTitle">Assign a Tag</h2>
-                <p class="form-description" data-i18n="assignDescription">Place one item on the reader or enter its EPC below.</p>
+                <h2 data-i18n="assignTitle">Add a Tagged Item</h2>
+                <p class="form-description" data-i18n="assignDescription">Put ONE new item on the reader and read its tag. Adding a tag adds 1 item to stock (recorded as a delivery of 1).</p>
                 <!-- Shows the product and stock before assigning a tag -->
                 <label for="tag-product" data-i18n="product">Product</label>
                 <input id="tag-product" value="{{ product.name }}" readonly>
@@ -128,7 +128,7 @@
                 <p id="epc-help" class="form-description" data-i18n="epcHelp">Use only numbers 0–9 and letters A–F.</p>
                 <button id="read-tag" type="button" data-i18n="readTag">Read tag from RFID reader</button>
                 <p id="tag-status" class="tag-status" role="status" aria-live="polite"></p>
-                <button type="submit" class="save-button" data-i18n="assignTag">Assign tag</button>
+                <button type="submit" class="save-button" data-i18n="assignTag">Add item to stock</button>
             </form>
 
             <!-- Lists the tags already assigned to this product -->

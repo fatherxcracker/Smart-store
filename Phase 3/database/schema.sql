@@ -129,11 +129,14 @@ SELECT
     p.id, p.name, p.category, p.price, p.upc, p.epc, p.producer, p.image_url,
     COALESCE(r.total_received, 0)                              AS total_received,
     COALESCE(s.total_sold, 0)                                  AS total_sold,
-    COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0)  AS in_stock,
+    -- Every item in stock carries its own RFID tag, so stock = unsold tags
+    COALESCE(t.in_stock, 0)                                    AS in_stock,
     r.last_received_at
 FROM products p
 LEFT JOIN (SELECT product_id, SUM(quantity) AS total_received, MAX(received_at) AS last_received_at
            FROM receptions GROUP BY product_id) r ON r.product_id = p.id
 LEFT JOIN (SELECT product_id, SUM(quantity) AS total_sold
            FROM purchase_items GROUP BY product_id) s ON s.product_id = p.id
+LEFT JOIN (SELECT product_id, COUNT(*) AS in_stock
+           FROM product_tags WHERE sold_purchase_id IS NULL GROUP BY product_id) t ON t.product_id = p.id
 WHERE p.is_active = 1;

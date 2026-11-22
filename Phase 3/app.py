@@ -77,6 +77,11 @@ def create_app(config=None):
             if not customer or not customer.get("is_admin"):
                 abort(403, "Administrator access required.")
 
+    # Fixed product categories, available to every page (add/edit product forms)
+    @app.context_processor
+    def product_categories():
+        return {"categories": db.CATEGORIES}
+
     # Converts stored UTC dates into local time
     @app.template_filter("local_time")
     def local_time(value):
@@ -291,8 +296,10 @@ def create_app(config=None):
         error = None
         if request.method == "POST":
             try:
+                # A new tag = one more tagged item in stock (recorded as a delivery of 1)
                 db.register_product_tag(product_id, request.form.get("epc", ""))
-                flash("RFID tag assigned to this item.", "success")
+                flash(notify("tag_added", name=product["name"],
+                             in_stock=db.get_product(product_id)["in_stock"])["message"], "success")
                 return redirect(url_for("manage_product_tags", product_id=product_id))
             except db.DatabaseError as exc:
                 error = str(exc)
@@ -511,22 +518,9 @@ def create_app(config=None):
                 if product is None:
                     raise db.DatabaseError("Product not found.")
 
-                # Convert quantity into an integer
-                try:
-                    quantity = int(
-                        request.form.get("quantity", "")
-                    )
-
-                except ValueError:
-                    raise db.DatabaseError(
-                        "Quantity must be a whole number."
-                    )
-
-                # Quantity must be positive
-                if quantity <= 0:
-                    raise db.DatabaseError(
-                        "Quantity must be greater than zero."
-                    )
+                # One RFID tag (EPC) per item: the quantity received is
+                # the number of EPCs scanned, so it is counted, not typed.
+                epcs = [line.strip() for line in request.form.get("epcs", "").splitlines() if line.strip()]
 
                 # Read reception date
                 received_at = request.form.get(
@@ -549,9 +543,8 @@ def create_app(config=None):
                 # Convert local time to UTC
                 db.receive_stock(
                     product_id=product_id,
-                    quantity=quantity,
                     note=request.form.get("note", "").strip() or None,
-                    epcs=[line.strip() for line in request.form.get("epcs", "").splitlines() if line.strip()],
+                    epcs=epcs,
                     received_at=received_date.astimezone(
                         timezone.utc
                     ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -564,7 +557,7 @@ def create_app(config=None):
                 flash(
                     notify(
                         "stock_received",
-                        quantity=quantity,
+                        quantity=len(epcs),
                         name=product["name"],
                         in_stock=in_stock,
                     )["message"],
@@ -654,11 +647,12 @@ def create_app(config=None):
         sold = db.find_sold_tags([epcs[0]]).get(epcs[0])
 
         if existing is not None:
-            message = f'Tag {epcs[0]} read. It already belongs to "{existing["name"]}".'
+            # Already on an unsold item in stock: never count the same tag twice
+            message = f'Tag {epcs[0]} is already on an item in stock ("{existing["name"]}"). Use another tag.'
         elif sold is not None:
             message = (
                 f'Tag {epcs[0]} read. It was sold as "{sold["name"]}" '
-                f'(receipt {sold["receipt_number"]}). Assigning it makes it available again.'
+                f'(receipt {sold["receipt_number"]}). Using it on a new item adds that item to stock.'
             )
         else:
             message = f"Tag {epcs[0]} read."

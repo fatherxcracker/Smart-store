@@ -175,11 +175,20 @@
                 Category
             </label>
 
+            <!-- Searchable, limited to the store's fixed category list -->
             <input id="category"
                    name="category"
                    type="text"
+                   list="category-options"
+                   autocomplete="off"
+                   placeholder="Search categories..."
                    value="{{ values.get('category', '') }}"
                    required>
+            <datalist id="category-options">
+                {% for name, french in categories.items() %}
+                <option value="{{ name }}" data-en="{{ name }}" data-fr="{{ french }}"></option>
+                {% endfor %}
+            </datalist>
 
 
             <!-- Product price -->
@@ -255,6 +264,7 @@
 
 <!-- Navigation and translation functionality -->
 <script src="{{ url_for('static', filename='add_product_page.js') }}"></script>
+<script src="{{ url_for('static', filename='category_picker.js') }}"></script>
 
 </body>
 </html>

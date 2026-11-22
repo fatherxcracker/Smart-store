@@ -46,29 +46,44 @@ print("Database setup")
 db.init_db()
 inventory = db.get_inventory()
 check("sample products loaded", len(inventory) == 5)
-check("initial stock is 24 each", all(p["in_stock"] == 24 for p in inventory))
+check("sample products start with 0 in stock (no tags yet)", all(p["in_stock"] == 0 for p in inventory))
+check("sample categories are on the fixed list", all(p["category"] in db.CATEGORIES for p in inventory))
+# Stock for the sample products: one RFID tag per item
+coke0 = db.find_by_upc("123456789012")["id"]
+chips0 = db.find_by_upc("123456789029")["id"]
+db.receive_stock(coke0, epcs=[f"C0{i:02X}" for i in range(24)], note="Initial stock")
+db.receive_stock(chips0, epcs=[f"C1{i:02X}" for i in range(24)], note="Initial stock")
+check("receiving 24 tagged items = 24 in stock", db.get_product(coke0)["in_stock"] == 24)
 
 print("\nProduct management")
-pid = db.add_product("Red Bull 250ml", "Beverage", "3.49", "611269991000", "e28011700000020a1b2c3d99", "Red Bull GmbH")
+pid = db.add_product("Red Bull 250ml", "beverages", "3.49", "611269991000", "e28011700000020a1b2c3d99", "Red Bull GmbH")
 check("add product", db.get_product(pid)["name"] == "Red Bull 250ml")
+check("category matched to the fixed list", db.get_product(pid)["category"] == "Beverages")
 check("EPC stored in upper case", db.get_product(pid)["epc"] == "E28011700000020A1B2C3D99")
-expect_error("duplicate UPC rejected", db.add_product, "Copy", "Beverage", 1, "611269991000", None, "X")
-expect_error("UPC over 13 chars rejected", db.add_product, "X", "Y", 1, "12345678901234", None, "Z")
-expect_error("EPC over 24 chars rejected", db.add_product, "X", "Y", 1, "123", "A" * 25, "Z")
-db.update_product(pid, "Red Bull 250ml", "Energy Drink", 3.99, "611269991000", "E28011700000020A1B2C3D99", "Red Bull GmbH")
-check("edit product (new price + category)", db.get_product(pid)["price"] == 3.99)
+check("product added with an EPC = 1 tagged item in stock", db.get_product(pid)["in_stock"] == 1)
+expect_error("category not on the list rejected", db.add_product, "X", "Energy Drink", 1, "555", None, "Z")
+expect_error("duplicate UPC rejected", db.add_product, "Copy", "Beverages", 1, "611269991000", None, "X")
+expect_error("UPC over 13 chars rejected", db.add_product, "X", "Other", 1, "12345678901234", None, "Z")
+expect_error("EPC over 24 chars rejected", db.add_product, "X", "Other", 1, "123", "A" * 25, "Z")
+db.update_product(pid, "Red Bull 250ml", "Snacks", 3.99, "611269991000", "E28011700000020A1B2C3D99", "Red Bull GmbH")
+check("edit product (new price + category)", db.get_product(pid)["price"] == 3.99 and db.get_product(pid)["category"] == "Snacks")
 check("find by barcode (UPC)", db.find_by_upc("611269991000")["id"] == pid)
 check("find by RFID (EPC)", db.find_by_epc("E28011700000020A1B2C3D99")["id"] == pid)
-found = db.find_by_epcs(["E28011700000020A1B2C3D01", "E28011700000020A1B2C3D02", "UNKNOWNTAG"])
+found = db.find_by_epcs(["C000", "C100", "UNKNOWNTAG"])
 check("find many RFID tags at once (unknown ignored)", len(found) == 2)
 
 print("\nInventory (one product, many receptions)")
-db.receive_stock(pid, 10, note="Invoice 1001", epcs=[f"AB{i:02X}" for i in range(10)])
+db.receive_stock(pid, note="Invoice 1001", epcs=[f"AB{i:02X}" for i in range(10)])
 db.receive_stock(pid, 6, note="Invoice 1002", epcs=[f"AC{i:02X}" for i in range(6)])
-check("two receptions recorded", len(db.get_receptions(pid)) == 2)
-check("total in stock = 16", db.get_product(pid)["in_stock"] == 16)
-expect_error("receive 0 rejected", db.receive_stock, pid, 0)
+check("receptions recorded (initial + 2 deliveries)", len(db.get_receptions(pid)) == 3)
+check("quantity received = number of EPCs", sorted(r["quantity"] for r in db.get_receptions(pid)) == [1, 6, 10])
+check("total in stock = 1 + 10 + 6 = 17", db.get_product(pid)["in_stock"] == 17)
+expect_error("delivery without EPCs rejected", db.receive_stock, pid, 0)
 expect_error("40 items with only 4 EPCs rejected", db.receive_stock, pid, 40, None, None, ["AD01", "AD02", "AD03", "AD04"])
+expect_error("tag already on an unsold item rejected (no duplicates)", db.receive_stock, pid, None, None, None, ["AB00"])
+check("rejected deliveries added no stock", db.get_product(pid)["in_stock"] == 17)
+db.register_product_tag(pid, "AE01")
+check("tag added on Manage tags = 1 more item (recorded as a delivery)", db.get_product(pid)["in_stock"] == 18 and len(db.get_receptions(pid)) == 4)
 
 print("\nCustomer accounts")
 acct = db.create_customer("Kiara Bartuccio", "Kiara@Example.com", "secret123", language="fr")
@@ -84,7 +99,9 @@ coke = db.find_by_upc("123456789012")
 chips = db.find_by_upc("123456789029")
 cart = [{"product_id": coke["id"], "quantity": 2}, {"product_id": chips["id"], "quantity": 1},
         {"product_id": coke["id"], "quantity": 1}]  # coke scanned again -> merged
-result = receipts.complete_checkout(cart, customer_id=acct["id"], lang="fr", send_email=False)
+expect_error("sale without RFID tags rejected (EPC only)", db.create_purchase, cart)
+result = receipts.complete_checkout(cart, customer_id=acct["id"], lang="fr", send_email=False,
+                                    epcs=["C000", "C001", "C002", "C100"])
 r = result["receipt"]
 check("purchase saved with 2 lines (duplicates merged)", len(r["items"]) == 2)
 check("subtotal = 3 x 2.49 + 4.99 = 12.46", r["subtotal"] == 12.46)
@@ -102,7 +119,8 @@ db.update_product(coke["id"], coke["name"], coke["category"], 9.99, coke["upc"],
 check("old receipt keeps old price after price change",
       db.get_purchase(result["purchase_id"])["items"][0]["unit_price"] == old_price)
 
-guest = receipts.complete_checkout([{"product_id": chips["id"], "quantity": 1}], lang="en", send_email=False)
+check("sold tags no longer count as stock", db.find_by_epc("C000") is None)
+guest = receipts.complete_checkout([{"product_id": chips["id"], "quantity": 1}], lang="en", send_email=False, epcs=["C101"])
 check("guest checkout works, 0 points", guest["receipt"]["points_earned"] == 0 and guest["receipt"]["customer"] is None)
 
 expect_error("can't buy more than in stock", db.create_purchase, [{"product_id": pid, "quantity": 999}])
@@ -111,7 +129,10 @@ check("failed checkout left no half receipt", len(db.get_purchase_history(acct["
 
 db.delete_product(pid)
 check("deleted product gone from inventory", db.get_product(pid) is None)
-check("its UPC can be reused", db.add_product("Red Bull 2", "Energy Drink", 3.99, "611269991000", None, "Red Bull GmbH") > 0)
+check("its UPC can be reused", db.add_product("Red Bull 2", "Beverages", 3.99, "611269991000", None, "Red Bull GmbH") > 0)
+print("\nResetting sold tags")
+before = db.get_product(coke["id"])["in_stock"]
+check("reset puts sold tags back in stock", db.reset_sold_tags(product_id=coke["id"]) == 3 and db.get_product(coke["id"])["in_stock"] == before + 3)
 
 print("\nNotifications")
 n = notify("product_added", "en", name="Coca-Cola 500ml")

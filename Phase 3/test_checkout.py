@@ -26,7 +26,7 @@ class CheckoutTests(unittest.TestCase):
         self.email = patch("receipts.send_receipt_email", return_value=None)
         self.email.start()
         self.addCleanup(self.email.stop)
-        self.pid = db.add_product("Test item", "Test", 10, "900000000001", None, "Test producer")
+        self.pid = db.add_product("Test item", "Other", 10, "900000000001", None, "Test producer")
         # Every unit received has its own RFID tag
         self.tags = [f"5E{index:02X}" for index in range(10)]
         self.next_tag = 0
@@ -208,7 +208,7 @@ class CheckoutTests(unittest.TestCase):
     def test_nonfinite_prices_rejected(self):
         for price in ("inf", "-inf", "nan", "1e999"):
             with self.subTest(price=price), self.assertRaises(db.DatabaseError):
-                db.add_product("Invalid", "Test", price, "invalid", None, "Test")
+                db.add_product("Invalid", "Other", price, "invalid", None, "Test")
 
     def enable_points(self, amount=100):
         with closing(db.get_connection()) as conn:

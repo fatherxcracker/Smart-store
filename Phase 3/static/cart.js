@@ -816,44 +816,6 @@ loadCart();
 loadMembershipNumber();
 
 
-// CF600 in keyboard mode: rfid_keyboard.js fires "rfid-scan" for every tag the reader types.
-// With several tags on the reader it types them one after another (and repeats them about
-// once a second), so tags arriving close together are collected and added in one request.
-// Any tag on the reader that isn't in the cart (new, removed earlier, or after Reset Cart)
-// is added; tags already in the cart are ignored.
-const KEYBOARD_BATCH_MS = 400;
-const keyboardTagQueue = new Set();
-let keyboardTimer = null;
-
-async function flushKeyboardTags() {
-    keyboardTimer = null;
-    if (!keyboardTagQueue.size) return;
-    if (busy) {
-        keyboardTimer = setTimeout(flushKeyboardTags, 200);
-        return;
-    }
-    const epcs = [...keyboardTagQueue];
-    keyboardTagQueue.clear();
-
-    setBusy(true);
-    try {
-        const result = await cartRequest("/api/cart/rfid", "POST", { epcs, manual: true });
-        // Repeats of tags already in the cart: nothing to show
-        if ((result.message || "").includes("already been read")) return;
-        renderCart(result.cart);
-        showMessage(result.message, result.message.includes("Ignored:") ? "warning" : "success");
-        receiptPanel.hidden = true;
-    } catch (error) {
-        // Sold items still on the reader right after checkout: keep the receipt message
-        if (receiptPanel.hidden) showMessage(error.message, "error");
-    } finally {
-        setBusy(false);
-    }
-}
-
-document.addEventListener("rfid-scan", event => {
-    const epc = event.detail.epc;
-    keyboardTagQueue.add(epc);
-    // Fixed window from the first tag (the reader's repeats must not keep postponing it)
-    if (!keyboardTimer) keyboardTimer = setTimeout(flushKeyboardTags, KEYBOARD_BATCH_MS);
-});
+// The reader works in CDC (USB serial) mode only: items are added with
+// "Scan all items" / Auto-scan, which ask the server to read the reader.
+// rfid_keyboard.js ignores tags typed by a reader left in keyboard (HID) mode.

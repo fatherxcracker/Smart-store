@@ -193,26 +193,32 @@
                 </select>
 
 
-                <!-- Quantity of new products received -->
+                <!-- RFID tags of the items received: one tag per item -->
+                <label for="epcs" data-i18n="epcsLabel">RFID tags of the items received (one per item)</label>
+                <p class="form-description" data-i18n="epcsHelp">
+                    Put one item on the reader and click "Read one RFID tag". Repeat for every item.
+                    Each item in stock needs its own tag, so the quantity is the number of tags.
+                </p>
+                <button type="button" id="receive-read-tag" data-i18n="readOneTag">Read one RFID tag</button>
+                <p id="receive-tag-status" role="status" aria-live="polite"></p>
+                <textarea id="epcs" name="epcs" rows="5"
+                          data-i18n-placeholder="epcsPlaceholder"
+                          placeholder="One EPC per line"
+                          class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
+
+                <!-- Quantity received = number of tags (counted automatically) -->
                 <label for="quantity" data-i18n="quantityReceived">
                     Quantity Received
                 </label>
-
                 <input id="quantity"
-                       name="quantity"
                        type="number"
-                       min="1"
-                       step="1"
-                       value="{{ values.get('quantity', '') }}"
-                       required>
-
-
-                <label for="epcs">RFID EPCs (required, one per item, one per line)</label>
-                <p class="form-description">Scan or enter one EPC for every item received. The number of EPCs must match the quantity.</p>
-                <textarea id="epcs" name="epcs" rows="5" placeholder="One EPC per line" class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
-                <button type="button" id="receive-read-tag">Read one RFID tag</button>
-                <p id="epc-count" class="form-description" aria-live="polite"></p>
-                <p id="receive-tag-status" role="status" aria-live="polite"></p>
+                       value="0"
+                       readonly
+                       tabindex="-1"
+                       aria-describedby="epc-count">
+                <p id="epc-count" class="form-description" aria-live="polite" data-i18n="quantityCounted">
+                    Counted from the tags above.
+                </p>
 
                 <!-- Date and time of delivery -->
                 <label for="received_at" data-i18n="receptionDate">

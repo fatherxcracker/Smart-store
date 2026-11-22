@@ -35,6 +35,46 @@ QST_RATE = 0.09975
 POINTS_PER_DOLLAR = 1
 
 
+# Fixed list of product categories (the add/edit product form only allows these).
+# value stored in the database -> French label shown when the page is in French
+CATEGORIES = {
+    "Bakery": "Boulangerie",
+    "Beverages": "Boissons",
+    "Candy": "Bonbons",
+    "Dairy": "Produits laitiers",
+    "Deli": "Charcuterie",
+    "Frozen Foods": "Surgelés",
+    "Fruits & Vegetables": "Fruits et légumes",
+    "Health & Beauty": "Santé et beauté",
+    "Household": "Entretien ménager",
+    "Meat & Seafood": "Viandes et poissons",
+    "Pantry": "Épicerie",
+    "Pet Supplies": "Animaux",
+    "Snacks": "Collations",
+    "Other": "Autre",
+}
+
+# Old free-text categories from earlier versions -> the matching fixed category
+LEGACY_CATEGORIES = {
+    "beverage": "Beverages", "drinks": "Beverages", "drink": "Beverages",
+    "snack": "Snacks", "candies": "Candy", "milk": "Dairy",
+    "frozen": "Frozen Foods", "produce": "Fruits & Vegetables",
+    "fruits": "Fruits & Vegetables", "vegetables": "Fruits & Vegetables",
+    "meat": "Meat & Seafood", "seafood": "Meat & Seafood",
+    "personal care": "Health & Beauty", "health": "Health & Beauty",
+    "pet": "Pet Supplies", "pets": "Pet Supplies",
+}
+
+
+def normalize_category(value):
+    """Return the fixed category matching `value` (case-insensitive), or None."""
+    text = (value or "").strip().lower()
+    for category in CATEGORIES:
+        if category.lower() == text or CATEGORIES[category].lower() == text:
+            return category
+    return LEGACY_CATEGORIES.get(text)
+
+
 class DatabaseError(Exception):
     """Raised with a user-friendly message (e.g. 'UPC already exists')."""
 
@@ -75,8 +115,18 @@ def init_db(seed=True):
     tag_columns = {row["name"] for row in conn.execute("PRAGMA table_info(product_tags)")}
     if "reception_id" not in tag_columns:
         conn.execute("ALTER TABLE product_tags ADD COLUMN reception_id INTEGER REFERENCES receptions(id)")
-    # Preserve each legacy product EPC as an individual tag, once.
-    conn.execute("INSERT OR IGNORE INTO product_tags (epc, product_id) SELECT UPPER(epc), id FROM products WHERE epc IS NOT NULL AND is_active = 1")
+    # Preserve each legacy product EPC as an individual tag, once
+    # (databases from before product_tags existed: that EPC was a real tagged item).
+    conn.execute("""INSERT OR IGNORE INTO product_tags (epc, product_id)
+                    SELECT UPPER(p.epc), p.id FROM products p
+                    WHERE p.epc IS NOT NULL AND p.is_active = 1
+                      AND NOT EXISTS (SELECT 1 FROM product_tags t WHERE t.product_id = p.id)
+                      AND NOT EXISTS (SELECT 1 FROM purchase_items i WHERE i.product_id = p.id)""")
+    # Move old free-text categories onto the fixed list
+    for row in conn.execute("SELECT id, category FROM products").fetchall():
+        fixed = normalize_category(row["category"])
+        if fixed and fixed != row["category"]:
+            conn.execute("UPDATE products SET category = ? WHERE id = ?", (fixed, row["id"]))
     conn.commit()
     conn.close()
     print(f"[database] Ready at {get_database_path()}")
@@ -89,9 +139,14 @@ def _rows(rows):
 # ---------------------------------------------------------------------------
 # Products (admin: register / edit / delete)
 # ---------------------------------------------------------------------------
-def _validate_product(name, category, price, upc, epc, producer):
+def _validate_product(name, category, price, upc, epc, producer, current_category=None):
     if not name or not category or not producer:
         raise DatabaseError("Name, category and producer are required.")
+    fixed = normalize_category(category)
+    # An old product may keep its existing category until it is changed
+    if not fixed and not (current_category and category.strip() == current_category):
+        raise DatabaseError("Choose a category from the list.")
+    category = fixed or category.strip()
     try:
         price = round(float(price), 2)
     except (TypeError, ValueError):
@@ -106,49 +161,65 @@ def _validate_product(name, category, price, upc, epc, producer):
         raise DatabaseError("UPC is required and must be at most 13 characters.")
     if epc and len(epc) > 24:
         raise DatabaseError("EPC must be at most 24 characters.")
-    return price, upc, epc
+    return price, upc, epc, category
 
 
 def add_product(name, category, price, upc, epc, producer, image_url=None, expiry_date=None):
-    price, upc, epc = _validate_product(name, category, price, upc, epc, producer)
+    price, upc, epc, category = _validate_product(name, category, price, upc, epc, producer)
     conn = get_connection()
     try:
         cur = conn.execute(
             """INSERT INTO products (name, category, price, upc, epc, producer, image_url, expiry_date)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (name.strip(), category.strip(), price, upc, epc, producer.strip(), image_url, expiry_date),
+            (name.strip(), category, price, upc, epc, producer.strip(), image_url, expiry_date),
         )
+        product_id = cur.lastrowid
         if epc:
-            _assign_tag(conn, cur.lastrowid, epc)
+            # The EPC belongs to a physical item: record it as 1 item received
+            rec = conn.execute(
+                "INSERT INTO receptions (product_id, quantity, note) VALUES (?, 1, 'Initial stock')",
+                (product_id,),
+            )
+            _assign_tag(conn, product_id, epc, rec.lastrowid)
         conn.commit()
-        return cur.lastrowid
+        return product_id
     except sqlite3.IntegrityError as error:
         raise DatabaseError(_duplicate_message(error))
     finally:
         conn.close()
 
 
-def _assign_tag(conn, product_id, epc):
-    """Make `epc` an available (unsold) tag of `product_id` in product_tags.
+def _assign_tag(conn, product_id, epc, reception_id=None):
+    """Make `epc` an available (unsold) tag of `product_id`, linked to the
+    delivery (reception) it arrived in.
 
-    A tag that was sold before is re-armed: the admin is physically putting
-    that tag on an item again. An unsold tag of another product is refused."""
+    A tag that was sold before can be put on a new item again (re-armed).
+    A tag that is already on an unsold item is refused: no duplicates."""
     row = conn.execute(
         "SELECT product_id, sold_purchase_id FROM product_tags WHERE epc = ?", (epc,)
     ).fetchone()
     if row is None:
-        conn.execute("INSERT INTO product_tags (epc, product_id) VALUES (?, ?)", (epc, product_id))
+        conn.execute(
+            "INSERT INTO product_tags (epc, product_id, reception_id) VALUES (?, ?, ?)",
+            (epc, product_id, reception_id),
+        )
     elif row["sold_purchase_id"] is not None:
         conn.execute(
-            "UPDATE product_tags SET product_id = ?, sold_purchase_id = NULL, reception_id = NULL WHERE epc = ?",
-            (product_id, epc),
+            "UPDATE product_tags SET product_id = ?, sold_purchase_id = NULL, reception_id = ? WHERE epc = ?",
+            (product_id, reception_id, epc),
         )
-    elif row["product_id"] != product_id:
-        raise DatabaseError("This EPC is already assigned to another product.")
+    elif row["product_id"] == product_id:
+        raise DatabaseError(f"Tag {epc} is already on an item of this product.")
+    else:
+        raise DatabaseError(f"Tag {epc} is already assigned to another product.")
 
 
 def update_product(product_id, name, category, price, upc, epc, producer, image_url=None, expiry_date=None):
-    price, upc, epc = _validate_product(name, category, price, upc, epc, producer)
+    existing = get_product(product_id)
+    price, upc, epc, category = _validate_product(
+        name, category, price, upc, epc, producer,
+        current_category=existing["category"] if existing else None,
+    )
     conn = get_connection()
     try:
         cur = conn.execute(
@@ -156,7 +227,7 @@ def update_product(product_id, name, category, price, upc, epc, producer, image_
                SET name = ?, category = ?, price = ?, upc = ?, epc = ?, producer = ?,
                    image_url = ?, expiry_date = ?, updated_at = CURRENT_TIMESTAMP
                WHERE id = ? AND is_active = 1""",
-            (name.strip(), category.strip(), price, upc, epc, producer.strip(),
+            (name.strip(), category, price, upc, epc, producer.strip(),
              image_url, expiry_date, product_id),
         )
         conn.commit()
@@ -263,53 +334,16 @@ def get_product_tags(product_id):
         conn.close()
 
 
-def get_untagged_stock(product_id):
-    """Units eligible for barcode checkout, excluding unsold RFID tags."""
-    conn = get_connection()
-    try:
-        row = conn.execute("""SELECT i.in_stock -
-            (SELECT COUNT(*) FROM product_tags t WHERE t.product_id = i.id
-             AND t.sold_purchase_id IS NULL) AS available
-            FROM inventory i WHERE i.id = ?""", (product_id,)).fetchone()
-        return max(0, row["available"]) if row else 0
-    finally:
-        conn.close()
-
-
-def register_product_tag(product_id, epc):
-    epc = (epc or "").strip().upper()
-    if not epc or len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc):
-        raise DatabaseError("EPC must contain 1 to 24 hexadecimal characters.")
-    conn = get_connection()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
-        product = conn.execute("SELECT * FROM inventory WHERE id = ?", (product_id,)).fetchone()
-        if not product:
-            raise DatabaseError("Product not found.")
-        current = conn.execute(
-            "SELECT product_id, sold_purchase_id FROM product_tags WHERE epc = ?", (epc,)
-        ).fetchone()
-        if current and current["sold_purchase_id"] is None:
-            if current["product_id"] == product_id:
-                raise DatabaseError("This tag is already assigned to this product.")
-            raise DatabaseError("This EPC is already assigned to another product.")
-        tagged = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ? AND sold_purchase_id IS NULL", (product_id,)).fetchone()[0]
-        if tagged >= product["in_stock"]:
-            raise DatabaseError("Receive more stock before assigning another tag.")
-        # New tag, or a sold tag being put on an item again (re-armed).
-        _assign_tag(conn, product_id, epc)
-        conn.commit()
-    except sqlite3.IntegrityError:
-        conn.rollback()
-        raise DatabaseError("This EPC is already registered.")
-    finally:
-        conn.close()
+def register_product_tag(product_id, epc, note="Tag added on Manage tags"):
+    """Add one tagged item to stock (a delivery of 1). Every item in stock
+    has its own RFID tag, so a new tag always means one more item."""
+    return receive_stock(product_id, epcs=[epc], note=note)
 
 
 def reset_sold_tags(product_id=None, epc=None):
     """Make sold RFID tags available again so they can be scanned and sold
-    again (for practice/demo checkouts). Old receipts and the Sold / In stock
-    numbers don't change, because they come from the purchase records.
+    again (for practice/demo checkouts). Stock goes back up by one per tag
+    (stock = unsold tags); old receipts and the Sold column don't change.
 
     reset_sold_tags()                    -> every sold tag in the store
     reset_sold_tags(product_id=3)        -> every sold tag of one product
@@ -333,7 +367,8 @@ def reset_sold_tags(product_id=None, epc=None):
 
 
 def remove_product_tag(product_id, epc):
-    """Unassign a tag from a product (e.g. to put it on another product)."""
+    """Unassign a tag from a product (e.g. to put it on another product).
+    An unsold tag removed this way takes its item out of stock."""
     epc = (epc or "").strip().upper()
     conn = get_connection()
     try:
@@ -356,24 +391,28 @@ def remove_product_tag(product_id, epc):
 # ---------------------------------------------------------------------------
 # Inventory
 # ---------------------------------------------------------------------------
-def receive_stock(product_id, quantity, note=None, received_at=None, epcs=None):
-    """Record a delivery and its RFID tags (exactly one EPC per unit) atomically."""
-    try:
-        quantity = int(quantity)
-    except (TypeError, ValueError):
-        raise DatabaseError("Quantity must be a whole number.")
-    if quantity <= 0:
-        raise DatabaseError("Quantity must be greater than 0.")
-    tags = [(epc or "").strip().upper() for epc in (epcs or [])]
-    # Every item received needs its own RFID tag: one EPC per unit, no more, no less.
-    if len(tags) != quantity:
-        raise DatabaseError(
-            f"Every item needs one RFID tag: you are receiving {quantity} item(s) "
-            f"but entered {len(tags)} EPC(s). No stock was received."
-        )
+def receive_stock(product_id, quantity=None, note=None, received_at=None, epcs=None):
+    """Record a delivery: one RFID tag (EPC) per item received, atomically.
+
+    The quantity received IS the number of EPCs. `quantity` is optional; when
+    given it must match the number of EPCs. A tag that was sold before can be
+    put on a new item; a tag already on an unsold item is refused."""
+    tags = [(epc or "").strip().upper() for epc in (epcs or []) if (epc or "").strip()]
+    if not tags:
+        raise DatabaseError("Scan the RFID tag of every item received. No stock was received.")
+    if quantity not in (None, ""):
+        try:
+            quantity = int(quantity)
+        except (TypeError, ValueError):
+            raise DatabaseError("Quantity must be a whole number.")
+        if quantity != len(tags):
+            raise DatabaseError(
+                f"Every item needs one RFID tag: you are receiving {quantity} item(s) "
+                f"but entered {len(tags)} EPC(s). No stock was received."
+            )
     if len(tags) != len(set(tags)):
         raise DatabaseError("Each EPC must be unique in this delivery.")
-    if any(not epc or len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc) for epc in tags):
+    if any(len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc) for epc in tags):
         raise DatabaseError("Each EPC must contain 1 to 24 hexadecimal characters.")
     conn = get_connection()
     try:
@@ -381,13 +420,20 @@ def receive_stock(product_id, quantity, note=None, received_at=None, epcs=None):
         if not conn.execute("SELECT 1 FROM products WHERE id = ? AND is_active = 1", (product_id,)).fetchone():
             raise DatabaseError("Product not found.")
         if received_at:
-            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note, received_at) VALUES (?, ?, ?, ?)", (product_id, quantity, note, received_at))
+            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note, received_at) VALUES (?, ?, ?, ?)", (product_id, len(tags), note, received_at))
         else:
-            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note) VALUES (?, ?, ?)", (product_id, quantity, note))
+            cur = conn.execute("INSERT INTO receptions (product_id, quantity, note) VALUES (?, ?, ?)", (product_id, len(tags), note))
         reception_id = cur.lastrowid
-        conn.executemany("INSERT INTO product_tags (epc, product_id, reception_id) VALUES (?, ?, ?)", [(epc, product_id, reception_id) for epc in tags])
+        for epc in tags:
+            _assign_tag(conn, product_id, epc, reception_id)
         conn.commit()
         return reception_id
+    except DatabaseError as error:
+        conn.rollback()
+        message = str(error)
+        if "No stock" not in message and message != "Product not found.":
+            message += " No stock was received."
+        raise DatabaseError(message)
     except sqlite3.IntegrityError:
         conn.rollback()
         raise DatabaseError("An EPC is already registered; no stock was received.")
@@ -708,12 +754,9 @@ def create_purchase(cart, customer_id=None, payment_method="card", epcs=None, ch
                 raise DatabaseError(f"Product #{pid} is no longer available.")
             if product["in_stock"] < qty:
                 raise DatabaseError(f"Only {product['in_stock']} '{product['name']}' left in stock.")
-            tagged_sold = tagged_counts.get(pid, 0)
-            if tagged_sold > qty:
-                raise DatabaseError("RFID tags do not match cart quantities.")
-            available_tagged = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ? AND sold_purchase_id IS NULL", (pid,)).fetchone()[0]
-            if qty - tagged_sold > product["in_stock"] - available_tagged:
-                raise DatabaseError("Scan the RFID tags for tagged items; barcode sales require untagged stock.")
+            # Items are only sold by their RFID tag (EPC): one tag per unit.
+            if tagged_counts.get(pid, 0) != qty:
+                raise DatabaseError("Every item must be scanned with the RFID reader. Reset and rescan the cart.")
             line_total = round(product["price"] * qty, 2)
             subtotal += line_total
             lines.append((pid, product["name"], qty, product["price"], line_total))

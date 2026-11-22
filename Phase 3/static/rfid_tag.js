@@ -15,10 +15,12 @@ readTagButton.addEventListener("click", async () => {
         const response = await fetch("/api/rfid/read");
         const result = await response.json();
 
-        if (result.success) {
+        if (result.success && !result.in_use_by) {
             epcInput.value = result.epc;
-            tagStatus.classList.add(result.in_use_by ? "warning" : "success");
+            tagStatus.classList.add("success");
         } else {
+            // No tag, several tags, reader not in CDC mode, or the tag is
+            // already on an item in stock (never registered twice)
             tagStatus.classList.add("error");
         }
         tagStatus.textContent = result.message;
@@ -29,13 +31,4 @@ readTagButton.addEventListener("click", async () => {
         readTagButton.disabled = false;
         readTagButton.textContent = readTagLabel;
     }
-});
-
-// Reader in keyboard mode: holding a tag on the reader fills the EPC field directly
-document.addEventListener("rfid-scan", event => {
-    epcInput.value = event.detail.epc;
-    tagStatus.className = "tag-status success";
-    tagStatus.textContent = document.documentElement.lang === "fr"
-        ? `Étiquette ${event.detail.epc} lue. Cliquez sur « Attribuer l’étiquette ».`
-        : `Tag ${event.detail.epc} read. Click "Assign tag" to save it.`;
 });
