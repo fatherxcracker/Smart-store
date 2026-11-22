@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title|default('Reports') }} | Smart Store</title>
+    <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
+    <script src="{{ url_for('reports.static', filename='js/reports.js') }}" defer></script>
+</head>
+<body>
+<header><a class="brand" href="{{ url_for('reports.index') }}">SMART STORE <span>Reports</span></a>
+<nav aria-label="Store"><a href="{{ url_for('home') }}#dashboard">Account</a><a href="{{ url_for('shopping_cart') }}">Checkout</a>
+{% if report_customer and report_customer.is_admin %}<a href="{{ url_for('inventory') }}">Manage inventory</a>{% endif %}
+<button type="button" id="print-report">Print / save PDF</button></nav></header>
+<main>
+<p class="eyebrow">STORE INSIGHTS</p><h1>{{ title|default('Reports') }}</h1>
+<nav class="tabs" aria-label="Reports">
+{% if report_customer and report_customer.is_admin %}
+<a {% if active=='inventory' %}aria-current="page"{% endif %} href="{{ url_for('reports.inventory_report') }}">Inventory</a>
+<a {% if active=='sales' %}aria-current="page"{% endif %} href="{{ url_for('reports.sales_report') }}">Sales</a>
+<a {% if active=='customers' %}aria-current="page"{% endif %} href="{{ url_for('reports.customer_report') }}">Customer activity</a>
+{% endif %}
+<a {% if active=='purchases' %}aria-current="page"{% endif %} href="{{ url_for('reports.purchase_report') }}">My purchases</a>
+</nav>
+{% if period %}
+<form class="filters" method="get">
+<label>From <input type="date" name="start" value="{{ period.start }}" required></label>
+<label>Through <input type="date" name="end" value="{{ period.end }}" required></label>
+{% if active=='sales' %}<label>Top / bottom <input type="number" name="limit" min="1" max="50" value="{{ limit }}" required></label>{% endif %}
+{% if active=='purchases' %}
+<label>Search item <input name="q" value="{{ request.args.get('q','') }}" placeholder="Product name"></label>
+<label>Product / price history <select name="product_id"><option value="">All my products</option>{% for p in data.products %}<option value="{{ p.id }}" {% if request.args.get('product_id')==p.id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></label>
+{% endif %}
+<button>Apply filters</button><a href="{{ request.path }}">Reset</a>
+</form>
+<p class="note">Dates include the whole selected day in {{ timezone }}. Maximum period: 366 days.</p>
+{% endif %}
+{% block filters %}{% endblock %}
+<p id="refresh-status" role="status">Live report · refreshes every 5 seconds</p>
+<div id="report-content">{% block content %}{% endblock %}</div>
+</main>
+<footer>Smart Store · Phase 4 · {{ report_customer.name if report_customer else '' }}</footer>
+</body></html>

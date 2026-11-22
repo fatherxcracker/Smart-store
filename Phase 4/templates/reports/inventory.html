@@ -1,0 +1,11 @@
+{% extends 'reports/base.html' %}
+{% block filters %}
+<form method="get" class="filters"><label>Category <select name="category"><option value="">All categories</option>{% for value in data.categories %}<option {% if value==category %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label><button>Apply filter</button></form>
+{% endblock %}
+{% block content %}
+<div class="metrics"><article><span>Active products</span><strong>{{ data.products|length }}</strong></article><article><span>Units in stock</span><strong>{{ data.units }}</strong></article><article><span>Low stock products</span><strong>{{ data.low_count }}</strong></article></div>
+<section class="panel"><h2>Available stock</h2><p class="note">Low: fewer than 5 units · Moderate: 5–9 · Good: 10 or more</p>
+<div class="table-wrap"><table><thead><tr><th>Product</th><th>ID</th><th>Category</th><th>Available</th><th>Last restocked</th><th>Level</th></tr></thead><tbody>
+{% for p in data.products %}<tr><td>{{ p.name }}</td><td>{{ p.id }}</td><td>{{ p.category }}</td><td>{{ p.in_stock }}</td><td>{{ p.last_received_at|report_time or 'Never' }}</td><td><span class="badge {{ p.stock_level }}">{{ p.stock_level }}</span></td></tr>{% else %}<tr><td colspan="6">No products in this category.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

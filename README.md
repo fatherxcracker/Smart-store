@@ -14,11 +14,11 @@ Open each phase's own README for its full setup, wiring, and run instructions.
 
 ## Phase 4 workspace
 
-[`Phase 4/`](./Phase%204/README.md) contains the starter structure for admin and
-customer reports, Minew MSP01 BLE monitoring, and final system integration. Its
-starter page runs on port 5003. The reporting and sensor features are pending.
-It will reuse earlier phases; unlike the self-contained Phases 1-3 below, it is
-the integration phase. The teacher's requirements are in `Phase 4/docs/Phase-4-.pdf`.
+[`Phase 4/`](./Phase%204/README.md) runs its own copies of the store workflows and
+the new admin and customer reports on port 5003. Its database is an independent
+snapshot; earlier phases remain unchanged. Reports include inventory, sales, customer activity, filtered
+receipts and product price history. BLE hardware and Phase 2 monitoring integration
+remain pending. The teacher's requirements are in `Phase 4/docs/Phase-4-.pdf`.
 
 ## Repo layout
 

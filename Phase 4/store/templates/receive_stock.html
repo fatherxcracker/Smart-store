@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
+    <title>Receive Stock | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for stock forms -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='receive_stock_page.css') }}">
+</head>
+
+<body data-home-url="{{ url_for('home') }}">
+
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- Main page content -->
+    <main class="stock-main">
+
+        <!-- Returns to inventory -->
+        <a class="back-button"
+           href="{{ url_for('inventory') }}"
+           data-i18n="backInventory">
+            ← Back to Inventory
+        </a>
+
+        <!-- Receive stock heading -->
+        <div class="stock-heading">
+
+            <span class="eyebrow" data-i18n="productManagement">
+                PRODUCT MANAGEMENT
+            </span>
+
+            <h1 data-i18n="receiveStockTitle">
+                Receive Stock
+            </h1>
+
+            <p data-i18n="receiveStockDesc">
+                Record a new delivery and update product quantities
+            </p>
+
+        </div>
+
+
+        <!-- Displays error if stock cannot be received -->
+        {% if error %}
+            <p class="form-error" role="alert">
+                {{ error }}
+            </p>
+        {% endif %}
+
+
+        <!-- Check if products exist in inventory -->
+        {% if products %}
+
+            <!-- Receive stock form -->
+            <!-- Sends delivery information to Flask -->
+            <form method="post"
+                  action="{{ url_for('receive_stock') }}"
+                  class="product-form">
+
+                <h2 data-i18n="deliveryDetails">
+                    Delivery Details
+                </h2>
+
+                <p class="form-description" data-i18n="formDescription">
+                    Enter the information for the received stock
+                </p>
+
+
+                <!-- Select product to receive -->
+                <label for="product_id" data-i18n="product">
+                    Product
+                </label>
+
+                <select id="product_id"
+                        name="product_id"
+                        required>
+
+                    <!-- Default dropdown option -->
+                    <option value=""
+                            data-i18n="selectProduct">
+                        Select a product
+                    </option>
+
+                    <!-- Display products from database -->
+                    {% for product in products %}
+
+                        <option value="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-product-stock="{{ product.in_stock }}"
+                            {% if values.get('product_id', '')|string == product.id|string %}
+                                selected
+                            {% endif %}>
+                            {{ product.name }} — {{ product.in_stock }} in stock
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+
+                <!-- Quantity of new products received -->
+                <label for="quantity" data-i18n="quantityReceived">
+                    Quantity Received
+                </label>
+
+                <input id="quantity"
+                       name="quantity"
+                       type="number"
+                       min="1"
+                       step="1"
+                       value="{{ values.get('quantity', '') }}"
+                       required>
+
+
+                <label for="epcs">RFID EPCs (required, one per item, one per line)</label>
+                <p class="form-description">Scan or enter one EPC for every item received. The number of EPCs must match the quantity.</p>
+                <textarea id="epcs" name="epcs" rows="5" placeholder="One EPC per line" class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
+                <button type="button" id="receive-read-tag">Read one RFID tag</button>
+                <p id="epc-count" class="form-description" aria-live="polite"></p>
+                <p id="receive-tag-status" role="status" aria-live="polite"></p>
+
+                <!-- Date and time of delivery -->
+                <label for="received_at" data-i18n="receptionDate">
+                    Reception Date and Time
+                </label>
+
+                <input id="received_at"
+                       name="received_at"
+                       type="datetime-local"
+                       value="{{ values.get('received_at', '') }}"
+                       required>
+
+
+                <!-- Optional delivery note -->
+                <label for="note" data-i18n="note">
+                    Note (optional)
+                </label>
+
+                <input id="note"
+                       name="note"
+                       type="text"
+                       value="{{ values.get('note', '') }}"
+                       placeholder="Add a delivery note"
+                       data-i18n-placeholder="notePlaceholder">
+
+
+                <!-- Saves delivery to database -->
+                <button type="submit"
+                        class="save-button"
+                        data-i18n="recordDelivery">
+                    Record Delivery
+                </button>
+
+            </form>
+
+        {% else %}
+
+            <!-- Shows message if inventory has no products -->
+            <div class="empty-products">
+
+                <p data-i18n="noProducts">
+                    No products are available yet
+                </p>
+
+                <!-- Opens Add Product -->
+                <a href="{{ url_for('add_product') }}"
+                   data-i18n="addProductFirst">
+                    Add a product first
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </main>
+
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<script src="{{ url_for('static', filename='rfid_keyboard.js') }}"></script>
+<script src="{{ url_for('static', filename='receive_stock_rfid.js') }}"></script>
+
+<!-- Navigation and translation functionality -->
+<script src="{{ url_for('static', filename='receive_stock_page.js') }}"></script>
+
+</body>
+</html>

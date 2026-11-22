@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
+    <title>{{ user.name }} | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for product table -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='inventory_page.css') }}">
+
+    <!-- User management styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='users_page.css') }}">
+</head>
+
+<body data-home-url="{{ url_for('home') }}">
+
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Opens user management (admins) -->
+            <a class="nav-link active"
+               href="{{ url_for('manage_users') }}"
+               data-i18n="usersLink">
+                Users
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- One account -->
+    <main class="inventory-main users-main">
+
+        <a class="back-button" href="{{ url_for('manage_users') }}" data-i18n="backUsers">
+            ← Back to Users
+        </a>
+
+        <div class="inventory-heading">
+            <div>
+                <span class="eyebrow" data-i18n="storeAdmin">STORE ADMINISTRATION</span>
+                <h1>
+                    {{ user.name }}
+                    {% if user.is_admin %}<span class="role-badge admin" data-i18n="adminBadge">Admin</span>{% endif %}
+                    {% if is_self %}<span class="role-badge you" data-i18n="youBadge">You</span>{% endif %}
+                </h1>
+                <p>
+                    <span class="mono">{{ user.membership_number }}</span> ·
+                    <span data-i18n="memberSince">Member since</span> {{ user.created_at|local_time }}
+                </p>
+            </div>
+
+            <div class="user-stats">
+                <div class="user-stat"><strong>{{ user.points }}</strong><span data-i18n="points">Points</span></div>
+                <div class="user-stat"><strong>{{ stats.purchase_count or 0 }}</strong><span data-i18n="purchases">Purchases</span></div>
+                <div class="user-stat"><strong>${{ "%.2f"|format((stats.total_spent or 0)|float) }}</strong><span data-i18n="spent">Total spent</span></div>
+            </div>
+        </div>
+
+        <!-- Flask notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="inventory-message {{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="user-grid">
+
+            <!-- Profile -->
+            <form method="post" action="{{ url_for('update_user', customer_id=user.id) }}" class="user-form admin-form">
+                <input type="hidden" name="language" value="en">
+                <h2 data-i18n="profile">Profile</h2>
+
+                <label for="name" data-i18n="name">Name</label>
+                <input id="name" name="name" value="{{ user.name }}" required>
+
+                <label for="email" data-i18n="email">Email</label>
+                <input id="email" name="email" type="email" value="{{ user.email }}" required>
+
+                <label for="phone" data-i18n="phoneOptional">Phone (optional)</label>
+                <input id="phone" name="phone" value="{{ user.phone or '' }}">
+
+                <label for="user_language" data-i18n="receiptLanguage">Receipt language</label>
+                <select id="user_language" name="user_language">
+                    <option value="en" {% if user.language != 'fr' %}selected{% endif %}>English</option>
+                    <option value="fr" {% if user.language == 'fr' %}selected{% endif %}>Français</option>
+                </select>
+
+                <button type="submit" class="save-button" data-i18n="saveChanges">Save changes</button>
+            </form>
+
+            <div class="user-column">
+
+                <!-- Loyalty points -->
+                <form method="post" action="{{ url_for('set_user_points', customer_id=user.id) }}" class="user-form admin-form">
+                    <input type="hidden" name="language" value="en">
+                    <h2 data-i18n="loyaltyPoints">Loyalty points</h2>
+                    <p class="form-description" data-i18n="pointsHelp">Set the balance directly, e.g. to correct a mistake.</p>
+                    <label for="points" data-i18n="pointsBalance">Points balance</label>
+                    <input id="points" name="points" type="number" min="0" step="1" value="{{ user.points }}" required>
+                    <button type="submit" class="save-button" data-i18n="savePoints">Save points</button>
+                </form>
+
+                <!-- Password -->
+                <form method="post" action="{{ url_for('reset_user_password', customer_id=user.id) }}" class="user-form admin-form">
+                    <input type="hidden" name="language" value="en">
+                    <h2 data-i18n="password">Password</h2>
+                    <p class="form-description" data-i18n="passwordHelp">Give the customer a new temporary password.</p>
+                    <label for="password" data-i18n="newPassword">New password (6+ characters)</label>
+                    <input id="password" name="password" type="text" minlength="6" required autocomplete="new-password">
+                    <button type="submit" class="save-button" data-i18n="resetPassword">Reset password</button>
+                </form>
+
+                <!-- Role + delete -->
+                <div class="user-form">
+                    <h2 data-i18n="role">Role</h2>
+                    <p class="form-description">
+                        {% if user.is_admin %}
+                            <span data-i18n="isAdminText">Administrator: can manage products, stock, tags and users.</span>
+                        {% else %}
+                            <span data-i18n="isCustomerText">Customer: can shop and see their own account.</span>
+                        {% endif %}
+                    </p>
+
+                    {% if not is_self %}
+                    <form method="post" action="{{ url_for('set_user_admin', customer_id=user.id) }}" class="admin-form"
+                          data-confirm="{{ 'confirmRemoveAdmin' if user.is_admin else 'confirmMakeAdmin' }}">
+                        <input type="hidden" name="language" value="en">
+                        <input type="hidden" name="is_admin" value="{{ '0' if user.is_admin else '1' }}">
+                        <button type="submit" class="secondary-action"
+                                data-i18n="{{ 'removeAdmin' if user.is_admin else 'grantAdmin' }}">
+                            {{ 'Remove administrator access' if user.is_admin else 'Make administrator' }}
+                        </button>
+                    </form>
+
+                    <form method="post" action="{{ url_for('delete_user', customer_id=user.id) }}" class="admin-form"
+                          data-confirm="confirmDeleteUser">
+                        <input type="hidden" name="language" value="en">
+                        <button type="submit" class="danger-action" data-i18n="deleteAccount">Delete account</button>
+                    </form>
+                    {% else %}
+                    <p class="form-description" data-i18n="selfNote">This is your account. Another administrator must change your role or delete it.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Purchase history -->
+        <section class="inventory-card purchases-card">
+            <div class="card-title">
+                <h2 data-i18n="purchaseHistory">Purchase history</h2>
+            </div>
+            <div class="table-wrapper">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="receipt">Receipt</th>
+                            <th data-i18n="date">Date</th>
+                            <th data-i18n="items">Items</th>
+                            <th data-i18n="total">Total</th>
+                            <th data-i18n="pointsEarned">Points earned</th>
+                            <th data-i18n="pointsUsed">Points used</th>
+                            <th data-i18n="emailed">Emailed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in purchases %}
+                        <tr>
+                            <td>
+                                <button type="button" class="receipt-toggle mono"
+                                        aria-expanded="false" aria-controls="receipt-{{ p.id }}">
+                                    {{ p.receipt_number }}
+                                </button>
+                            </td>
+                            <td>{{ p.created_at|local_time }}</td>
+                            <td>{{ p.item_count }}</td>
+                            <td>${{ "%.2f"|format(p.total|float) }}</td>
+                            <td>+{{ p.points_earned }}</td>
+                            <td>{{ p.points_redeemed or 0 }}</td>
+                            <td>{% if p.email_sent %}✓{% else %}—{% endif %}</td>
+                        </tr>
+                        <!-- The receipt, shown under its row when the receipt number is clicked -->
+                        <tr class="receipt-row" id="receipt-{{ p.id }}" hidden>
+                            <td colspan="7">
+                                <div class="receipt-preview">{{ receipts_html[p.id]|safe }}</div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-inventory" data-i18n="noPurchases">No purchases yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- footer -->
+    <footer>
+        <span>© Smart Store</span>
+        <span data-i18n="footer">Smart shopping, better rewards</span>
+    </footer>
+
+</div>
+
+<!-- Translation, navigation and confirmations -->
+<script src="{{ url_for('static', filename='users_page.js') }}"></script>
+
+</body>
+</html>
