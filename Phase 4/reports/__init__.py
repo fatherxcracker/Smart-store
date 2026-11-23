@@ -2,9 +2,9 @@
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from flask import Blueprint, abort, current_app, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for
 import db
-from . import inventory, sales, customers, purchases
+from . import inventory, sales, customers, purchases, dashboard, exports
 from .common import Period, snapshot
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,7 +22,8 @@ def authorize():
         if request.endpoint == "reports.index":
             return redirect(url_for("home"))
         abort(401, "Log in on the account page to view reports.")
-    if request.endpoint in ("reports.inventory_report", "reports.sales_report", "reports.customer_report") and not customer.get("is_admin"):
+    # Only "My purchases" is for customers; every other report page is administrator-only.
+    if request.endpoint not in ("reports.index", "reports.purchase_report") and not customer.get("is_admin"):
         abort(403, "Administrator access required.")
 
 
@@ -33,7 +34,7 @@ def private_response(response):
     return response
 
 
-@report_pages.context_processor
+@report_pages.app_context_processor
 def report_context():
     return {"report_customer": db.get_customer(session.get("customer_id")) if session.get("customer_id") else None}
 
@@ -54,7 +55,18 @@ def invalid_filter(error):
 @report_pages.get("/")
 def index():
     customer = db.get_customer(session["customer_id"])
-    return redirect(url_for("reports.inventory_report" if customer.get("is_admin") else "reports.purchase_report"))
+    return redirect(url_for("reports.dashboard_page" if customer.get("is_admin") else "reports.purchase_report"))
+
+
+@report_pages.get("/dashboard")
+def dashboard_page():
+    return render_template("reports/dashboard.html", title="Dashboard", active="dashboard", no_refresh=True)
+
+
+@report_pages.get("/api/dashboard")
+def dashboard_data():
+    with snapshot() as conn:
+        return jsonify(dashboard.generate(conn, current_app))
 
 
 @report_pages.get("/inventory")
@@ -62,7 +74,20 @@ def inventory_report():
     category = request.args.get("category", "").strip()
     with snapshot() as conn:
         data = inventory.generate(conn, category)
-    return render_template("reports/inventory.html", data=data, category=category, title="Inventory report", active="inventory")
+    if request.args.get("format") == "csv":
+        return exports.inventory_csv(data, lambda v: report_time(v) if v else "Never")
+    return render_template("reports/inventory.html", data=data, category=category, title="Inventory report", active="inventory",
+                           saved=request.args.get("saved", ""), error=request.args.get("error", ""))
+
+
+@report_pages.post("/inventory/limits")
+def save_low_stock_limit():
+    category = request.form.get("category", "")
+    try:
+        value = db.set_category_threshold(category, request.form.get("low_stock", ""))
+    except db.DatabaseError as error:
+        return redirect(url_for("reports.inventory_report", error=str(error)))
+    return redirect(url_for("reports.inventory_report", saved=f"{category}: low stock is now below {value} units."))
 
 
 def filtered_report(kind, title, active):
@@ -87,6 +112,12 @@ def filtered_report(kind, title, active):
             except ValueError:
                 raise ValueError("Choose a valid product.")
             data = purchases.generate(conn, period, session["customer_id"], request.args.get("q", "").strip(), product_id)
+    if request.args.get("format") == "csv":
+        if kind == "sales":
+            return exports.sales_csv(data, period, request.args.get("table", "products"))
+        if kind == "customers":
+            return exports.customers_csv(data, period)
+        return exports.purchases_csv(data, report_time, period)
     return render_template(f"reports/{kind}.html", data=data, period=period, limit=limit,
                            title=title, active=active, timezone=current_app.config["REPORT_TIMEZONE"])
 

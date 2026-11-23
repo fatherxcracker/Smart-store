@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
+    <title>Reception History | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for reception history -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='reception_history_page.css') }}">
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+</head>
+
+<body data-home-url="{{ url_for('home') }}">
+
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link active"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- Main page content -->
+    <main class="history-main">
+
+        <!-- Returns to inventory -->
+        <a class="back-button"
+           href="{{ url_for('inventory') }}"
+           data-i18n="backInventory">
+            ← Back to Inventory
+        </a>
+
+
+        <!-- Reception history heading and filter -->
+        <div class="history-controls">
+
+            <div class="history-heading">
+
+                <span class="eyebrow" data-i18n="productManagement">
+                    PRODUCT MANAGEMENT
+                </span>
+
+                <h1 data-i18n="receptionHistoryTitle">
+                    Reception History
+                </h1>
+
+                <p data-i18n="receptionHistoryDesc">
+                    View previous stock deliveries and quantities received
+                </p>
+
+            </div>
+
+
+            <!-- Filter reception history by product -->
+            <!-- Sends selected product ID to Flask using GET -->
+            <form method="get"
+                  action="{{ url_for('reception_history') }}"
+                  class="filter-form">
+
+                <div class="filter-field">
+
+                    <label for="product_id"
+                           data-i18n="filterByProduct">
+                        Filter by Product
+                    </label>
+
+                    <!-- Dropdown contains products from database -->
+                    <select id="product_id"
+                            name="product_id">
+
+                        <!-- Empty value shows all products -->
+                        <option value=""
+                                data-i18n="allProducts">
+                            All Products
+                        </option>
+
+                        {% for product in products %}
+
+                            <option value="{{ product.id }}"
+                                {% if selected_id == product.id|string %}
+                                    selected
+                                {% endif %}>
+                                {{ product.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- Applies selected product filter -->
+                <button type="submit"
+                        class="filter-button"
+                        data-i18n="applyFilter">
+                    Apply Filter
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- Reception history table -->
+        <div class="reception-card">
+
+            <div class="table-wrapper">
+
+                <table class="reception-table">
+
+                    <!-- Table headings -->
+                    <thead>
+                        <tr>
+                            <th data-i18n="product">Product</th>
+
+                            <th data-i18n="quantityReceived">
+                                Quantity Received
+                            </th>
+
+                            <th data-i18n="receptionDate">
+                                Reception Date
+                            </th>
+
+                            <th>RFID EPCs</th>
+                            <th data-i18n="note">
+                                Note
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <!-- Display reception records from database -->
+                        {% for reception in receptions %}
+
+                            <tr>
+
+                                <!-- Product name -->
+                                <td>
+                                    <span class="reception-product">
+                                        {{ reception.product_name }}
+                                    </span>
+                                </td>
+
+                                <!-- Quantity received -->
+                                <td>
+                                    <span class="received-quantity">
+                                        +{{ reception.quantity }}
+                                    </span>
+                                </td>
+
+                                <!-- Convert stored date into local time -->
+                                <td>
+                                    {{ reception.received_at|local_time }}
+                                </td>
+
+                                <td>{{ reception.epcs or '—' }}</td>
+
+                                <!-- Optional delivery note -->
+                                <td>
+                                    {{ reception.note or '—' }}
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <!-- Display message if no receptions exist -->
+                            <tr>
+                                <td colspan="5"
+                                    class="empty-history"
+                                    data-i18n="noReceptions">
+                                    No reception records found
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- footer -->
+
+    <!-- Bottom section of website -->
+    <footer>
+        <span>© Smart Store</span>
+
+        <span data-i18n="footer">
+            Smart shopping, better rewards
+        </span>
+    </footer>
+
+</div>
+
+
+<!-- Navigation and translation functionality -->
+<script src="{{ url_for('static', filename='reception_history_page.js') }}"></script>
+
+</body>
+</html>

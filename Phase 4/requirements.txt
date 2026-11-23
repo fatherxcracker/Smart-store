@@ -2,4 +2,8 @@ Flask==3.0.3
 python-dotenv==1.0.1
 pyserial==3.5
 tzdata>=2024.1
-# Add the BLE dependency when the MSP01 receiver is implemented and verified.
+# Phase 2: fridge monitoring (MQTT broker + motor driver)
+paho-mqtt==2.1.0
+gpiozero==2.0.1
+# Phase 4: Minew MSP01 Bluetooth scan (only used when MSP01_BLE=1)
+bleak>=0.22

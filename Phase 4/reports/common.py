@@ -22,11 +22,15 @@ def snapshot():
 
 
 class Period:
-    def __init__(self):
+    def __init__(self, start=None, end=None):
+        """Dates come from the page's ?start=&end= filters unless given directly."""
         self.zone = ZoneInfo(current_app.config["REPORT_TIMEZONE"])
         today = datetime.now(self.zone).date()
-        self.start = self.parse(request.args.get("start", (today - timedelta(days=29)).isoformat()))
-        self.end = self.parse(request.args.get("end", today.isoformat()))
+        if start is not None:
+            self.start, self.end = start, end or start
+        else:
+            self.start = self.parse(request.args.get("start", (today - timedelta(days=29)).isoformat()))
+            self.end = self.parse(request.args.get("end", today.isoformat()))
         if self.end < self.start:
             raise ValueError("The end date must be on or after the start date.")
         if (self.end - self.start).days > 365:
@@ -50,6 +54,10 @@ class Period:
 
     def local_day(self, value):
         return datetime.fromisoformat(value).replace(tzinfo=timezone.utc).astimezone(self.zone).date().isoformat()
+
+
+def today_local():
+    return datetime.now(ZoneInfo(current_app.config["REPORT_TIMEZONE"])).date()
 
 
 def currency(value):

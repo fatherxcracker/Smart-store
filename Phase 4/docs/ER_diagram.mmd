@@ -1,0 +1,98 @@
+erDiagram
+    PRODUCTS ||--o{ RECEPTIONS : "is received in"
+    PRODUCTS ||--o{ PURCHASE_ITEMS : "appears on"
+    CUSTOMERS ||--o{ PURCHASES : "makes"
+    PURCHASES ||--|{ PURCHASE_ITEMS : "contains"
+
+    PRODUCTS {
+        int id PK
+        text name
+        text category
+        real price
+        text upc UK "barcode, max 13"
+        text epc UK "RFID tag, max 24"
+        text producer
+        text image_url
+        date expiry_date
+        int is_active "0 = deleted"
+        timestamp created_at
+        timestamp updated_at
+    }
+    RECEPTIONS {
+        int id PK
+        int product_id FK
+        int quantity
+        timestamp received_at
+        text note
+    }
+    CUSTOMERS {
+        int id PK
+        text name
+        text email UK
+        text phone
+        text membership_number UK "auto-generated"
+        text password_hash
+        int points
+        text language "en / fr"
+        timestamp created_at
+    }
+    PURCHASES {
+        int id PK
+        text receipt_number UK
+        int customer_id FK "NULL = guest"
+        real subtotal
+        real gst
+        real qst
+        real total
+        int points_earned
+        text payment_method
+        int email_sent
+        timestamp created_at
+    }
+    PURCHASE_ITEMS {
+        int id PK
+        int purchase_id FK
+        int product_id FK
+        text product_name "copied at checkout"
+        int quantity
+        real unit_price "copied at checkout"
+        real line_total
+    }
+
+    %% Phase 4 additions
+    CATEGORY_THRESHOLDS {
+        text category PK "one of the fixed categories"
+        int low_stock "low = fewer units than this"
+    }
+    FRIDGE_THRESHOLDS {
+        int fridge_id PK
+        real threshold_c
+    }
+    FRIDGE_ALERTS {
+        int id PK
+        int fridge_id
+        real temperature
+        text token UK "in the email subject and links"
+        text status "pending, confirmed (YES), declined (NO)"
+        timestamp created_at
+        timestamp resolved_at
+    }
+    FRIDGE_READINGS {
+        int id PK
+        int fridge_id
+        real temperature
+        real humidity
+        timestamp recorded_at
+    }
+    SENSOR_READINGS {
+        int id PK
+        text sensor "msp01"
+        real temperature
+        real humidity
+        real light "lux"
+        int motion "0 or 1"
+        int battery
+        text source "ble, mqtt, api, simulator"
+        timestamp recorded_at
+    }
+

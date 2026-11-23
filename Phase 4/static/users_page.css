@@ -1,0 +1,304 @@
+/* User management pages (admin) */
+
+.users-main .inventory-heading h1 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Small number tiles in the heading */
+.user-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.user-stat {
+    min-width: 110px;
+    padding: 14px 18px;
+    background: white;
+    border: 1px solid #e5eaf2;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(18, 33, 60, .05);
+}
+
+.user-stat strong {
+    display: block;
+    font-size: 22px;
+    color: #171b26;
+}
+
+.user-stat span {
+    font-size: 12px;
+    color: #737e91;
+}
+
+/* Search bar */
+.users-toolbar {
+    margin: 0 0 16px;
+}
+
+.user-search {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    max-width: 640px;
+}
+
+.user-search input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #dce3ed;
+    border-radius: 8px;
+    background: white;
+    font: inherit;
+    font-size: 13px;
+}
+
+.user-search button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #1769ff;
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.user-search a {
+    color: #566176;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Add user (collapsible) */
+.add-user {
+    margin: 0 0 22px;
+}
+
+.add-user summary {
+    display: inline-block;
+    cursor: pointer;
+    padding: 11px 16px;
+    background: #eaf2ff;
+    color: #154da5;
+    border: 1px solid #cbdfff;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    list-style: none;
+}
+
+.add-user summary::-webkit-details-marker {
+    display: none;
+}
+
+.add-user-form {
+    margin-top: 14px;
+    max-width: 760px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+}
+
+.inline-check {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.inline-check input {
+    width: 18px !important;
+    height: 18px;
+    margin: 0 !important;
+}
+
+/* Cards with forms */
+.user-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 24px;
+}
+
+.user-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    padding: 26px;
+    background: white;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(18, 33, 60, .05);
+}
+
+.user-form h2,
+.card-title h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #171b26;
+}
+
+.user-form .form-description {
+    color: #737e91;
+    font-size: 12px;
+    margin: 0 0 16px;
+}
+
+.user-form label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #171b26;
+}
+
+.user-form input,
+.user-form select {
+    width: 100%;
+    padding: 11px 13px;
+    margin-bottom: 16px;
+    border: 1px solid #dce3ed;
+    border-radius: 8px;
+    background: #fbfcfe;
+    color: #171b26;
+    font: inherit;
+    font-size: 13px;
+}
+
+.user-form input:focus,
+.user-form select:focus {
+    outline: none;
+    border-color: #1769ff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(23, 105, 255, .08);
+}
+
+.user-form .save-button {
+    align-self: flex-start;
+    background: #1769ff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.user-form .save-button:hover {
+    background: #0954db;
+}
+
+.user-form form + form {
+    margin-top: 10px;
+}
+
+.secondary-action,
+.danger-action {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.secondary-action {
+    background: #eaf2ff;
+    color: #154da5;
+    border: 1px solid #cbdfff;
+}
+
+.danger-action {
+    background: #fff1f1;
+    color: #a12b2b;
+    border: 1px solid #f2c9c9;
+}
+
+.danger-action:hover {
+    border-color: #a12b2b;
+}
+
+/* Badges next to names */
+.role-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    vertical-align: middle;
+    letter-spacing: 0;
+}
+
+.role-badge.admin {
+    background: #e8f6ee;
+    color: #1d6b3f;
+}
+
+.role-badge.you {
+    background: #eef1f6;
+    color: #566176;
+}
+
+.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+}
+
+/* Purchase history */
+.purchases-card .card-title {
+    padding: 22px 24px 6px;
+}
+
+.receipt-toggle {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: #1769ff;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.receipt-row > td {
+    background: #f8faff;
+}
+
+.receipt-preview {
+    max-width: 520px;
+    margin: 4px auto 8px;
+    padding: 20px;
+    background: white;
+    border: 1px solid #e5eaf2;
+    border-radius: 10px;
+}
+
+@media (max-width: 860px) {
+    .user-grid,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -22,7 +22,11 @@ def generate(conn, period, customer_id, query="", product_id=None):
     ids = {i["purchase_id"] for i in matched}
     for receipt in receipts:
         receipt["items"] = by_receipt.get(receipt["id"], [])
-    return {"receipts": [r for r in receipts if r["id"] in ids] if query or product_id else receipts,
+    spending = {day: 0.0 for day in period.days}
+    for receipt in receipts:
+        spending[period.local_day(receipt["created_at"])] += receipt["total"]
+    return {"spending": [{"date": day, "total": currency(total)} for day, total in spending.items()],
+            "receipts": [r for r in receipts if r["id"] in ids] if query or product_id else receipts,
             "total_spent": currency(sum(r["total"] for r in receipts)),
             "receipt_count": len(receipts), "products": options, "matches": matched,
             "purchase_times": len(ids), "units": sum(i["quantity"] for i in matched),

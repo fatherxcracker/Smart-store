@@ -1,0 +1,28 @@
+{% extends 'reports/base.html' %}
+{% block content %}
+<script src="{{ url_for('reports.static', filename='js/widgets.js') }}"></script>
+<script src="{{ url_for('reports.static', filename='js/dashboard.js') }}" defer></script>
+<p id="dash-status" class="note" role="status">Loading…</p>
+<div class="metrics">
+<article><span>Sales today (incl. tax)</span><strong id="k-sales">--</strong></article>
+<article><span>Orders today</span><strong id="k-orders">--</strong></article>
+<article><span>Customers today</span><strong id="k-customers">--</strong></article>
+<article><span>Low-stock products</span><strong id="k-low">--</strong></article>
+</div>
+<div class="columns">
+<section class="panel"><h2>Sales, last 7 days</h2><p class="note" id="week-note"></p>
+<figure class="chart" id="week-chart" data-x="date" data-y="total" data-money="true" data-empty="No sales yet this week." aria-label="Sales in the last 7 days"></figure></section>
+<section class="panel"><h2>Low stock</h2><ul class="plain" id="low-list"><li>Loading…</li></ul><p class="note"><a href="{{ url_for('reports.inventory_report') }}">Open the inventory report</a> to change each category's limit.</p></section>
+</div>
+<h2 class="section-title">Refrigerators <a class="more" href="{{ url_for('monitoring.page') }}">Open fridge controls</a></h2>
+<div class="metrics" id="fridge-tiles"></div>
+<h2 class="section-title">Minew MSP01 sensor <a class="more" href="{{ url_for('sensors.page') }}">Open sensor page</a></h2>
+<div class="metrics sensor-tiles">
+<article><span>Temperature</span><strong id="d-temp">--</strong><small id="d-updated"></small></article>
+<article><span>Humidity</span><strong id="d-hum">--</strong><small id="d-battery"></small></article>
+<article><span>Light intensity</span><strong id="d-light">--</strong></article>
+<article><span>Motion</span><strong id="d-motion">--</strong><small id="d-motion-note"></small></article>
+<article><span>Sensor status</span><strong><span id="d-status" class="pill">--</span></strong></article>
+</div>
+<section class="panel"><h2>Recent notifications</h2><ul class="plain" id="notes"><li>Loading…</li></ul></section>
+{% endblock %}

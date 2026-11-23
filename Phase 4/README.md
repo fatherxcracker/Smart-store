@@ -1,129 +1,155 @@
-﻿# Smart Store - Phase 4
+# Smart Store - Phase 4 (complete system)
 
-Phase 3 accounts, inventory, RFID checkout and Phase 4 reports run in one Flask
-application on port 5003. Phase 4 imports the existing store code and uses the
-existing database, without maintaining duplicate store files.
+One Flask application on **port 5003** that contains everything built so far:
 
-## Implemented
+| Phase | What it contributes | Where it lives |
+|---|---|---|
+| 2 | Fridge monitoring: ESP32 + DHT11 -> Mosquitto -> temperature email -> reply **YES** -> fan (L293D + PWM) | `monitoring/`, `esp32/` |
+| 3 | Accounts, loyalty points, inventory, RFID stock (one EPC per item), self-checkout, receipts, EN/FR notifications | `storefront.py`, `db.py`, `cart.py`, `checkout.py`, `receipts.py`, `notifications.py`, `rfid_reader.py` |
+| 4 | Dashboard, admin + customer reports, CSV export, per-category stock alerts, dark mode, Minew MSP01 BLE sensor | `reports/`, `sensors/`, `templates/`, `static/` |
 
-- Administrator inventory report with category filters, stock levels, delivery dates and live refresh.
-- Sales reports by day or date range: sold quantities, top/bottom N products,
-  total paid, net sales, discounts, taxes and daily charts.
-- Customer activity: distinct purchasing members, new/returning classifications,
-  guest order counts, busiest/quietest days and daily charts/tables.
-- Customer reports: dated receipt history, period spending, product search,
-  purchase counts, historical unit prices and a product price-history chart.
-- Existing login sessions and administrator checks protect all reports.
-- Reports refresh every five seconds and support browser printing / Save as PDF.
-- Mobile layouts and tables work without external chart libraries or CDN access.
+The folder is **self-contained**: it does not import code from `Phase 2/` or `Phase 3/`.
+One login, one SQLite database (`smartstore.db`), one set of notifications.
 
-## Run on Windows
+## What the Phase 4 task asks for, and where it is
 
-From the repository root:
+| Requirement | Where |
+|---|---|
+| 2.1 Inventory report: available items per product, real-time, last restocked | **Reports > Inventory**. Refreshes every 5 s, so a purchase shows up without reloading. |
+| 2.1 Stock-level alerts, customizable per category; colour levels | Same page, "Low-stock limit per category". Red = fewer than the limit, yellow = fewer than twice the limit, green = otherwise. The checkout sends a low-stock notification using the category's limit. |
+| 2.2 Sales report: sold items per product in a range, most / least sold, total for a day or a range | **Reports > Sales** (a single day = same start and end date). Top/bottom N, daily line chart, taxes, discounts. |
+| 2.3 Customer activity: customers per day / range, new vs returning, busiest / quietest day | **Reports > Customer activity** |
+| 3.1 Receipt history per day or period (date and time, items, prices, total) | **My purchases** (customer) |
+| 3.2 Total spent in a period, spending graph | **My purchases** (total + "Spending over time" chart) |
+| 3.3 Search purchase history, times bought, dates and prices, inflation diagram | **My purchases**: search box, product selector, "Inflation report: price history" chart |
+| 4.1 GUI style, responsive | One design for the Phase 4 pages, mobile layouts, keyboard focus styles |
+| 4.2 Notifications | Low-stock alerts, purchase confirmations, fridge alerts, error messages (EN/FR for the store). Everything is in **Manage inventory > Notifications** and on the dashboard. |
+| 4.3 Light and dark theme | "Dark mode" / "Mode sombre" button on every page (remembered per browser, follows the system setting the first time) |
+| Bilingual EN / FR | EN / FR switch on every Phase 4 page, shared with the store portal's language choice (also saved on the account for receipt emails) |
+| 4.4 Extras | **CSV download** on every report, print / save as PDF, dashboard widgets |
+| 5 Minew MSP01 sensor + dashboard widgets | **Reports > Dashboard** (live tiles) and **MSP01 sensor** page (charts, motion log) |
+| 6 Final demonstration | Demo script below |
+
+## Run it
+
+### Raspberry Pi
+
+```bash
+cd ~/Smart-store/"Phase 4"
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # then edit .env (Gmail App Password, PUBLIC_BASE_URL, ...)
+python app.py
+```
+
+Open `http://<pi-ip>:5003`. The first start creates `smartstore.db` with the sample products (0 in stock) and the demo accounts.
+
+Mosquitto must be running for the fridges (`sudo systemctl status mosquitto`), and the ESP32 sketches in `esp32/` publish to topics `Frig1` and `Frig2` (wiring and Wi-Fi setup: `Phase 2/README.md`). The app still starts without the broker; the fridge tiles just say "Waiting for data".
+
+### Windows (testing without hardware)
 
 ```powershell
 cd "Phase 4"
-```
-
-First-time setup on another computer (a local environment has already been
-created in this workspace):
-
-```powershell
 py -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 Copy-Item .env.example .env
-```
-
-Do not overwrite an existing `.env`. Start the integrated app:
-
-```powershell
 .\venv\Scripts\python.exe app.py
 ```
 
-Open http://localhost:5003, sign in using an existing store account, and click
-**Reports**. Administrators see all reporting tabs; customers see only their
-personal purchase reports. The root page is the existing customer portal.
-Do not open the Phase 3 port to log in for Phase 4: use port 5003 throughout.
-Phase 3 does not need to run separately. Restart an already running Phase 4 server
-after the integration update so it uses the existing Phase 3 code and database.
-No app is started automatically by tests.
+Set `RFID_SIMULATE=1` and `MSP01_SIMULATE=1` in `.env` to demo without the reader or the sensor.
 
-On the Pi, use `python3 -m venv venv`, install with
-`venv/bin/python -m pip install -r requirements.txt`, and run
-`venv/bin/python app.py`. Set `HOST=0.0.0.0` for LAN access.
+### Accounts (new database only)
 
-## Database and configuration
+| Role | Email | Password |
+|---|---|---|
+| Administrator | `admin@smartstore.local` | `eUL1b-l0PhnHW9WDo8A6Dw` |
+| Customer | `john@gmail.com` | `123456` |
 
-- `PHASE3_DATABASE_PATH` defaults to `../Phase 3/smartstore.db`, resolved from
-  this folder. Set an absolute path in `.env` to use another database.
-- Startup runs Phase 3's normal database initialization and migrations. A missing
-  database is created with Phase 3 demo data. Back up store data before deployment.
-- Reports only read data. Checkout and account actions use the existing store
-  functions and database, so reports reflect the same purchases and inventory.
-- The unused local `database/smartstore.db` snapshot from the earlier standalone
-  setup is preserved as a backup, ignored by Git, and not opened by this app.
-- `REPORT_TIMEZONE` defaults to `America/Toronto`. Filter days include the entire
-  local day, with UTC database boundaries accounting for daylight saving.
-- Maximum report period is 366 days, including both endpoints.
-- Receipt email settings load from Phase 3's `.env`; values in Phase 4's `.env`,
-  when present, take precedence. A configured `FLASK_SECRET_KEY` keeps sessions
-  stable across restarts.
+For testing only. Create real accounts and change these passwords before any real use (Manage inventory > User management).
+
+### Moving your Phase 3 data
+
+Phase 4 uses `Phase 4/smartstore.db`. To keep the accounts, products and RFID tags you already have, stop both apps and copy the file: `cp "../Phase 3/smartstore.db" smartstore.db`. The new tables are created automatically on start. Otherwise start fresh and receive your tags again (Manage inventory > Receive stock).
+
+## Pages
+
+| Page | URL | Who |
+|---|---|---|
+| Account, purchase history, points | `/` | everyone |
+| Self-checkout | `/cart` | everyone |
+| Inventory, receive stock, tags, users | `/inventory` | admin |
+| Dashboard (sales today, low stock, fridges, MSP01, notifications) | `/reports/dashboard` | admin |
+| Inventory / Sales / Customer reports | `/reports/inventory`, `/reports/sales`, `/reports/customers` | admin |
+| My purchases | `/reports/purchases` | any signed-in customer |
+| Fridges and fan | `/monitoring/` | admin |
+| MSP01 sensor | `/sensors/` | admin |
+
+Every report accepts `?format=csv` (the "Download CSV" link). Sales and customer reports also have the daily table as CSV (`&table=daily` for sales).
+
+## The fridge alert flow (Phase 2)
+
+1. A DHT11 reading above the fridge's limit creates an alert and sends an email (subject ends with `[ref:...]`). At most one email per fridge every `ALERT_COOLDOWN_SECONDS`.
+2. **Reply YES** to the email: the Pi reads the Gmail inbox (IMAP, every `IMAP_POLL_SECONDS`) and turns the fan on. **Reply NO**: nothing happens. Only the address in `ALERT_RECIPIENT_EMAIL` can answer, and each alert can be answered once.
+3. The email also contains backup YES/NO links (`PUBLIC_BASE_URL`, must be reachable from your phone).
+4. Temperature limits, the fan switch and the PWM speed slider are on **Fridges & fan**. All events also appear in the store's notification log.
+
+## Minew MSP01 sensor (temperature, humidity, light, motion)
+
+1. Configure the sensor with the **BeaconSET+** app so it advertises temperature, humidity, illuminance and motion. The reelyActive guide describes the steps: https://reelyactive.github.io/diy/minew-msp01-config/
+2. Get its readings into the app in any one of these ways:
+   - **Bluetooth on the Pi**: `MSP01_BLE=1` (optionally `MINEW_DEVICE_ADDRESS=AA:BB:...`). `sensors/minew_msp01.py` decodes Minew's service data. It decodes **battery, temperature and humidity** of the Minew info frame; **check it against your own sensor** (for example with the nRF Connect phone app) before relying on it. Light and motion are not decoded from raw frames yet.
+   - **MQTT**: publish JSON such as `{"temperature":21.5,"humidity":44,"light":320,"motion":1,"battery":90}` to topic `MSP01`.
+   - **HTTP**: `POST /sensors/api/ingest` with the same JSON and header `X-Sensor-Token: <SENSOR_INGEST_TOKEN>` (for a gateway or reelyActive pipeline).
+3. No sensor at hand: `MSP01_SIMULATE=1` produces believable values so the widgets can be demonstrated. The page then shows the source of each reading as `simulator` in the database (`sensor_readings.source`).
+
+A sensor with no reading for `SENSOR_STALE_SECONDS` is shown as **Offline (stale)**, never as a live value.
+
+## Demo script (about 10 minutes)
+
+1. **Inventory management**: log in as admin > Manage inventory > Receive stock: read a tag with the CF600 (one tag at a time). The inventory report shows +1.
+2. **Purchasing workflow**: open `/cart` in another window, scan the items, pay. Watch **Reports > Inventory** drop by one without reloading, and a low-stock notice appear when the category limit is crossed. Change the Dairy limit to 10 to show the colours change.
+3. **Data synchronization**: the Dashboard shows today's sales and customers from that purchase within 5 seconds.
+4. **Admin reports**: Sales (top/bottom, daily chart, CSV), Customer activity (new vs returning, busiest day).
+5. **Customer reports**: log in as a customer > My purchases: receipts, spending chart, search an item, pick it and show the inflation chart (change a product price in between to show a different price).
+6. **Fridges and sensor**: warm a DHT11 with your hand, show the email, reply YES, watch the fan start. Show the MSP01 tiles and the motion log.
+7. **Polish**: switch to dark mode, resize the window, download a CSV, show French in the store portal.
+
+## Database
+
+Phase 3 tables (customers, products, product_tags, receptions, purchases, purchase_items, notifications, the `inventory` view) plus:
+
+| Table | Purpose |
+|---|---|
+| `category_thresholds` | low-stock limit per category |
+| `fridge_thresholds`, `fridge_alerts`, `fridge_readings` | Phase 2 limits, alert emails and their answers, history for the charts (kept 7 days) |
+| `sensor_readings` | MSP01 readings (kept 7 days) |
+
+See `docs/ER_diagram.mmd` (the PNG shows the Phase 3 tables).
 
 ## Report definitions
 
-- Net sales = receipt subtotal minus redeemed points discounts, before tax.
-  Total paid includes GST/QST. Product sales use historical item amounts before
-  points discounts and tax. These are clearly labelled and are not interchangeable.
-- Products with zero sales appear in rankings. Deleted products remain in
-  historical sales reports if sold during the period. Product names/categories
-  in admin rankings reflect the current product record; customer receipt lines
-  retain the original purchased name and price.
-- Customers are distinct linked accounts that purchased in the period, not
-  physical visitors. New means no purchase before the period; returning means
-  a prior purchase. A member appears in only one classification per period.
-- Guest orders and orders from deleted accounts are reported separately, because
-  they cannot be reliably assigned to distinct people. Zero-purchase days and
-  ties are included in busiest/quietest day results.
-- Personal total spending covers all receipts in the selected date period.
-  Product/name filters narrow matching items and receipts, not that period total.
-  Purchase count means distinct matching receipts; units are counted separately.
-- Product price charts show the actual historical unit price before order-level
-  points discounts and tax, rather than today's catalog price.
-
-## Files
-
-- `app.py`, `config.py`: integrated startup and settings.
-- Phase 3 store modules, templates and static assets are imported in place.
-  Small compatibility changes there allow configured database paths and report links.
-- `reports/common.py`: read-only database snapshots and date handling.
-- `reports/inventory.py`, `sales.py`, `customers.py`, `purchases.py`: report queries.
-- `reports/__init__.py`: authenticated routes and page rendering.
-- `templates/reports/`, `static/css/reports.css`, `static/js/reports.js`: report UI,
-  charts, mobile layout and refresh logic.
-- `test_reports.py`: temporary-database integration tests.
-- `docs/Phase-4-.pdf`: assignment requirements.
+- Net sales = receipt subtotal minus redeemed points discounts, before tax. Total paid includes GST/QST. Product sales use the item amounts at purchase time, before points discounts and tax. They are labelled and are not interchangeable.
+- Products with zero sales appear in rankings. Deleted products remain in historical reports if sold in the period.
+- Customers are distinct linked accounts that purchased in the period (not physical visitors). New = no purchase before the period; returning = a prior purchase. Guest orders are counted separately. Zero-purchase days and ties are included in busiest/quietest day results.
+- Personal total spending covers all receipts in the selected period. Product/name filters narrow the matching items and receipts, not that total.
+- Price charts show the unit price actually paid, not today's catalog price.
+- Days include the whole local day in `REPORT_TIMEZONE` (default `America/Toronto`). Maximum period: 366 days.
+- Stock = number of unsold RFID tags of the product (every item has its own EPC).
 
 ## Tests
 
-```powershell
-.\venv\Scripts\python.exe -m unittest -v test_reports
+```bash
+python -m unittest -v test_reports test_phase4 test_checkout    # 67 tests
+python test_database.py                                         # 53 checks
 ```
 
-Tests use temporary databases, not the real store. They do not send email or
-access hardware. Run the original store regression tests from Phase 3 as well:
+They use temporary databases and never send email, open the MQTT broker, drive the GPIO pins or use Bluetooth.
 
-```powershell
-cd "../Phase 3"
-.\venv\Scripts\python.exe -m unittest -v test_checkout
-.\venv\Scripts\python.exe test_database.py
-```
+## Known limits
 
-## Still pending
-
-- Minew MSP01 BLE receiver/decoder, sensor observation storage and live widgets.
-  The sensor and Raspberry Pi are not currently available, so the module remains
-  a placeholder; simulated or real sensor readings are not presented as working.
-- Phase 2 fridge monitoring integration with the combined dashboard.
-- French translations for the new reporting pages (the existing store portal
-  remains bilingual), optional CSV export and configurable category stock alerts.
-- Final end-to-end checks using physical RFID, BLE sensors and actual receipt email.
+- Not yet tested with the physical hardware in this combined app (CF600, DHT11 boards, fan, MSP01). The pieces come from Phases 2 and 3, which were tested separately.
+- Raw Bluetooth decoding of the MSP01 is partial (see above).
+- French on the Phase 4 pages comes from a phrase list in `static/i18n.js`; a new text added later shows in English until it is added there. Product names and server error pages (401/403) are not translated. CSV column names stay in English.
+- Dark mode on the older store pages inverts their colours, so it is close but not a hand-tuned palette.
+- `Phase 2/` and `Phase 3/` still run on their own (ports 5001 and 5002). Phase 4 is the version to demonstrate.

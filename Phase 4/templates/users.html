@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- tells browser how to read page -->
+    <meta charset="UTF-8">
+
+    <!-- Makes website fit different screen sizes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Name shown in browser tab -->
+    <title>Users | Smart Store</title>
+
+    <!-- Connects customer account CSS for same navigation -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='account.css') }}">
+
+    <!-- Connects inventory CSS for product table -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='inventory.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='inventory_page.css') }}">
+
+    <!-- User management styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='users_page.css') }}">
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+</head>
+
+<body data-home-url="{{ url_for('home') }}">
+
+<!-- Contains whole website -->
+<div class="app">
+
+    <!--Navigation-->
+
+    <!-- Top bar of website -->
+    <header class="topbar">
+
+        <!-- Website name -->
+        <div class="brand">
+            <div>
+                <strong>SMART STORE</strong>
+            </div>
+        </div>
+
+        <!-- Buttons on the right side of top bar -->
+        <div class="top-actions">
+
+            <!-- These buttons show when customer logs in -->
+            <nav id="account-nav" hidden>
+
+                <!-- Opens customer dashboard -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#dashboard"
+                   data-i18n="dashboard">
+                    Dashboard
+                </a>
+
+                <!-- Opens purchase history -->
+                <a class="nav-link"
+                   href="{{ url_for('home') }}#history"
+                   data-i18n="history">
+                    Purchase History
+                </a>
+
+            </nav>
+
+            <!-- Opens self-checkout -->
+            <a class="nav-link"
+               href="{{ url_for('shopping_cart') }}"
+               data-i18n="checkoutLink">
+                Self-checkout
+            </a>
+
+            <!-- Opens inventory -->
+            <a class="nav-link"
+               href="{{ url_for('inventory') }}"
+               data-i18n="inventoryLink">
+                Inventory
+            </a>
+
+            <!-- Opens user management (admins) -->
+            <a class="nav-link active"
+               href="{{ url_for('manage_users') }}"
+               data-i18n="usersLink">
+                Users
+            </a>
+
+            <!-- Buttons to change between English and French -->
+            <div class="language-switch">
+
+                <!-- English button -->
+                <button id="lang-en"
+                        class="selected"
+                        type="button">
+                    EN
+                </button>
+
+                <!-- French button -->
+                <button id="lang-fr"
+                        type="button">
+                    FR
+                </button>
+
+            </div>
+
+            <!-- Logout button appears after login -->
+            <button id="logout-button"
+                    class="logout"
+                    type="button"
+                    data-i18n="logout"
+                    hidden>
+                Log Out
+            </button>
+
+        </div>
+    </header>
+
+
+    <!-- Main user management content -->
+    <main class="inventory-main users-main">
+
+        <a class="back-button" href="{{ url_for('inventory') }}" data-i18n="backInventory">
+            ← Back to Inventory
+        </a>
+
+        <div class="inventory-heading">
+            <div>
+                <span class="eyebrow" data-i18n="storeAdmin">STORE ADMINISTRATION</span>
+                <h1 data-i18n="usersTitle">User Management</h1>
+                <p data-i18n="usersDesc">See every account in the store, edit details, points and roles</p>
+            </div>
+
+            <!-- Quick numbers -->
+            <div class="user-stats">
+                <div class="user-stat">
+                    <strong>{{ total_users }}</strong>
+                    <span data-i18n="statUsers">accounts</span>
+                </div>
+                <div class="user-stat">
+                    <strong>{{ admin_count }}</strong>
+                    <span data-i18n="statAdmins">administrators</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flask notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="inventory-message {{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Search + add user -->
+        <div class="users-toolbar">
+            <form method="get" action="{{ url_for('manage_users') }}" class="user-search">
+                <input type="search" name="q" value="{{ search }}"
+                       data-i18n-placeholder="searchPlaceholder"
+                       placeholder="Search by name, email, phone or membership number">
+                <button type="submit" data-i18n="search">Search</button>
+                {% if search %}
+                <a href="{{ url_for('manage_users') }}" data-i18n="clearSearch">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <details class="add-user" {% if show_add_form %}open{% endif %}>
+            <summary data-i18n="addUser">+ Add user</summary>
+
+            <!-- Creates a new account (same rules as customer sign-up) -->
+            <form method="post" action="{{ url_for('create_user') }}" class="user-form add-user-form admin-form">
+                <input type="hidden" name="language" value="en">
+
+                <div class="form-grid">
+                    <div>
+                        <label for="new-name" data-i18n="name">Name</label>
+                        <input id="new-name" name="name" value="{{ values.get('name', '') }}" required>
+                    </div>
+                    <div>
+                        <label for="new-email" data-i18n="email">Email</label>
+                        <input id="new-email" name="email" type="email" value="{{ values.get('email', '') }}" required>
+                    </div>
+                    <div>
+                        <label for="new-phone" data-i18n="phoneOptional">Phone (optional)</label>
+                        <input id="new-phone" name="phone" value="{{ values.get('phone', '') }}">
+                    </div>
+                    <div>
+                        <label for="new-password" data-i18n="tempPassword">Temporary password (6+ characters)</label>
+                        <input id="new-password" name="password" type="text" minlength="6" required autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label for="new-language" data-i18n="receiptLanguage">Receipt language</label>
+                        <select id="new-language" name="user_language">
+                            <option value="en" {% if values.get('user_language') != 'fr' %}selected{% endif %}>English</option>
+                            <option value="fr" {% if values.get('user_language') == 'fr' %}selected{% endif %}>Français</option>
+                        </select>
+                    </div>
+                    <div class="checkbox-row">
+                        <label class="inline-check">
+                            <input type="checkbox" name="is_admin" value="1">
+                            <span data-i18n="makeAdmin">Administrator</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="save-button" data-i18n="createAccount">Create account</button>
+            </form>
+        </details>
+
+        <!-- All accounts -->
+        <div class="inventory-card">
+            <div class="table-wrapper">
+                <table class="inventory-table users-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="name">Name</th>
+                            <th data-i18n="email">Email</th>
+                            <th data-i18n="membership">Membership #</th>
+                            <th data-i18n="points">Points</th>
+                            <th data-i18n="purchases">Purchases</th>
+                            <th data-i18n="spent">Total spent</th>
+                            <th data-i18n="joined">Joined</th>
+                            <th data-i18n="actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <span class="product-name">{{ user.name }}</span>
+                                {% if user.is_admin %}<span class="role-badge admin" data-i18n="adminBadge">Admin</span>{% endif %}
+                                {% if user.id == current_admin_id %}<span class="role-badge you" data-i18n="youBadge">You</span>{% endif %}
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td class="mono">{{ user.membership_number }}</td>
+                            <td><span class="stock-number">{{ user.points }}</span></td>
+                            <td>{{ user.purchase_count }}</td>
+                            <td>${{ "%.2f"|format(user.total_spent|float) }}</td>
+                            <td>{{ user.created_at|local_time }}</td>
+                            <td>
+                                <a class="edit-button" href="{{ url_for('user_detail', customer_id=user.id) }}" data-i18n="manage">Manage</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="empty-inventory" data-i18n="noUsers">No accounts found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- footer -->
+    <footer>
+        <span>© Smart Store</span>
+        <span data-i18n="footer">Smart shopping, better rewards</span>
+    </footer>
+
+</div>
+
+<!-- Translation, navigation and confirmations -->
+<script src="{{ url_for('static', filename='users_page.js') }}"></script>
+
+</body>
+</html>

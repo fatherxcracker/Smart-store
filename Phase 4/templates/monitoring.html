@@ -1,0 +1,27 @@
+{% extends 'reports/base.html' %}
+{% block content %}
+<script src="{{ url_for('reports.static', filename='js/widgets.js') }}"></script>
+<script src="{{ url_for('reports.static', filename='js/monitoring.js') }}" defer></script>
+<p class="note">Two DHT11 sensors (ESP32 → Mosquitto) watch the refrigerators. Above the limit, an email asks whether to turn on the fan: reply <strong>YES</strong> and the fan starts; reply NO and nothing happens.</p>
+<section class="fridge-grid">
+{% for n in (1, 2) %}
+<article class="panel fridge" data-fridge="{{ n }}">
+<h2>Refrigerator {{ n }} <span class="pill" id="status{{ n }}">Waiting for data</span></h2>
+<div class="metrics two"><article><span>Temperature</span><strong id="temp{{ n }}">--</strong></article><article><span>Humidity</span><strong id="humidity{{ n }}">--</strong></article></div>
+<p class="note" id="updated{{ n }}"></p>
+<label class="stack">Temperature limit (°C)
+<span class="inline"><input type="number" id="threshold{{ n }}" min="-30" max="60" step="0.5"><button type="button" data-save="{{ n }}">Save</button></span></label>
+<figure class="chart" id="hist{{ n }}" data-x="recorded_at" data-y="temperature" data-unit=" °C" data-time="true" data-range="true" data-empty="No history yet - readings are saved every 30 seconds." aria-label="Refrigerator {{ n }} temperature, last 6 hours"></figure>
+<p class="note">Temperature, last 6 hours</p>
+</article>
+{% endfor %}
+</section>
+<section class="panel fan-panel"><h2>Fan control <span class="pill" id="fanStatus">OFF</span></h2>
+<div class="fan-row">
+<svg id="fanIcon" class="fan-icon" viewBox="0 0 100 100" role="img" aria-label="Fan"><circle cx="50" cy="50" r="46" class="fan-ring"/><g class="fan-blades"><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z"/><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(120 50 50)"/><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(240 50 50)"/></g><circle cx="50" cy="50" r="7" class="fan-hub"/></svg>
+<div><strong class="big" id="rpmDisplay">0%</strong><span class="note"> duty cycle</span>
+<p><button type="button" id="powerButton">Turn ON</button></p>
+<label class="stack">Speed <span id="speedValue">40% duty cycle</span><input type="range" id="fanSlider" min="0" max="100" step="5" value="40" disabled></label></div>
+</div></section>
+<section class="panel"><h2>Alerts and notifications</h2><ul class="plain" id="notifications"><li>No active alerts.</li></ul></section>
+{% endblock %}

@@ -1,30 +1,40 @@
-"""Run Phase 3 store workflows and Phase 4 reporting in one application."""
+"""Smart Store - Phase 4: the complete system in one application.
 
-import importlib.util
-import sys
-from pathlib import Path
+    Phase 2  fridge monitoring: DHT11 sensors -> MQTT -> email alert -> reply YES -> fan   (monitoring/)
+    Phase 3  accounts, inventory, RFID stock, checkout, receipts, notifications           (storefront.py ...)
+    Phase 4  dashboard, admin and customer reports, CSV export, dark mode,
+             Minew MSP01 BLE sensor                                                        (reports/, sensors/)
 
+Run:  python app.py      then open http://localhost:5003
+"""
+
+import config  # loads .env first (db.py reads its settings when imported)
 from config import Config
 
+import storefront
+from monitoring import init_monitoring, monitor_shutdown
+from reports import report_pages
+from sensors import init_sensors
 
-def create_app(config=None):
-    phase3 = Path(__file__).resolve().parent.parent / "Phase 3"
-    if str(phase3) not in sys.path:
-        sys.path.insert(0, str(phase3))
-    name = "smartstore_phase3_app"
-    if name not in sys.modules:
-        spec = importlib.util.spec_from_file_location(name, phase3 / "app.py")
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-        spec.loader.exec_module(module)
-    settings = {"DATABASE_PATH": str(Config.PHASE3_DATABASE_PATH),
-                "REPORT_TIMEZONE": Config.REPORT_TIMEZONE, "PHASE4_ENABLED": True}
-    settings.update(config or {})
-    app = sys.modules[name].create_app(settings)
-    from reports import report_pages
+
+def create_app(overrides=None, start_services=False):
+    """start_services=True also starts the MQTT, mailbox and BLE threads (real server only)."""
+    # The database is Phase 4/smartstore.db unless DATABASE_PATH is set in .env (read by db.py).
+    settings = {"REPORT_TIMEZONE": Config.REPORT_TIMEZONE,
+                "PHASE4_ENABLED": True,
+                "SESSION_COOKIE_SAMESITE": "Lax",   # blocks cross-site form posts
+                "SESSION_COOKIE_HTTPONLY": True}
+    settings.update(overrides or {})
+    app = storefront.create_app(settings)
     app.register_blueprint(report_pages)
+    init_monitoring(app, start_background=start_services)
+    init_sensors(app, start_background=start_services)
     return app
 
 
 if __name__ == "__main__":
-    create_app().run(host=Config.HOST, port=Config.PORT, debug=False)
+    application = create_app(start_services=True)
+    try:
+        application.run(host=Config.HOST, port=Config.PORT, debug=False, use_reloader=False)
+    finally:
+        monitor_shutdown(application)

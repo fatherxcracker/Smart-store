@@ -12,13 +12,13 @@ A semester-long IoT project, built in phases. Each phase lives in its own folder
 
 Open each phase's own README for its full setup, wiring, and run instructions.
 
-## Phase 4 workspace
+## Phase 4: the complete system
 
-[`Phase 4/`](./Phase%204/README.md) runs Phase 3 store workflows and the new admin
-and customer reports together on port 5003, using the existing store database
-and login accounts. Reports include inventory, sales, customer activity, filtered
-receipts and product price history. BLE hardware and Phase 2 monitoring integration
-remain pending. The teacher's requirements are in `Phase 4/docs/Phase-4-.pdf`.
+[`Phase 4/`](./Phase%204/README.md) is the final, self-contained application (port 5003): Phase 2 fridge monitoring
+(email reply YES -> fan), the Phase 3 store (RFID stock, checkout, receipts, users) and the Phase 4 dashboard,
+inventory / sales / customer reports, customer purchase reports with price history, CSV export, per-category
+stock alerts, dark mode and the Minew MSP01 sensor widgets. Demonstrate this one.
+The teacher's requirements are in `Phase 4/docs/Phase-4-.pdf`.
 
 ## Repo layout
 
@@ -27,7 +27,8 @@ Smart-store/
 ├── README.md              <- you are here
 ├── Phase 1/                <- self-contained: own venv, own requirements.txt
 ├── Phase 2/                <- self-contained: own venv, own requirements.txt
-└── Phase 3/                <- self-contained: own venv, own requirements.txt
+├── Phase 3/                <- self-contained: own venv, own requirements.txt
+└── Phase 4/                <- the complete system (Phases 2 + 3 + reports + sensor), port 5003
 ```
 
-Each phase folder is independent — different `requirements.txt`, different virtual environment, different Flask app running on a different port (Phase 1 on 5000, Phase 2 on 5001, Phase 3 on 5002), so you can `cd` into any one and run it without the other phases needing to exist or run at the same time.
+Each phase folder is independent — different `requirements.txt`, different virtual environment, different Flask app running on a different port (Phase 1 on 5000, Phase 2 on 5001, Phase 3 on 5002, Phase 4 on 5003), so you can `cd` into any one and run it without the other phases needing to exist or run at the same time.
