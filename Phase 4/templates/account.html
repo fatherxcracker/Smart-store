@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="native">
 
 <head>
     <!-- tells browser how to read page -->
@@ -22,6 +22,8 @@
         defer></script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='account_v2.css') }}">
+    <script src="{{ url_for('static', filename='account_v2.js') }}" defer></script>
 </head>
 
 <body>
@@ -43,70 +45,14 @@
 
         <!-- Buttons on the right side of the top bar -->
         <div class="top-actions">
-            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}">Reports</a>{% endif %}
-
-            <!-- These buttons show when customer logs in -->
-            <!-- hidden: they are not shown at first -->
-            <nav id="account-nav" hidden>
-
-                <!-- Opens customer dashboard -->
-                <button class="nav-link"
-                        type="button"
-                        data-page="dashboard"
-                        data-i18n="dashboard">
-                    Dashboard
-                </button>
-
-                <!-- Opens purchase history page -->
-                <button class="nav-link"
-                        type="button"
-                        data-page="history"
-                        data-i18n="history">
-                    Purchase History
-                </button>
-
-            </nav>
-
-            <!-- Link to self-checkout page -->
-            <a class="nav-link"
-               href="{{ url_for('shopping_cart') }}"
-               data-i18n="checkoutLink">
-                Self-checkout
-            </a>
-
-            <!-- Link to inventory page -->
-            <a class="nav-link"
-               href="{{ url_for('inventory') }}"
-               data-i18n="inventoryLink">
-                Inventory
-            </a>
-
-            <!-- Buttons to change between English and French -->
+            <nav id="account-nav" hidden></nav>
+            <a class="nav-link top-link" href="{{ url_for('shopping_cart') }}" data-i18n="checkoutLink">Self-checkout</a>
             <div class="language-switch">
-
-                <!-- English button -->
-                <button id="lang-en"
-                        class="selected"
-                        type="button">
-                    EN
-                </button>
-
-                <!-- French button -->
-                <button id="lang-fr" type="button">
-                    FR
-                </button>
-
+                <button id="lang-en" class="selected" type="button">EN</button>
+                <button id="lang-fr" type="button">FR</button>
             </div>
-
-            <!-- Logout button appears after login -->
-            <button id="logout-button"
-                    class="logout"
-                    type="button"
-                    data-i18n="logout"
-                    hidden>
-                Log Out
-            </button>
-
+            <button id="theme-toggle" class="theme-btn" type="button">Dark mode</button>
+            <button id="logout-button" class="logout" type="button" data-i18n="logout" hidden>Log Out</button>
         </div>
     </header>
 
@@ -115,6 +61,20 @@
     <div id="message" role="status" aria-live="polite"></div>
 
     <!-- Main content of website -->
+    <div class="acct-layout">
+    <aside id="account-side" class="acct-side" hidden aria-label="Account menu">
+        <p class="side-title" data-v2="myAccount">MY ACCOUNT</p>
+        <button class="nav-link side-item" type="button" data-page="dashboard" data-v2="navOverview">Overview</button>
+        <button class="nav-link side-item" type="button" data-page="history" data-v2="navHistory">Purchase history</button>
+        <p class="side-group" data-v2="shop">Shop</p>
+        <a class="side-item" href="{{ url_for('shopping_cart') }}" data-v2="navCheckout">Self-checkout</a>
+        <a class="side-item" href="{{ url_for('reports.purchase_report') }}" data-v2="navReports">My purchase reports</a>
+        <div id="side-admin" hidden>
+            <p class="side-group" data-v2="admin">Administration</p>
+            <a class="side-item side-accent" href="{{ url_for('reports.index') }}" data-v2="navAdmin">Admin dashboard</a>
+            <a class="side-item" href="{{ url_for('inventory') }}" data-v2="navProducts">Products &amp; stock</a>
+        </div>
+    </aside>
     <main class="main">
 
         <!--Login page-->
@@ -343,102 +303,65 @@
         <section id="dashboard-page" class="page" hidden>
 
             <div class="dashboard-container">
-
-                <!-- Welcome message -->
                 <div class="page-heading">
                     <div>
-
-                        <span class="eyebrow" data-i18n="overview">
-                            ACCOUNT OVERVIEW
-                        </span>
-
-                        <h1>
-                            <span data-i18n="hello">Hello</span>,
-
-                            <!-- JavaScript puts the customer's name here -->
-                            <span id="welcome-name"></span>!
-                        </h1>
-
-                        <p data-i18n="dashboardDesc">
-                            Here's your Smart Store membership.
-                        </p>
-
+                        <span class="eyebrow" data-i18n="overview">ACCOUNT OVERVIEW</span>
+                        <h1><span data-i18n="hello">Hello</span>, <span id="welcome-name"></span>!</h1>
+                        <p data-i18n="dashboardDesc">Here's your Smart Store membership.</p>
                     </div>
+                    <span id="role-badge" class="role-badge" hidden>Administrator</span>
                 </div>
 
-                <!-- Grid has the three customer cards -->
-                <div class="dashboard-grid">
-
-                    <!-- membership card -->
-                    <div class="info-card membership-card">
-
-                        <span data-i18n="memberCard">
-                            MEMBERSHIP CARD
-                        </span>
-
-                        <div class="membership-logo">
-                            SMART STORE
-                        </div>
-
-                        <div>
-
-                            <small data-i18n="memberNumber">
-                                MEMBER NUMBER
-                            </small>
-
-                            <!-- Membership number comes from database -->
-                            <!-- JavaScript replaces --- with the real number -->
-                            <h2 id="membership-number">---</h2>
-
-                            <!-- Customer name appears on the card -->
-                            <p id="card-name"></p>
-
+                <div class="hero-grid">
+                    <!-- Membership card -->
+                    <div class="member-card" aria-label="Membership card">
+                        <div class="mc-top"><span class="mc-brand">SMART STORE</span>
+                            <svg class="mc-wave" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M12 6a8.5 8.5 0 0 1 0 12"/><path d="M15.5 3.5a12 12 0 0 1 0 17"/></svg></div>
+                        <div class="mc-chip" aria-hidden="true"></div>
+                        <div class="mc-number" id="membership-number">---</div>
+                        <div class="mc-bottom">
+                            <div><small data-v2="cardHolder">MEMBER</small><strong id="card-name"></strong></div>
+                            <div><small data-v2="since">SINCE</small><strong id="card-since">--</strong></div>
                         </div>
                     </div>
 
-                    <!-- Loyalty points card -->
+                    <!-- Points -->
                     <div class="info-card points-card">
-
-                        <span class="card-label"
-                              data-i18n="loyaltyPoints">
-                            LOYALTY POINTS
-                        </span>
-
-                        <!-- JavaScript displays the customer's points -->
-                        <div class="points-number" id="customer-points">
-                            0
+                        <span class="card-label" data-i18n="loyaltyPoints">LOYALTY POINTS</span>
+                        <div class="points-row">
+                            <div class="ring" id="points-ring" style="--p:0"><div class="ring-in"><b id="customer-points">0</b><small data-v2="pts">points</small></div></div>
+                            <div>
+                                <p class="points-worth"><span data-v2="worth">Worth</span> <strong id="points-value">$0.00</strong></p>
+                                <p class="points-next" id="points-next"></p>
+                            </div>
                         </div>
-
-                        <p data-i18n="pointsDesc">
-                            Earn 1 point for every full dollar spent before tax.
-                        </p>
-
-                    </div>
-
-                    <!-- customer profile card -->
-                    <div class="info-card profile-card">
-
-                        <span class="card-label" data-i18n="profile">
-                            MY PROFILE
-                        </span>
-
-                        <!-- Display customer name -->
-                        <p class="field-label" data-i18n="fullName">
-                            Full name
-                        </p>
-
-                        <strong id="customer-name">---</strong>
-
-                        <!-- Display customer email -->
-                        <p class="field-label" data-i18n="email">
-                            Email address
-                        </p>
-
-                        <strong id="customer-email">---</strong>
-
+                        <p class="points-desc" data-v2="pointsHow">1 point per full dollar spent. Redeem each point for $0.10 at checkout.</p>
                     </div>
                 </div>
 
+                <div class="stat-grid">
+                    <div class="stat"><span data-v2="statOrders">Purchases</span><strong id="stat-orders">--</strong></div>
+                    <div class="stat"><span data-v2="statSpent">Total spent</span><strong id="stat-spent">--</strong></div>
+                    <div class="stat"><span data-v2="statEarned">Points earned</span><strong id="stat-earned">--</strong></div>
+                    <div class="stat"><span data-v2="statLast">Last purchase</span><strong id="stat-last">--</strong></div>
+                </div>
+
+                <div class="lower-grid">
+                    <div class="info-card recent-card">
+                        <div class="card-head"><span class="card-label" data-v2="recent">RECENT PURCHASES</span>
+                            <button class="text-button" type="button" data-page="history" data-v2="seeAll">See all</button></div>
+                        <ul id="recent-list" class="recent-list"><li class="muted" data-v2="loading">Loading…</li></ul>
+                    </div>
+                    <div class="info-card profile-card">
+                        <span class="card-label" data-i18n="profile">MY PROFILE</span>
+                        <p class="field-label" data-i18n="fullName">Full name</p>
+                        <strong id="customer-name">---</strong>
+                        <p class="field-label" data-i18n="email">Email address</p>
+                        <strong id="customer-email">---</strong>
+                        <p class="field-label" data-v2="phoneLabel">Phone</p>
+                        <strong id="customer-phone">--</strong>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -501,6 +424,7 @@
         </section>
 
     </main>
+    </div>
 
     <!-- footer -->
 
