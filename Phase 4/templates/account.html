@@ -34,27 +34,8 @@
     <!--Navigation-->
 
     <!-- Top bar of website -->
-    <header class="topbar">
-
-        <!-- Website name -->
-        <div class="brand">
-            <div>
-                <strong>SMART STORE</strong>
-            </div>
-        </div>
-
-        <!-- Buttons on the right side of the top bar -->
-        <div class="top-actions">
-            <nav id="account-nav" hidden></nav>
-            <a class="nav-link top-link" href="{{ url_for('shopping_cart') }}" data-i18n="checkoutLink">Self-checkout</a>
-            <div class="language-switch">
-                <button id="lang-en" class="selected" type="button">EN</button>
-                <button id="lang-fr" type="button">FR</button>
-            </div>
-            <button id="theme-toggle" class="theme-btn" type="button">Dark mode</button>
-            <button id="logout-button" class="logout" type="button" data-i18n="logout" hidden>Log Out</button>
-        </div>
-    </header>
+    <div class="corner-logo" aria-label="Smart Store">SMART<br>STORE</div>
+    <nav id="account-nav" hidden></nav>
 
     <!-- Displays success messages or errors -->
     <!-- JavaScript changes the message shown here -->
@@ -62,17 +43,30 @@
 
     <!-- Main content of website -->
     <div class="acct-layout">
-    <aside id="account-side" class="acct-side" hidden aria-label="Account menu">
+    <aside id="account-side" class="acct-side" aria-label="Menu">
         <p class="side-title" data-v2="myAccount">MY ACCOUNT</p>
-        <button class="nav-link side-item" type="button" data-page="dashboard" data-v2="navOverview">Overview</button>
-        <button class="nav-link side-item" type="button" data-page="history" data-v2="navHistory">Purchase history</button>
-        <p class="side-group" data-v2="shop">Shop</p>
-        <a class="side-item" href="{{ url_for('shopping_cart') }}" data-v2="navCheckout">Self-checkout</a>
-        <a class="side-item" href="{{ url_for('reports.purchase_report') }}" data-v2="navReports">My purchase reports</a>
-        <div id="side-admin" hidden>
-            <p class="side-group" data-v2="admin">Administration</p>
-            <a class="side-item side-accent" href="{{ url_for('reports.index') }}" data-v2="navAdmin">Admin dashboard</a>
-            <a class="side-item" href="{{ url_for('inventory') }}" data-v2="navProducts">Products &amp; stock</a>
+        <div id="side-nav" hidden>
+            <button class="nav-link side-item" type="button" data-page="dashboard" data-v2="navOverview">Overview</button>
+            <button class="nav-link side-item" type="button" data-page="history" data-v2="navHistory">Purchase history</button>
+            <p class="side-group" data-v2="shop">Shop</p>
+            <a class="side-item" href="{{ url_for('shopping_cart') }}" data-v2="navCheckout">Self-checkout</a>
+            <a class="side-item" href="{{ url_for('reports.purchase_report') }}" data-v2="navReports">My purchase reports</a>
+            <div id="side-admin" hidden>
+                <p class="side-group" data-v2="admin">Administration</p>
+                <a class="side-item side-accent" href="{{ url_for('reports.index') }}" data-v2="navAdmin">Admin dashboard</a>
+                <a class="side-item" href="{{ url_for('inventory') }}" data-v2="navProducts">Products &amp; stock</a>
+            </div>
+        </div>
+        <div id="side-guest">
+            <a class="side-item" href="{{ url_for('shopping_cart') }}" data-i18n="checkoutLink">Self-checkout</a>
+        </div>
+        <div class="side-bottom">
+            <div class="language-switch">
+                <button id="lang-en" class="selected" type="button">EN</button>
+                <button id="lang-fr" type="button">FR</button>
+            </div>
+            <button id="theme-toggle" class="theme-btn" type="button">Dark mode</button>
+            <button id="logout-button" class="logout" type="button" data-i18n="logout" hidden>Log Out</button>
         </div>
     </aside>
     <main class="main">

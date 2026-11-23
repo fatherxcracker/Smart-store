@@ -112,3 +112,28 @@ html[data-theme="dark"] body .app > .topbar .language-switch button { background
 html[data-theme="dark"] body .app > .topbar .language-switch button.selected { background:var(--blue); color:#fff; }
 .acct-layout .login-container { margin-left:auto; margin-right:auto; } .acct-layout .dashboard-container { margin-left:auto; margin-right:auto; width:100%; max-width:1100px; }
 .acct-layout .page { margin-left:auto; margin-right:auto; width:100%; }
+
+/* ---- No header: logo pinned top-right, every option lives in the sidebar ---- */
+.corner-logo { position:fixed; top:16px; right:22px; z-index:60; font-weight:800; letter-spacing:.7px; font-size:16px; line-height:1.15; text-align:right; color:var(--black); pointer-events:none; }
+html[data-theme="dark"] .corner-logo { color:var(--text); }
+.acct-layout { min-height:calc(100vh - 74px); }
+.acct-side { position:sticky; top:0; height:100vh; align-self:flex-start; overflow-y:auto; }
+.acct-side[hidden] { display:flex; }
+#side-nav[hidden], #side-guest[hidden] { display:none; }
+#side-nav, #side-guest { display:flex; flex-direction:column; gap:2px; }
+.side-bottom { margin-top:auto; padding-top:18px; display:flex; flex-direction:column; gap:10px; }
+.acct-side .language-switch { display:flex; background:var(--surface-2); border-radius:10px; padding:3px; }
+.acct-side .language-switch button { flex:1; border:0; background:transparent; color:var(--muted); font:700 .8rem Inter,sans-serif; padding:8px 0; border-radius:8px; cursor:pointer; }
+.acct-side .language-switch button.selected { background:var(--blue); color:#fff; }
+.acct-side .theme-btn, .acct-side .logout { width:100%; }
+.acct-side .logout { border:0; border-radius:10px; padding:10px 14px; background:var(--black); color:#fff; font:700 .85rem Inter,sans-serif; cursor:pointer; }
+.acct-side .logout[hidden] { display:none; }
+html[data-theme="dark"] .acct-side .logout { background:var(--surface-2); border:1px solid var(--line); color:var(--text); }
+.acct-layout .main { padding-top:56px; }
+@media (max-width:900px) {
+    .acct-side { position:static; height:auto; overflow:visible; flex-direction:column; }
+    .acct-side #side-nav, .acct-side #side-guest { flex-direction:row; overflow-x:auto; }
+    .side-bottom { flex-direction:row; align-items:center; margin-top:0; padding-top:8px; }
+    .acct-side .theme-btn, .acct-side .logout { width:auto; }
+    .corner-logo { position:static; padding:12px 16px 0; text-align:right; pointer-events:auto; }
+}

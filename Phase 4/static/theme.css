@@ -18,3 +18,4 @@ html[data-theme="dark"] .theme-float { filter: invert(1) hue-rotate(180deg); }
 /* Embedded inside the admin dashboard: hide the store's own header, footer and floating switch. */
 html.embedded .topbar, html.embedded footer, html.embedded .theme-float { display: none !important; }
 html.embedded .embed-hide { display: none !important; }
+html.embedded body { padding-top: 40px; }

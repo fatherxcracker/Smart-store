@@ -10,10 +10,7 @@
     <script src="{{ url_for('reports.static', filename='js/shell.js') }}" defer></script>
 </head>
 <body class="shell-body">
-<header class="shell-top"><a class="brand" href="{{ url_for('reports.index') }}">SMART<br>STORE</a>
-<nav aria-label="Store"><a href="{{ url_for('home') }}#dashboard">Account</a><a href="{{ url_for('shopping_cart') }}">Checkout</a>
-<span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
-<button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button><button type="button" id="logout">Log Out</button></nav></header>
+<div class="corner-logo" aria-label="Smart Store">SMART<br>STORE</div>
 <div class="shell-main">
 <aside class="side" aria-label="Dashboard sections">
 <p class="side-title">ADMIN DASHBOARD</p>
@@ -29,6 +26,13 @@
 <a href="#products" data-section="products" data-src="{{ url_for('inventory') }}">Products &amp; stock</a>
 <a href="#users" data-section="users" data-src="{{ url_for('manage_users') }}">Users</a>
 <a href="#notifications" data-section="notifications" data-src="{{ url_for('reports.notifications_page') }}">Notifications</a>
+<div class="side-bottom">
+<a class="side-item" href="{{ url_for('home') }}#dashboard">Account</a>
+<a class="side-item" href="{{ url_for('shopping_cart') }}">Checkout</a>
+<span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
+<button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button>
+<button type="button" id="logout">Log Out</button>
+</div>
 <p class="side-foot">Signed in as {{ report_customer.name if report_customer else '' }}</p>
 </aside>
 <section class="stage"><iframe id="stage" title="Dashboard content" src="about:blank"></iframe></section>

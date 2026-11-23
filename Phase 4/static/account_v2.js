@@ -71,12 +71,13 @@
             fetch("/api/account/history", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : []; })
         ]).then(function (r) {
             customer = r[0]; purchases = Array.isArray(r[1]) ? r[1] : [];
-            $("account-side").hidden = !customer; labels();
+            showSide(); labels();
         }).catch(function () {});
     }
     function showSide() {
-        // The sidebar follows the existing logged-in state of the page.
-        var nav = $("account-nav"); $("account-side").hidden = nav.hidden;
+        // The sidebar is always there; the account menu only shows when signed in.
+        var out = $("account-nav").hidden;
+        $("side-nav").hidden = out; $("side-guest").hidden = !out;
     }
     document.addEventListener("DOMContentLoaded", function () {
         labels();
