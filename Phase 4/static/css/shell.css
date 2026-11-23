@@ -1,0 +1,21 @@
+/* One-page admin dashboard: black/blue store look, left menu, content frame. */
+.shell-body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.shell-top{flex:none;position:static}
+.shell-top .brand{font-size:1.15rem;line-height:1.15;color:var(--black)}
+html[data-theme="dark"] .shell-top .brand{color:var(--text)}
+.shell-main{flex:1;display:flex;min-height:0}
+.side{flex:none;width:240px;padding:22px 14px;background:var(--surface);border-right:1px solid var(--line);overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.side-title{margin:0 10px 10px;font-size:.72rem;letter-spacing:.14em;font-weight:800;color:var(--accent)}
+.side-group{margin:16px 10px 6px;font-size:.7rem;letter-spacing:.1em;font-weight:700;color:var(--muted);text-transform:uppercase}
+.side a{display:block;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none;font-size:.92rem;font-weight:500}
+.side a:hover{background:var(--surface-2)}
+.side a[aria-current]{background:var(--accent);color:#fff;font-weight:700}
+.side-foot{margin:auto 10px 0;padding-top:18px;font-size:.78rem;color:var(--muted)}
+.stage{flex:1;min-width:0;background:var(--bg)}
+.stage iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+@media(max-width:800px){
+  .shell-body{height:auto;overflow:visible}.shell-main{flex-direction:column}
+  .side{width:auto;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line)}
+  .side a{white-space:nowrap}.side-title,.side-group,.side-foot{display:none}
+  .stage iframe{height:calc(100vh - 150px);min-height:520px}
+}

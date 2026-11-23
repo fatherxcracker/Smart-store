@@ -19,6 +19,11 @@
             button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
         }
     }
+    // Shown inside the admin dashboard's page frame: the dashboard supplies header, menu and footer.
+    try { if (window.self !== window.top) document.documentElement.classList.add("embedded"); } catch (e) { document.documentElement.classList.add("embedded"); }
+    window.addEventListener("storage", function (event) {
+        if (event.key === KEY && event.newValue) apply(event.newValue === "dark" ? "dark" : "light");
+    });
     var start = saved() || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     apply(start);
     document.addEventListener("smartstore-language", function () { apply(current()); });

@@ -16,6 +16,15 @@
         "MSP01 sensor": "Capteur MSP01", "My purchases": "Mes achats", "My purchase reports": "Mes rapports d'achats",
         "Inventory report": "Rapport d'inventaire", "Sales report": "Rapport des ventes", "Minew MSP01 sensor": "Capteur Minew MSP01",
         "Reports": "Rapports", "Store": "Magasin",
+        // admin dashboard shell
+        "Admin dashboard": "Tableau de bord administrateur", "ADMIN DASHBOARD": "TABLEAU DE BORD ADMINISTRATEUR", "MY ACCOUNT": "MON COMPTE",
+        "Overview": "Aperçu", "Live monitoring": "Surveillance en direct", "Products & stock": "Produits et stock", "Users": "Utilisateurs",
+        "Notifications": "Notifications",
+        "Dashboard content": "Contenu du tableau de bord", "Dashboard sections": "Sections du tableau de bord",
+        "Back to the admin dashboard": "Retour au tableau de bord administrateur", "Store notifications": "Notifications du magasin",
+        "Latest 100 events: stock received, checkouts, low-stock notices, product changes and errors.": "100 derniers événements : stock reçu, achats, avis de stock bas, modifications de produits et erreurs.",
+        "Message": "Message", "See all": "Tout voir", "No notifications yet.": "Aucune notification pour l'instant.",
+        "Success": "Succès", "Warning": "Avertissement", "Info": "Info", "Error": "Erreur",
         // filters
         "From": "Du", "Through": "Au", "Search item": "Chercher un article", "Product / price history": "Produit / historique des prix",
         "All my products": "Tous mes produits", "Apply filters": "Appliquer les filtres", "Apply filter": "Appliquer le filtre",
@@ -135,6 +144,7 @@
 
     // Texts with numbers or names inside: [pattern, replacement]
     var RULES = [
+        [/^Signed in as (.*)$/, "Connecté en tant que $1"],
         [/^Dates include the whole selected day in (.+)\. Maximum period: 366 days\.$/, "Les dates incluent toute la journée sélectionnée (fuseau : $1). Période maximale : 366 jours."],
         [/^Updated (.+) · refreshes every 5 seconds$/, "Mis à jour à $1 · actualisation toutes les 5 secondes"],
         [/^Updated (.+)$/, function (m, a) { return "Mis à jour : " + translate(a); }],
@@ -260,6 +270,9 @@
 
     lang = stored();
     document.documentElement.lang = lang;
+    window.addEventListener("storage", function (event) {
+        if (event.key === KEY && stored() !== lang) { lang = stored(); everything(); }
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         var en = document.getElementById("lang-en"), fr = document.getElementById("lang-fr");

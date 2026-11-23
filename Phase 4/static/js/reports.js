@@ -1,3 +1,11 @@
+/* An administrator who opens a report page directly lands inside the one-page dashboard instead. */
+(function () {
+    var body = document.body, shell = body && body.dataset.shell;
+    var names = { dashboard: "overview", inventory: "inventory-report", sales: "sales", customers: "customers", monitoring: "fridges", sensors: "sensor", notifications: "notifications" };
+    if (shell && window.self === window.top && names[body.dataset.section] && location.search.indexOf("standalone") < 0) {
+        location.replace(shell + "#" + names[body.dataset.section]);
+    }
+})();
 "use strict";
 
 document.getElementById("print-report")?.addEventListener("click", () => window.print());

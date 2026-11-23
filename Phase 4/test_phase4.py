@@ -289,6 +289,25 @@ class ReportFeatureTests(Phase4Base):
                      "Busiest days", "Motion events", "Download CSV", "Recent notifications"):
             self.assertIn('"' + text + '"', source, text)
 
+    def test_admin_gets_one_page_dashboard_and_customers_do_not(self):
+        self.login(self.admin)
+        page = self.client.get("/reports/").data
+        for marker in (b'id="stage"', b"shell.js", b'data-section="notifications"', b'data-section="fridges"',
+                       b'data-section="users"', b'data-section="products"', b'data-section="sales"'):
+            self.assertIn(marker, page, marker)
+        self.assertEqual(self.client.get("/reports/notifications").status_code, 200)
+        self.login(self.member)
+        response = self.client.get("/reports/")
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.headers["Location"].endswith("/reports/purchases"))
+        self.assertEqual(self.client.get("/reports/notifications").status_code, 403)
+
+    def test_embedded_mode_hooks_exist(self):
+        root = Path(__file__).parent / "static"
+        self.assertIn("embedded", (root / "theme.js").read_text(encoding="utf-8"))
+        self.assertIn("html.embedded .topbar", (root / "theme.css").read_text(encoding="utf-8"))
+        self.assertIn("html.embedded header", (root / "css" / "reports.css").read_text(encoding="utf-8"))
+
     def test_store_pages_carry_the_theme(self):
         for path in ("/", "/cart"):
             data = self.client.get(path).data

@@ -74,16 +74,19 @@ Phase 4 uses `Phase 4/smartstore.db`. To keep the accounts, products and RFID ta
 
 ## Pages
 
-| Page | URL | Who |
-|---|---|---|
-| Account, purchase history, points | `/` | everyone |
-| Self-checkout | `/cart` | everyone |
-| Inventory, receive stock, tags, users | `/inventory` | admin |
-| Dashboard (sales today, low stock, fridges, MSP01, notifications) | `/reports/dashboard` | admin |
-| Inventory / Sales / Customer reports | `/reports/inventory`, `/reports/sales`, `/reports/customers` | admin |
-| My purchases | `/reports/purchases` | any signed-in customer |
-| Fridges and fan | `/monitoring/` | admin |
-| MSP01 sensor | `/sensors/` | admin |
+Administrators get **one page that holds everything**: `/reports/` (the "Reports" link in the store header). A left menu switches the content with no page reload, in the same blue/black look as the store, with the EN/FR and light/dark switches at the top (they apply to every section at once).
+
+| Menu entry | What opens inside the dashboard |
+|---|---|
+| Overview | sales today, low stock, both fridges, fan, MSP01 sensor, recent notifications |
+| Inventory report / Sales / Customer activity | the reports (filters, charts, Download CSV, per-category low-stock limits) |
+| Fridges & fan | live temperature and humidity, limits, fan control, alerts |
+| MSP01 sensor | temperature, humidity, light, motion, status |
+| Products & stock | add/edit products, receive stock, RFID tags, reception history |
+| Users | accounts, points, roles |
+| Notifications | the last 100 store events |
+
+Customers keep simple separate pages with the same header: Account (`/`), Self-checkout (`/cart`) and My purchases (`/reports/purchases`). Opening a report URL directly as an administrator (for example `/reports/sales`) lands in the matching dashboard section.
 
 Every report accepts `?format=csv` (the "Download CSV" link). Sales and customer reports also have the daily table as CSV (`&table=daily` for sales).
 

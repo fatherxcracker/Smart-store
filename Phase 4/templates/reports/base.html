@@ -8,25 +8,21 @@
     <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
     <script src="{{ url_for('reports.static', filename='js/reports.js') }}" defer></script>
 </head>
-<body data-live="{{ 'off' if no_refresh else 'on' }}">
-<header><a class="brand" href="{{ url_for('reports.index') }}">SMART STORE <span>Dashboard &amp; reports</span></a>
+<body data-shell="{{ url_for('reports.index') if report_customer and report_customer.is_admin else '' }}" data-section="{{ active }}" data-live="{{ 'off' if no_refresh else 'on' }}">
+<header><a class="brand" href="{{ url_for('reports.index') }}" target="_top">SMART STORE <span>Dashboard &amp; reports</span></a>
 <nav aria-label="Store"><a href="{{ url_for('home') }}#dashboard">Account</a><a href="{{ url_for('shopping_cart') }}">Checkout</a>
-{% if report_customer and report_customer.is_admin %}<a href="{{ url_for('inventory') }}">Manage inventory</a>{% endif %}
+{% if report_customer and report_customer.is_admin %}<a href="{{ url_for('reports.index') }}">Admin dashboard</a>{% endif %}
 <span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
 <button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button>
 <button type="button" id="print-report">Print / save PDF</button></nav></header>
 <main>
-<p class="eyebrow">STORE INSIGHTS</p><h1>{{ title|default('Reports') }}</h1>
+<p class="eyebrow">{{ "ADMIN DASHBOARD" if report_customer and report_customer.is_admin else "MY ACCOUNT" }}</p><h1>{{ title|default('Reports') }}</h1>
 <nav class="tabs" aria-label="Reports">
 {% if report_customer and report_customer.is_admin %}
-<a {% if active=='dashboard' %}aria-current="page"{% endif %} href="{{ url_for('reports.dashboard_page') }}">Dashboard</a>
-<a {% if active=='inventory' %}aria-current="page"{% endif %} href="{{ url_for('reports.inventory_report') }}">Inventory</a>
-<a {% if active=='sales' %}aria-current="page"{% endif %} href="{{ url_for('reports.sales_report') }}">Sales</a>
-<a {% if active=='customers' %}aria-current="page"{% endif %} href="{{ url_for('reports.customer_report') }}">Customer activity</a>
-<a {% if active=='monitoring' %}aria-current="page"{% endif %} href="{{ url_for('monitoring.page') }}">Fridges &amp; fan</a>
-<a {% if active=='sensors' %}aria-current="page"{% endif %} href="{{ url_for('sensors.page') }}">MSP01 sensor</a>
+<a href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>
+{% else %}
+<a aria-current="page" href="{{ url_for('reports.purchase_report') }}">My purchases</a>
 {% endif %}
-<a {% if active=='purchases' %}aria-current="page"{% endif %} href="{{ url_for('reports.purchase_report') }}">My purchases</a>
 </nav>
 {% if period %}
 <form class="filters" method="get">

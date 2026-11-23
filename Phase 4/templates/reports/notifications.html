@@ -1,0 +1,10 @@
+{% extends 'reports/base.html' %}
+{% block content %}
+<style>td:nth-child(3){white-space:normal}html[lang=fr] .msg-en{display:none}html:not([lang=fr]) .msg-fr{display:none}</style>
+<section class="panel"><h2>Store notifications</h2>
+<p class="note">Latest 100 events: stock received, checkouts, low-stock notices, product changes and errors.</p>
+<div class="table-wrap"><table><thead><tr><th>Time</th><th>Level</th><th>Message</th></tr></thead><tbody>
+{% for n in items %}<tr><td>{{ n.created_at|report_time }}</td><td><span class="pill {{ 'low' if n.level=='error' else ('moderate' if n.level=='warning' else 'good') }}">{{ n.level }}</span></td><td><span class="msg-en">{{ n.message_en }}</span><span class="msg-fr">{{ n.message_fr }}</span></td></tr>
+{% else %}<tr><td colspan="3">No notifications yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

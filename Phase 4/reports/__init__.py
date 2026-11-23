@@ -55,7 +55,15 @@ def invalid_filter(error):
 @report_pages.get("/")
 def index():
     customer = db.get_customer(session["customer_id"])
-    return redirect(url_for("reports.dashboard_page" if customer.get("is_admin") else "reports.purchase_report"))
+    if customer.get("is_admin"):
+        return render_template("reports/shell.html", title="Admin dashboard")
+    return redirect(url_for("reports.purchase_report"))
+
+
+@report_pages.get("/notifications")
+def notifications_page():
+    return render_template("reports/notifications.html", title="Notifications", active="notifications",
+                           items=db.get_notifications(100), no_refresh=True)
 
 
 @report_pages.get("/dashboard")
