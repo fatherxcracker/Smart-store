@@ -33,9 +33,10 @@
 <a href="#users" data-section="users" data-src="{{ url_for('manage_users') }}">Users</a>
 <a href="#notifications" data-section="notifications" data-src="{{ url_for('reports.notifications_page') }}">Notifications</a>
 <p class="side-group">My account</p>
-<a class="side-item-link" href="{{ url_for('home') }}#dashboard">Account</a>
-<a class="side-item-link" href="{{ url_for('shopping_cart') }}">Self-checkout</a>
-
+<a href="#account" data-section="account" data-src="{{ url_for('home') }}#dashboard">Account overview</a>
+<a href="#purchases" data-section="purchases" data-src="{{ url_for('home') }}?page=history#history">Purchase history</a>
+<a href="#myreports" data-section="myreports" data-src="{{ url_for('reports.purchase_report') }}">My purchase reports</a>
+<a href="#checkout" data-section="checkout" data-src="{{ url_for('shopping_cart') }}">Self-checkout</a>
 <p class="side-foot">Signed in as {{ report_customer.name if report_customer else '' }}</p>
 </aside>
 <section class="stage"><iframe id="stage" title="Dashboard content" src="about:blank"></iframe></section>

@@ -10,7 +10,7 @@
     function show() {
         var link = current();
         links.forEach(function (a) { if (a === link) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-        var target = new URL(link.dataset.src, location.href).pathname;
+        var target = new URL(link.dataset.src, location.href).href;
         if (frame.getAttribute("data-path") !== target) {
             frame.setAttribute("data-path", target);
             frame.src = link.dataset.src;
@@ -22,9 +22,11 @@
     // The page inside the frame can be changed by its own links and forms (filters, saving a limit).
     // Keep the menu highlight in step with where the frame really is.
     frame.addEventListener("load", function () {
-        var path = "";
-        try { path = frame.contentWindow.location.pathname; } catch (e) { return; }
-        frame.setAttribute("data-path", path);
+        var path = "", full = "";
+        try { path = frame.contentWindow.location.pathname; full = frame.contentWindow.location.href; } catch (e) { return; }
+        frame.setAttribute("data-path", full);
+        var chosen = links.filter(function (a) { return a.hasAttribute("aria-current"); })[0];
+        if (chosen && new URL(chosen.dataset.src, location.href).pathname === path) return;
         var best = null;
         links.forEach(function (a) {
             var p = new URL(a.dataset.src, location.href).pathname;

@@ -41,3 +41,5 @@ html.embedded body.ss-layout { padding-top: 0; padding-left: 0; }
 }
 /* The sidebar is the only navigation: in-page "back" buttons are not needed. */
 body.ss-layout .back-button { display: none !important; }
+/* Shown inside the admin dashboard: that page supplies the menu. */
+html.embedded .back-button, html.embedded .topbar { display: none !important; }
