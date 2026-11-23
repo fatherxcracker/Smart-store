@@ -48,5 +48,9 @@
             if (path.indexOf("/reports") !== 0 && path.indexOf("/monitoring") !== 0 && path.indexOf("/sensors") !== 0) frame.contentWindow.location.reload();
         } catch (e) { /* ignore */ }
     });
+    document.getElementById("logout").addEventListener("click", function () {
+        fetch("/api/account/logout", { method: "POST", credentials: "same-origin" })
+            .catch(function () {}).then(function () { location.href = "/"; });
+    });
     show();
 })();

@@ -480,6 +480,13 @@ async function loadAccount() {
         // Display the customer's loyalty points
         document.getElementById("customer-points").textContent = customer.points;
 
+        // Administrators land on the all-in-one admin dashboard (fridges, reports, store).
+        // "Account" in its header opens this page with #dashboard, which skips the redirect.
+        if (customer.is_admin && !window.location.hash && !window.location.search.includes("account")) {
+            window.location.replace("/reports/");
+            return;
+        }
+
         // Open the dashboard after loading customer information
         showPage("dashboard");
 

@@ -19,7 +19,7 @@
         // admin dashboard shell
         "Admin dashboard": "Tableau de bord administrateur", "ADMIN DASHBOARD": "TABLEAU DE BORD ADMINISTRATEUR", "MY ACCOUNT": "MON COMPTE",
         "Overview": "Aperçu", "Live monitoring": "Surveillance en direct", "Products & stock": "Produits et stock", "Users": "Utilisateurs",
-        "Notifications": "Notifications",
+        "Notifications": "Notifications", "Log Out": "Déconnexion",
         "Dashboard content": "Contenu du tableau de bord", "Dashboard sections": "Sections du tableau de bord",
         "Back to the admin dashboard": "Retour au tableau de bord administrateur", "Store notifications": "Notifications du magasin",
         "Latest 100 events: stock received, checkouts, low-stock notices, product changes and errors.": "100 derniers événements : stock reçu, achats, avis de stock bas, modifications de produits et erreurs.",
