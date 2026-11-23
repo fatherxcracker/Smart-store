@@ -22,7 +22,9 @@
         defer></script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='account_v2.css') }}">
+    <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
     <script src="{{ url_for('static', filename='account_v2.js') }}" defer></script>
 </head>
 
@@ -34,7 +36,15 @@
     <!--Navigation-->
 
     <!-- Top bar of website -->
-    <div class="corner-logo" aria-label="Smart Store">SMART<br>STORE</div>
+    <div class="ss-top">
+        <div class="language-switch">
+            <button id="lang-en" class="selected" type="button">EN</button>
+            <button id="lang-fr" type="button">FR</button>
+        </div>
+        <button id="theme-toggle" class="ss-btn" type="button">Dark mode</button>
+        <button id="logout-button" class="ss-btn logout" type="button" data-i18n="logout" hidden>Log Out</button>
+        <a class="ss-logo" href="{{ url_for('home') }}" aria-label="Smart Store">SMART<br>STORE</a>
+    </div>
     <nav id="account-nav" hidden></nav>
 
     <!-- Displays success messages or errors -->
@@ -42,31 +52,23 @@
     <div id="message" role="status" aria-live="polite"></div>
 
     <!-- Main content of website -->
-    <div class="acct-layout">
-    <aside id="account-side" class="acct-side" aria-label="Menu">
-        <p class="side-title" data-v2="myAccount">MY ACCOUNT</p>
+    <aside class="ss-side" aria-label="Menu">
+        <p class="ss-title" data-ss="account">MY ACCOUNT</p>
         <div id="side-nav" hidden>
-            <button class="nav-link side-item" type="button" data-page="dashboard" data-v2="navOverview">Overview</button>
-            <button class="nav-link side-item" type="button" data-page="history" data-v2="navHistory">Purchase history</button>
-            <p class="side-group" data-v2="shop">Shop</p>
-            <a class="side-item" href="{{ url_for('shopping_cart') }}" data-v2="navCheckout">Self-checkout</a>
-            <a class="side-item" href="{{ url_for('reports.purchase_report') }}" data-v2="navReports">My purchase reports</a>
-            <div id="side-admin" hidden>
-                <p class="side-group" data-v2="admin">Administration</p>
-                <a class="side-item side-accent" href="{{ url_for('reports.index') }}" data-v2="navAdmin">Admin dashboard</a>
-                <a class="side-item" href="{{ url_for('inventory') }}" data-v2="navProducts">Products &amp; stock</a>
+            <button class="nav-link ss-item" type="button" data-page="dashboard" data-ss="overview">Overview</button>
+            <button class="nav-link ss-item" type="button" data-page="history" data-ss="history">Purchase history</button>
+            <a class="ss-item" href="{{ url_for('reports.purchase_report') }}" data-ss="reports">My purchase reports</a>
+            <p class="ss-group" data-ss="shop">Shop</p>
+            <a class="ss-item" href="{{ url_for('shopping_cart') }}" data-ss="checkout">Self-checkout</a>
+            <div id="side-admin" data-admin="1" hidden>
+                <p class="ss-group" data-ss="admin">Administration</p>
+                <a class="ss-item" href="{{ url_for('reports.index') }}" data-ss="dashboard">Admin dashboard</a>
+                <a class="ss-item" href="{{ url_for('inventory') }}" data-ss="products">Products &amp; stock</a>
+                <a class="ss-item" href="{{ url_for('manage_users') }}" data-ss="users">Users</a>
             </div>
         </div>
         <div id="side-guest">
-            <a class="side-item" href="{{ url_for('shopping_cart') }}" data-i18n="checkoutLink">Self-checkout</a>
-        </div>
-        <div class="side-bottom">
-            <div class="language-switch">
-                <button id="lang-en" class="selected" type="button">EN</button>
-                <button id="lang-fr" type="button">FR</button>
-            </div>
-            <button id="theme-toggle" class="theme-btn" type="button">Dark mode</button>
-            <button id="logout-button" class="logout" type="button" data-i18n="logout" hidden>Log Out</button>
+            <a class="ss-item" href="{{ url_for('shopping_cart') }}" data-ss="checkout">Self-checkout</a>
         </div>
     </aside>
     <main class="main">
@@ -418,7 +420,6 @@
         </section>
 
     </main>
-    </div>
 
     <!-- footer -->
 

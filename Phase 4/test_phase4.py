@@ -302,6 +302,19 @@ class ReportFeatureTests(Phase4Base):
         self.assertTrue(response.headers["Location"].endswith("/reports/purchases"))
         self.assertEqual(self.client.get("/reports/notifications").status_code, 403)
 
+    def test_every_page_carries_the_shared_sidebar(self):
+        self.login(self.admin)
+        for path in ("/", "/cart", "/inventory", "/admin/users", "/inventory/receive", "/inventory/receptions"):
+            data = self.client.get(path).data
+            self.assertIn(b"nav_shell.js", data, path)
+            self.assertIn(b"nav_shell.css", data, path)
+        shell = self.client.get("/reports/").data
+        for marker in (b'class="ss-top"', b'class="ss-logo"', b'id="theme-toggle"', b'id="lang-fr"', b'id="logout"'):
+            self.assertIn(marker, shell, marker)
+        account = self.client.get("/").data
+        for marker in (b'class="ss-top"', b'class="ss-logo"', b'class="ss-side"', b'data-page="history"'):
+            self.assertIn(marker, account, marker)
+
     def test_embedded_mode_hooks_exist(self):
         root = Path(__file__).parent / "static"
         self.assertIn("embedded", (root / "theme.js").read_text(encoding="utf-8"))

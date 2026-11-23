@@ -92,6 +92,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 
 /* Embedded inside the admin dashboard: the dashboard supplies the header, menu and footer. */
 html.embedded header,html.embedded footer,html.embedded .tabs,html.embedded .eyebrow,html.embedded main>h1,html.embedded .theme-float,html.embedded #print-report{display:none}
-html.embedded main{max-width:none;padding:56px 28px 32px}
+html.embedded main{max-width:none;padding:24px 28px 32px}
 html.embedded .filters{margin-top:0}
 html.embedded body{background:var(--bg)}

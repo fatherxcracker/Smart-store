@@ -1,0 +1,43 @@
+/* Shared chrome for every page: logo pinned top right, controls beside it,
+   and one sidebar that holds all navigation. Light and dark. */
+.ss-top {
+    position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 60;
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+    padding: 0 22px; background: var(--surface, #fff); border-bottom: 1px solid var(--line, #e5eaf2);
+}
+.ss-logo { font: 800 16px/1.15 Inter, system-ui, sans-serif; letter-spacing: .7px; text-align: right; color: var(--black, #101218); text-decoration: none; margin-left: 8px; }
+.ss-btn { border: 1px solid var(--line, #e5eaf2); background: var(--surface, #fff); color: var(--text, #171b26); border-radius: 10px; padding: 9px 14px; font: 600 .8rem Inter, system-ui, sans-serif; cursor: pointer; }
+.ss-btn:hover { background: var(--surface-2, #f0f3f9); }
+.ss-btn.logout { background: var(--black, #101218); border-color: var(--black, #101218); color: #fff; font-weight: 700; }
+.ss-top .language-switch { display: flex; background: var(--surface-2, #f0f3f9); border-radius: 10px; padding: 3px; height: 38px; }
+.ss-top .language-switch button { border: 0; background: transparent; color: var(--muted, #737e91); font: 700 .8rem Inter, system-ui, sans-serif; padding: 0 14px; border-radius: 8px; cursor: pointer; }
+.ss-top .language-switch button.selected, .ss-top .language-switch button[aria-pressed="true"] { background: var(--blue, #1769ff); color: #fff; }
+
+.ss-side {
+    position: fixed; top: 64px; left: 0; bottom: 0; width: 240px; z-index: 55;
+    padding: 22px 14px; background: var(--surface, #fff); border-right: 1px solid var(--line, #e5eaf2);
+    overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+}
+.ss-title { margin: 0 10px 10px; font-size: .72rem; letter-spacing: .14em; font-weight: 800; color: var(--blue, #1769ff); }
+.ss-group { margin: 16px 10px 6px; font-size: .7rem; letter-spacing: .1em; font-weight: 700; color: var(--muted, #737e91); text-transform: uppercase; }
+.ss-item { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--text, #171b26); text-decoration: none; font: 500 .92rem Inter, system-ui, sans-serif; cursor: pointer; }
+.ss-item:hover { background: var(--surface-2, #f0f3f9); }
+.ss-item.active { background: var(--blue, #1769ff); color: #fff; font-weight: 700; }
+.ss-foot { margin: auto 10px 0; padding-top: 18px; font-size: .78rem; color: var(--muted, #737e91); }
+
+/* Page content sits beside the sidebar and below the top bar. */
+body.ss-layout { padding-top: 64px; padding-left: 240px; }
+body.ss-layout .topbar, body.ss-layout .theme-float { display: none !important; }
+
+html.embedded .ss-top, html.embedded .ss-side, html.embedded .ss-logo { display: none !important; }
+html.embedded body.ss-layout { padding-top: 0; padding-left: 0; }
+
+@media (max-width: 900px) {
+    .ss-side { position: static; width: auto; height: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line, #e5eaf2); padding: 10px; }
+    .ss-side .ss-title, .ss-side .ss-group, .ss-side .ss-foot { display: none; }
+    .ss-item { width: auto; white-space: nowrap; }
+    body.ss-layout { padding-left: 0; }
+    .ss-top { padding: 0 12px; gap: 6px; }
+}
+/* The sidebar is the only navigation: in-page "back" buttons are not needed. */
+body.ss-layout .back-button { display: none !important; }

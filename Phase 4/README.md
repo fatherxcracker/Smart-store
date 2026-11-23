@@ -86,7 +86,9 @@ Administrators get **one page that holds everything**: `/reports/` (the "Reports
 | Users | accounts, points, roles |
 | Notifications | the last 100 store events |
 
-Customers keep simple separate pages with the same header: Account (`/`), Self-checkout (`/cart`) and My purchases (`/reports/purchases`). Opening a report URL directly as an administrator (for example `/reports/sales`) lands in the matching dashboard section.
+Every page of the site uses the same chrome: the Smart Store logo is pinned in the top-right corner, the only buttons beside it are EN/FR, dark mode and Log Out, and all navigation lives in the left sidebar (`static/nav_shell.js` builds it on the store pages, so their old header links are hidden). Administrators who sign in land on `/reports/` instead of the account page; opening a report URL directly (for example `/reports/sales`) lands in the matching dashboard section.
+
+Customers get the same sidebar with their own entries: Overview, Purchase history, My purchase reports and Self-checkout.
 
 Every report accepts `?format=csv` (the "Download CSV" link). Sales and customer reports also have the daily table as CSV (`&table=daily` for sales).
 

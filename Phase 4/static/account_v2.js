@@ -34,7 +34,6 @@
         badge.hidden = false;
         badge.textContent = customer.is_admin ? tr("admin_badge") : tr("member_badge");
         badge.classList.toggle("admin", !!customer.is_admin);
-        $("side-admin").hidden = !customer.is_admin;
         $("customer-phone").textContent = customer.phone || "--";
         $("card-since").textContent = customer.created_at ? when(customer.created_at) : "--";
         var points = Number(customer.points) || 0;

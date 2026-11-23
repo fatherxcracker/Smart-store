@@ -6,11 +6,17 @@
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <script src="{{ url_for('static', filename='i18n.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/shell.css') }}">
     <script src="{{ url_for('reports.static', filename='js/shell.js') }}" defer></script>
 </head>
 <body class="shell-body">
-<div class="corner-logo" aria-label="Smart Store">SMART<br>STORE</div>
+<div class="ss-top">
+<span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
+<button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button>
+<button type="button" id="logout" class="ss-btn logout">Log Out</button>
+<a class="ss-logo" href="{{ url_for('reports.index') }}" aria-label="Smart Store">SMART<br>STORE</a>
+</div>
 <div class="shell-main">
 <aside class="side" aria-label="Dashboard sections">
 <p class="side-title">ADMIN DASHBOARD</p>
@@ -26,13 +32,10 @@
 <a href="#products" data-section="products" data-src="{{ url_for('inventory') }}">Products &amp; stock</a>
 <a href="#users" data-section="users" data-src="{{ url_for('manage_users') }}">Users</a>
 <a href="#notifications" data-section="notifications" data-src="{{ url_for('reports.notifications_page') }}">Notifications</a>
-<div class="side-bottom">
-<a class="side-item" href="{{ url_for('home') }}#dashboard">Account</a>
-<a class="side-item" href="{{ url_for('shopping_cart') }}">Checkout</a>
-<span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
-<button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button>
-<button type="button" id="logout">Log Out</button>
-</div>
+<p class="side-group">My account</p>
+<a class="side-item-link" href="{{ url_for('home') }}#dashboard">Account</a>
+<a class="side-item-link" href="{{ url_for('shopping_cart') }}">Self-checkout</a>
+
 <p class="side-foot">Signed in as {{ report_customer.name if report_customer else '' }}</p>
 </aside>
 <section class="stage"><iframe id="stage" title="Dashboard content" src="about:blank"></iframe></section>
