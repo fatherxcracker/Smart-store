@@ -95,6 +95,7 @@ html.embedded body{background:var(--bg)}
 .purchase-report h1{letter-spacing:-.03em}
 .purchase-report .report-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .purchase-report .report-actions a{text-decoration:none}
+.purchase-report:has(.ss-side:not([hidden])) .customer-report-back{display:none}
 .purchase-report .filters{border-radius:16px}
 @media (min-width:481px) and (max-width:900px){
     .purchase-report .filters label{flex:0 0 calc(50% - 7px);min-width:0}
@@ -103,6 +104,6 @@ html.embedded body{background:var(--bg)}
 html.embedded .purchase-report{padding-top:0}
 html.embedded .purchase-report .report-actions{display:none}
 @media print{
-    .purchase-report{padding-top:0}
-    .purchase-report .ss-top,.purchase-report .report-actions{display:none}
+    body.purchase-report.ss-layout,.purchase-report{padding:0}
+    .purchase-report .ss-top,.purchase-report .ss-side,.purchase-report .report-actions{display:none}
 }

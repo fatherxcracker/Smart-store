@@ -6,7 +6,10 @@
     <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <script src="{{ url_for('static', filename='i18n.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
-    {% if active == 'purchases' %}<link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">{% endif %}
+    {% if active == 'purchases' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
+    <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
+    {% endif %}
     <script src="{{ url_for('reports.static', filename='js/reports.js') }}" defer></script>
 </head>
 <body{% if active == 'purchases' %} class="purchase-report"{% endif %} data-shell="{{ url_for('reports.index') if report_customer and report_customer.is_admin else '' }}" data-section="{{ active }}" data-live="{{ 'off' if no_refresh else 'on' }}">
@@ -33,7 +36,7 @@
 {% if report_customer and report_customer.is_admin %}
     <a class="ss-btn" href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>
 {% else %}
-    <a class="ss-btn" href="{{ url_for('home') }}#dashboard">Back to dashboard</a>
+    <a class="ss-btn customer-report-back" href="{{ url_for('home') }}#dashboard">Back to dashboard</a>
 {% endif %}
     <button type="button" id="print-report" class="ss-btn">Print / save PDF</button>
 </div>

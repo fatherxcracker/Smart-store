@@ -58,7 +58,7 @@
 .info-card.profile-card strong { display:block; margin-bottom:6px; }
 
 /* Header navigation */
-body.customer-account.ss-layout { padding-left:0; }
+body.customer-account:has(.ss-side:not([hidden])) #account-nav { display:none; }
 .customer-account #account-nav { display:flex; gap:6px; }
 .customer-account #account-nav[hidden] { display:none; }
 .customer-account #account-nav .ss-btn { white-space:nowrap; }
@@ -70,9 +70,9 @@ body.customer-account.ss-layout { padding-left:0; }
 .page { width:100%; }
 
 @media (max-width:1100px) {
-    .customer-account .ss-top:has(#account-nav:not([hidden])) { flex-wrap:wrap; height:110px; padding-block:8px; }
+    .customer-account:not(:has(.ss-side:not([hidden]))) .ss-top:has(#account-nav:not([hidden])) { flex-wrap:wrap; height:110px; padding-block:8px; }
     .customer-account #account-nav { order:1; flex-basis:100%; overflow-x:auto; }
-    body.customer-account.ss-layout:has(#account-nav:not([hidden])) { padding-top:110px; }
+    body.customer-account.ss-layout:not(:has(.ss-side:not([hidden]))):has(#account-nav:not([hidden])) { padding-top:110px; }
 }
 @media (max-width:900px) {
     .hero-grid { grid-template-columns:1fr; }

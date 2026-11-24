@@ -3,10 +3,10 @@
     "use strict";
     var TEXT = {
         en: { account: "MY ACCOUNT", overview: "Overview", history: "Purchase history", reports: "My purchase reports",
-              checkout: "Self-checkout", admin: "Administration", dashboard: "Admin dashboard",
+              profile: "My profile", checkout: "Self-checkout", admin: "Administration", dashboard: "Admin dashboard",
               products: "Products & stock", users: "Users", logout: "Log Out", signIn: "Sign in" },
         fr: { account: "MON COMPTE", overview: "Aperçu", history: "Historique d'achats", reports: "Mes rapports d'achats",
-              checkout: "Caisse libre-service", admin: "Administration", dashboard: "Tableau de bord administrateur",
+              profile: "Mon profil", checkout: "Caisse libre-service", admin: "Administration", dashboard: "Tableau de bord administrateur",
               products: "Produits et stock", users: "Utilisateurs", logout: "Déconnexion", signIn: "Se connecter" }
     };
     function lang() { try { return localStorage.getItem("smartstore-language") === "fr" ? "fr" : "en"; } catch (e) { return "en"; } }
@@ -51,12 +51,13 @@
 
     var side = document.querySelector(".ss-side");
     var links = [];
-    if (!side && !document.body.classList.contains("customer-account")) {
+    if (!side) {
         side = el("aside", "ss-side");
         side.setAttribute("aria-label", "Menu");
         side.hidden = true;
         var title = el("p", "ss-title", tr("account")); title.dataset.ss = "account"; side.appendChild(title);
         var items = [["overview", "/#dashboard", "auth"], ["history", "/#history", "auth"], ["reports", "/reports/purchases", "auth"],
+                     ["profile", "/#profile", "auth"],
                      ["#admin", "admin"],
                      ["dashboard", "/reports/", "admin"], ["products", "/inventory", "admin"], ["users", "/admin/users", "admin"]];
         items.forEach(function (item) {
@@ -71,20 +72,38 @@
             }
             var flag = item[item.length - 1];
             if (flag === "admin") node.dataset.admin = "1";
-            if (flag === "auth") node.dataset.auth = "1";
+            if (flag === "admin") node.hidden = true;
             side.appendChild(node);
             links.push(node);
         });
-        document.body.insertBefore(side, top.nextSibling);
-        // Highlight the entry for the page being shown.
-        var path = location.pathname;
-        links.forEach(function (node) {
-            if (!node.href) return;
-            var target = new URL(node.getAttribute("href"), location.href).pathname;
-            if (target === path || (target !== "/" && path.indexOf(target) === 0)) node.classList.add("active");
-        });
+        top.after(side);
     }
     document.body.classList.add("ss-layout");
+
+    function highlight(accountPage) {
+        var path = location.pathname;
+        var section = accountPage || location.hash || "#dashboard";
+        if (section.charAt(0) !== "#") section = "#" + section;
+        links.forEach(function (node) {
+            if (!node.href) return;
+            var target = new URL(node.href);
+            var active = target.pathname === "/" ? path === "/" && target.hash === section :
+                path === target.pathname || path.startsWith(target.pathname.replace(/\/$/, "") + "/");
+            node.classList.toggle("active", active);
+            if (active) node.setAttribute("aria-current", "page");
+            else node.removeAttribute("aria-current");
+        });
+    }
+
+    var accountNav = document.querySelector(".customer-account #account-nav");
+    if (accountNav) {
+        function syncAccountSidebar() { side.hidden = accountNav.hidden; }
+        new MutationObserver(syncAccountSidebar).observe(accountNav, { attributes: true, attributeFilter: ["hidden"] });
+        document.addEventListener("smartstore-account-page", function (event) { highlight(event.detail); });
+        syncAccountSidebar();
+    }
+    window.addEventListener("hashchange", function () { highlight(); });
+    highlight();
 
     function labels() {
         top.querySelectorAll("[data-ss]").forEach(function (node) { node.textContent = tr(node.dataset.ss); });
@@ -100,11 +119,8 @@
                 if (out && !out.dataset.i18n) out.hidden = !customer;
                 document.querySelectorAll(".ss-top [data-admin], .ss-side [data-admin]").forEach(function (node) { node.hidden = !(customer && customer.is_admin); });
                 if (!side) return;
-                side.querySelectorAll("[data-auth]").forEach(function (node) { node.hidden = !customer; });
-                if (signIn) {
-                    signIn.hidden = !!customer;
-                    side.hidden = !customer;
-                }
+                if (signIn) signIn.hidden = !!customer;
+                if (!accountNav) side.hidden = !customer;
             }).catch(function () {});
     }
     ["lang-en", "lang-fr"].forEach(function (id) {

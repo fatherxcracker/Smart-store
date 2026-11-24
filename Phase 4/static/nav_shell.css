@@ -27,7 +27,7 @@
 
 /* Page content sits beside the sidebar and below the top bar. */
 body.ss-layout { padding-top: 64px; padding-left: 240px; }
-body.ss-layout .topbar, .ss-side[hidden], .ss-top .ss-btn[hidden] { display: none !important; }
+body.ss-layout .topbar, .ss-side[hidden], .ss-side [hidden], .ss-top .ss-btn[hidden] { display: none !important; }
 body.ss-layout:has(.ss-side[hidden]) { padding-left: 0; }
 
 html.embedded .ss-top, html.embedded .ss-side, html.embedded .ss-logo { display: none !important; }

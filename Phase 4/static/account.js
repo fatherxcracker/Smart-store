@@ -260,6 +260,7 @@ function showPage(page) {
 
     // Remember which page is displayed right now
     currentPage = page;
+    document.dispatchEvent(new CustomEvent("smartstore-account-page", { detail: page }));
 
     // Hide all pages except selected page
     // Each page has an ID like login-page or history-page
