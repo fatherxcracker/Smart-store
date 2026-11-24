@@ -1,6 +1,7 @@
 """Phase 4 tests: fridge monitoring (Phase 2 inside the store), MSP01 sensor,
 dashboard, CSV export, low-stock limits per category and shared navigation.
 Isolated databases; no real email, MQTT broker, GPIO or Bluetooth."""
+from contextlib import closing
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,7 +25,7 @@ class Phase4Base(unittest.TestCase):
         self.addCleanup(self.ctx.pop)
         self.client = self.app.test_client()
         self.monitor = self.app.extensions["monitor"]
-        with db.get_connection() as conn:
+        with closing(db.get_connection()) as conn:
             self.admin = conn.execute("SELECT id FROM customers WHERE is_admin=1").fetchone()[0]
         self.member = db.create_customer("Member One", "member1@example.com", "secret123")["id"]
 
@@ -289,7 +290,7 @@ class ReportFeatureTests(Phase4Base):
 
     def test_every_dashboard_text_has_a_french_version(self):
         import re
-        source = open(Path(__file__).parent / "static" / "i18n.js", encoding="utf-8").read()
+        source = (Path(__file__).parent / "static" / "i18n.js").read_text(encoding="utf-8")
         for text in ("Sales today (incl. tax)", "Low-stock limit per category", "Fan control", "Inflation report: price history",
                      "Busiest days", "Motion events", "Download CSV", "Recent notifications"):
             self.assertIn('"' + text + '"', source, text)
