@@ -1,7 +1,10 @@
 erDiagram
     PRODUCTS ||--o{ RECEPTIONS : "is received in"
     PRODUCTS ||--o{ PURCHASE_ITEMS : "appears on"
-    CUSTOMERS ||--o{ PURCHASES : "makes"
+    PRODUCTS ||--o{ PRODUCT_TAGS : "identifies individual units"
+    RECEPTIONS o|--o{ PRODUCT_TAGS : "registers"
+    PURCHASES o|--o{ PRODUCT_TAGS : "sells"
+    CUSTOMERS o|--o{ PURCHASES : "makes"
     PURCHASES ||--|{ PURCHASE_ITEMS : "contains"
 
     PRODUCTS {
@@ -10,7 +13,7 @@ erDiagram
         text category
         real price
         text upc UK "barcode, max 13"
-        text epc UK "RFID tag, max 24"
+        text epc UK "legacy product tag"
         text producer
         text image_url
         date expiry_date
@@ -25,6 +28,13 @@ erDiagram
         timestamp received_at
         text note
     }
+    PRODUCT_TAGS {
+        text epc PK
+        int product_id FK
+        int reception_id FK
+        int sold_purchase_id FK
+        timestamp created_at
+    }
     CUSTOMERS {
         int id PK
         text name
@@ -33,18 +43,22 @@ erDiagram
         text membership_number UK "auto-generated"
         text password_hash
         int points
+        int is_admin
         text language "en / fr"
         timestamp created_at
     }
     PURCHASES {
         int id PK
         text receipt_number UK
+        text checkout_key UK
         int customer_id FK "NULL = guest"
         real subtotal
         real gst
         real qst
         real total
         int points_earned
+        int points_redeemed
+        real points_discount
         text payment_method
         int email_sent
         timestamp created_at
@@ -59,7 +73,15 @@ erDiagram
         real line_total
     }
 
-    %% Phase 4 additions
+    NOTIFICATIONS {
+        int id PK
+        text level
+        text message_en
+        text message_fr
+        timestamp created_at
+    }
+
+    %% Phase 4 additions. Fridge tables share a logical fridge ID.
     CATEGORY_THRESHOLDS {
         text category PK "one of the fixed categories"
         int low_stock "low = fewer units than this"

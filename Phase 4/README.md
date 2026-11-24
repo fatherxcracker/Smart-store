@@ -73,7 +73,7 @@ Phase 4 uses `Phase 4/smartstore.db`. To keep the accounts, products and RFID ta
 
 ## Pages
 
-Administrators get **one page that holds everything**: `/reports/` (the "Reports" link in the store header). A left menu switches the content with no page reload, in the same blue/black look as the store, with the EN/FR and light/dark switches at the top (they apply to every section at once).
+Administrators get **one page that holds everything**: `/reports/` (the "Reports" link in the store header). A left menu switches the content with no page reload, in the same blue/black look as the store, with the EN/FR language switch at the top.
 
 | Menu entry | What opens inside the dashboard |
 |---|---|
@@ -129,7 +129,7 @@ Phase 3 tables (customers, products, product_tags, receptions, purchases, purcha
 | `fridge_thresholds`, `fridge_alerts`, `fridge_readings` | Phase 2 limits, alert emails and their answers, history for the charts (kept 7 days) |
 | `sensor_readings` | MSP01 readings (kept 7 days) |
 
-See `docs/ER_diagram.mmd` (the PNG shows the Phase 3 tables).
+See the [Phase 4 ER diagram](docs/ER_diagram.png) and its [Mermaid source](docs/ER_diagram.mmd). Stock is calculated from unsold product tags, and the monitoring tables store fridge and MSP01 readings.
 
 ## Report definitions
 
@@ -144,7 +144,7 @@ See `docs/ER_diagram.mmd` (the PNG shows the Phase 3 tables).
 ## Tests
 
 ```bash
-python -m unittest -v test_reports test_phase4 test_checkout    # 67 tests
+python -m unittest -v test_reports test_phase4 test_checkout
 python test_database.py                                         # 53 checks
 ```
 
