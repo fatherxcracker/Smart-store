@@ -1,6 +1,6 @@
 """Connect the shopping cart to payment simulation and receipts."""
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, current_app, jsonify, request, session
 
 import db
 import receipts
@@ -97,6 +97,7 @@ def complete_checkout():
             customer_id=customer_id,
             payment_method=payment_method,
             lang=language,
+            send_email=current_app.config.get("SEND_RECEIPT_EMAIL", True),
             epcs=list(session.get("rfid_cart_tags", {})),
             checkout_key=checkout_key,
             points_redeemed=points_redeemed,

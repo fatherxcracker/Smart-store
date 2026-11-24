@@ -1,5 +1,9 @@
 """Integration tests using isolated databases, no real email or hardware."""
+import csv
+from datetime import datetime
+from io import StringIO
 import sqlite3
+from zoneinfo import ZoneInfo
 import tempfile
 import unittest
 from pathlib import Path
@@ -137,6 +141,57 @@ class ReportTests(unittest.TestCase):
         page = self.client.get(f"/reports/purchases?start=2026-11-01&end=2026-11-05&customer_id={self.other}")
         self.assertNotIn(self.db.get_purchase(self.second)["receipt_number"].encode(), page.data)
 
+    def test_simulated_checkout_updates_inventory_sales_and_customer_receipt(self):
+        admin = self.client
+        self.login()
+        customer = self.app.test_client()
+        with customer.session_transaction() as session:
+            session["customer_id"] = self.member
+        membership = self.db.get_customer(self.member)["membership_number"]
+        products = (self.tea, self.coffee)
+        tags = [next(tag["epc"] for tag in self.db.get_product_tags(product_id)
+                     if tag["sold_purchase_id"] is None) for product_id in products]
+        day = datetime.now(ZoneInfo(self.app.config["REPORT_TIMEZONE"])).date()
+        period = f"start={day}&end={day}"
+
+        def rows(client, url):
+            response = client.get(url)
+            self.assertEqual(response.status_code, 200)
+            content = response.data.decode("utf-8-sig")
+            return list(csv.DictReader(StringIO(content)))
+
+        def quantities(url, field):
+            return {int(row["Product ID"]): int(row[field]) for row in rows(admin, url)
+                    if int(row["Product ID"]) in products}
+
+        inventory_url = "/reports/inventory?format=csv"
+        sales_url = f"/reports/sales?{period}&format=csv"
+        stock_before = quantities(inventory_url, "Available quantity")
+        sold_before = quantities(sales_url, "Sold quantity")
+
+        with patch("rfid_reader.SIMULATE", True), patch("rfid_reader.SIMULATED_TAGS", tags):
+            scan = customer.post("/api/cart/rfid/scan", json={"manual": True})
+        self.assertEqual(scan.status_code, 200)
+        self.assertEqual(scan.json["cart"]["item_count"], 2)
+        with patch("receipts.send_receipt_email") as send_email:
+            self.app.config["SEND_RECEIPT_EMAIL"] = False
+            checkout = customer.post("/api/checkout", json={"payment_method": "cash",
+                                                            "membership_number": membership})
+            send_email.assert_not_called()
+        self.assertEqual(checkout.status_code, 200)
+        self.assertEqual(checkout.json["cart"]["item_count"], 0)
+        receipt = checkout.json["receipt"]["receipt_number"]
+        history = customer.get("/api/account/history").json
+        self.assertIn(receipt, [entry["receipt_number"] for entry in history])
+        purchased = [row for row in rows(customer, f"/reports/purchases?{period}&format=csv")
+                     if row["Receipt"] == receipt]
+        self.assertCountEqual([(row["Product"], int(row["Quantity"])) for row in purchased],
+                              [(self.db.get_product(product_id)["name"], 1) for product_id in products])
+        self.assertEqual(quantities(inventory_url, "Available quantity"),
+                         {product_id: stock_before[product_id] - 1 for product_id in products})
+        self.assertEqual(quantities(sales_url, "Sold quantity"),
+                         {product_id: sold_before[product_id] + 1 for product_id in products})
+
     def test_inventory_changes_after_purchase_and_filters_category(self):
         from reports.common import snapshot
         from reports.inventory import generate
@@ -156,6 +211,13 @@ class ReportTests(unittest.TestCase):
         with self.request_context(), snapshot() as conn:
             data = generate(conn, Period(), self.member, product_id=self.tea)
         self.assertEqual([point["price"] for point in data["price_history"]], [10, 10, 10, 99])
+        self.login(self.member)
+        page = self.client.get(f"/reports/purchases?start=2026-11-04&end=2026-11-04&product_id={self.tea}")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'data-time-axis="true"', page.data)
+        self.assertIn(b'View price history table', page.data)
+        old_purchase = data["price_history"][0]["date"][:16].replace("T", " ")
+        self.assertIn(old_purchase.encode(), page.data)
 
     def test_empty_period_has_zero_totals_and_no_personal_receipts(self):
         from reports.common import Period, snapshot

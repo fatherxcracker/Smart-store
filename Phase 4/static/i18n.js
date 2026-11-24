@@ -45,6 +45,8 @@
             "Tous les achats du produit sélectionné sont affichés. Les prix sont par unité, avant les rabais de points et les taxes.",
         "No purchases in this period. Try a different date range.": "Aucun achat pour cette période. Essayez une autre plage de dates.",
         "Choose one product above to display its price-history chart.": "Choisissez un produit ci-dessus pour afficher son graphique d'historique des prix.",
+        "View price history table": "Voir le tableau de l’historique des prix",
+        "No purchases of this product yet.": "Aucun achat de ce produit pour l’instant.",
         "Matching item purchases": "Achats d'articles correspondants", "Date and time": "Date et heure", "Product": "Produit",
         "Quantity": "Quantité", "Unit price": "Prix unitaire", "Receipt": "Reçu",
         "No matching purchases for these filters.": "Aucun achat ne correspond à ces filtres.", "Your receipts": "Vos reçus",

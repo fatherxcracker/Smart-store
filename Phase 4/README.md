@@ -58,6 +58,23 @@ Copy-Item .env.example .env
 
 Set `RFID_SIMULATE=1` and `MSP01_SIMULATE=1` in `.env` to demo without the reader or the sensor.
 
+### Repeatable local demo
+
+From `Phase 4`, run `python demo.py` and open `http://127.0.0.1:5007`. The command
+uses a temporary database, leaves the regular store database alone, and starts
+without real email or hardware services. Stop it with Ctrl+C and run it again
+to restore the same starting stock and sample history.
+
+- Sign in as John using the demo account below. At Self-checkout, click **Scan RFID**.
+  One Coca-Cola and one Lay's appear. Use John's membership number `SS-00000002`
+  and choose **Cash** for the simulated purchase.
+- As admin, confirm each item's stock drops from one to zero and today's sales
+  show one unit of each product. As John, find the same receipt in Purchase History.
+- In **My purchase reports**, select **Demo Coffee**. The inflation chart starts
+  with three historical prices, including two purchases on the same day. Open
+  **View price history table** to see each timestamp and price.
+- The MSP01 page receives fresh simulated readings every five seconds.
+
 ### Accounts (new database only)
 
 | Role | Email | Password |

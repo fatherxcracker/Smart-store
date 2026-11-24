@@ -26,7 +26,8 @@ function svgNode(tag, attrs = {}, text = null) {
 
 /* Line chart without any library. The <figure> says what to plot:
    data-x / data-y: field names, data-money: dollars, data-unit: suffix such as "°C",
-   data-time: x values are timestamps (shows HH:MM), data-empty: text when no data. */
+   data-time: sensor timestamps (shows HH:MM), data-time-axis: ISO timestamps spaced by time,
+   data-empty: text when no data. */
 function drawChart(figure, data) {
     figure.querySelector("svg")?.remove();
     figure.querySelector(".empty-chart")?.remove();
@@ -47,7 +48,11 @@ function drawChart(figure, data) {
     const high = Math.max(Math.max(1, ...values), low + 1);
     const span = hasRange ? (high - low) * 1.1 : (figure.dataset.money ? high : Math.max(2, Math.ceil(high / 2) * 2));
     const base = hasRange ? low - (high - low) * 0.05 : 0;
-    const x = index => data.length === 1 ? (70 + right) / 2 : 70 + index / (data.length - 1) * (right - 70);
+    const timeAxis = figure.dataset.timeAxis === "true";
+    const positions = data.map((row, index) => timeAxis ? Date.parse(row[figure.dataset.x]) : index);
+    const start = positions[0];
+    const extent = positions[positions.length - 1] - start;
+    const x = index => extent ? 70 + (positions[index] - start) / extent * (right - 70) : (70 + right) / 2;
     const py = value => 210 - (Number(value) - base) / span * 175;
     const unit = figure.dataset.unit || "";
     const format = value => figure.dataset.money
@@ -69,12 +74,17 @@ function drawChart(figure, data) {
     };
     data.forEach((row, i) => {
         const dot = svgNode("circle", { cx: x(i), cy: py(row[y]), r: data.length > 90 ? 2 : 4 });
-        dot.append(svgNode("title", {}, `${label(row[figure.dataset.x])}: ${format(row[y])}`));
+        const stamp = row[figure.dataset.x];
+        const detail = timeAxis ? String(stamp).slice(0, 16).replace("T", " ") : label(stamp);
+        dot.append(svgNode("title", {}, `${detail}: ${format(row[y])}`));
         svg.append(dot);
     });
-    const ticks = width < 540 ? [0, data.length - 1] : [0, Math.floor((data.length - 1) / 2), data.length - 1];
-    for (const i of new Set(ticks)) {
-        svg.append(svgNode("text", { x: x(i), y: 242, "text-anchor": data.length === 1 ? "middle" : i === 0 ? "start" : i === data.length - 1 ? "end" : "middle" },
+    const last = data.length - 1;
+    const mid = Math.floor(last / 2);
+    const ticks = extent ? [0, last] : [0];
+    if (width >= 540 && x(mid) - x(0) >= 90 && x(last) - x(mid) >= 90) ticks.splice(1, 0, mid);
+    for (const i of ticks) {
+        svg.append(svgNode("text", { x: x(i), y: 242, "text-anchor": !extent ? "middle" : i === 0 ? "start" : i === last ? "end" : "middle" },
             label(data[i][figure.dataset.x])));
     }
     figure.append(svg);
@@ -118,9 +128,11 @@ async function refreshReport() {
             const page = new DOMParser().parseFromString(await response.text(), "text/html");
             const content = page.getElementById("report-content");
             if (!content) throw new Error();
-            // Don't replace the page while an administrator is typing in a form inside it.
-            if (!document.activeElement?.closest?.("#report-content form")) {
-                document.getElementById("report-content").replaceChildren(...content.childNodes);
+            // Keep focus and the reader's position while a form or the price-history disclosure is in use.
+            const report = document.getElementById("report-content");
+            if (!document.activeElement?.closest?.("#report-content :is(form, details)") &&
+                !report.querySelector(".price-history[open]")) {
+                report.replaceChildren(...content.childNodes);
                 drawCharts();
             }
             status.textContent = `Updated ${new Date().toLocaleTimeString()} · refreshes every 5 seconds`;

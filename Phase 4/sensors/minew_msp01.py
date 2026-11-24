@@ -18,7 +18,6 @@ import math
 import os
 import random
 import threading
-import time
 
 MINEW_SERVICE_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"
 FRAME_INFO = 0xA1  # Minew "info" frame carrying battery + temperature/humidity
@@ -89,11 +88,13 @@ def start_ble_scanner(app, record, address=""):
     return thread
 
 
-def start_simulator(app, record, every=5):
-    """Fake MSP01: slowly drifting temperature/humidity/light and random motion."""
+def start_simulator(app, record, every=5, stop_event=None):
+    """Simulate MSP01 readings until the optional stop event is set."""
+    stop_event = stop_event if stop_event is not None else threading.Event()
+
     def run():
         t = 0
-        while True:
+        while not stop_event.is_set():
             t += 1
             reading = {
                 "temperature": round(21 + 2 * math.sin(t / 30) + random.uniform(-.2, .2), 1),
@@ -107,7 +108,7 @@ def start_simulator(app, record, every=5):
                     record(reading, source="simulator")
                 except Exception as error:
                     print(f"[sim] {error}")
-            time.sleep(every)
+            stop_event.wait(every)
 
     thread = threading.Thread(target=run, daemon=True, name="msp01-sim")
     thread.start()
