@@ -6,7 +6,7 @@ async function loadSensor() {
         if (!response.ok) throw new Error();
         const data = await response.json();
         renderSensor(data, "s");
-        setText("motion-count", data.motion_last_24h);
+        setText("motion-count", data.motion ? data.motion_last_24h : "--");
     } catch (error) { console.error("Sensor:", error); }
 }
 
@@ -22,7 +22,14 @@ async function loadHistory() {
         const body = $("motion-rows");
         body.replaceChildren();
         const motion = rows.filter(r => r.motion === 1).slice(-10).reverse();
-        if (!motion.length) { const tr = el("tr"); const td = el("td", "", "No motion in this period."); td.colSpan = 2; tr.append(td); body.append(tr); }
+        if (!motion.length) {
+            const tr = el("tr");
+            const message = rows.some(r => r.motion !== null) ? "No motion in this period." : "No motion readings in this period.";
+            const td = el("td", "", message);
+            td.colSpan = 2;
+            tr.append(td);
+            body.append(tr);
+        }
         for (const r of motion) {
             const tr = el("tr");
             tr.append(el("td", "", new Date(r.recorded_at.replace(" ", "T") + "Z").toLocaleString()), el("td", "", "Motion detected"));

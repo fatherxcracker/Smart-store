@@ -32,21 +32,28 @@ function setText(id, text) { const node = $(id); if (node) node.textContent = te
 /* The MSP01 tiles are used on both the dashboard and the sensor page. */
 function renderSensor(data, prefix) {
     const online = data.online;
+    const readings = [data.temperature, data.humidity, data.light, data.motion, data.battery].filter(Boolean);
+    const hasSimulated = readings.some(reading => reading.source === "simulator");
+    const hasOther = readings.some(reading => reading.source !== "simulator");
     const pill = $(prefix + "-status");
     if (pill) {
-        pill.textContent = online ? "Online" : (data.seconds_since_update === null ? "No data yet" : "Offline (stale)");
+        let status = data.seconds_since_update === null ? "No data yet" : "Offline (stale)";
+        if (online) status = hasSimulated ? (hasOther ? "Includes simulated data" : "Simulated") : "Online";
+        else if (hasSimulated) status = hasOther ? "Offline (includes simulated data)" : "Simulated (stale)";
+        pill.textContent = status;
         pill.className = "pill " + (online ? "good" : "low");
     }
     setText(prefix + "-temp", number(data.temperature?.value, 1, " °C"));
     setText(prefix + "-hum", number(data.humidity?.value, 0, " %"));
     setText(prefix + "-light", data.light ? `${Math.round(data.light.value)} lux` : "--");
     const motion = $(prefix + "-motion");
+    const motionIsFresh = data.motion && data.motion.age_seconds <= data.stale_after_seconds;
     if (motion) {
-        const recent = data.last_motion_seconds !== null && data.last_motion_seconds < 60;
-        motion.textContent = data.last_motion_seconds === null ? "No motion yet" : (recent ? "Motion detected" : "No motion");
-        motion.className = recent ? "motion-on" : "";
+        motion.textContent = !data.motion ? "Waiting for motion data" : !motionIsFresh ? "Motion data is stale" :
+            (data.motion.value === 1 ? "Motion detected" : "No motion");
+        motion.className = motionIsFresh && data.motion.value === 1 ? "motion-on" : "";
     }
-    setText(prefix + "-motion-note", data.last_motion_seconds === null ? "" :
+    setText(prefix + "-motion-note", !motionIsFresh || data.last_motion_seconds === null ? "" :
         `Last motion ${ago(data.last_motion_seconds)} · ${data.motion_last_hour} ${data.motion_last_hour === 1 ? "event" : "events"} in the last hour`);
     setText(prefix + "-updated", data.seconds_since_update === null ? "Waiting for the sensor" : `Updated ${ago(data.seconds_since_update)}`);
     setText(prefix + "-battery", data.battery ? `Battery ${Math.round(data.battery.value)} %` : "");
