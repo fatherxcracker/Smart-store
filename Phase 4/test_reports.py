@@ -130,7 +130,8 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(data["purchase_times"], 2)
         self.assertEqual(data["units"], 3)
         self.assertEqual(data["total_spent"], 32.2)
-        self.assertEqual([point["price"] for point in data["price_history"]], [10, 10])
+        self.assertEqual([(point["date"][:10], point["price"]) for point in data["price_history"]],
+                         [("2026-10-31", 10), ("2026-11-01", 10), ("2026-11-02", 10)])
         self.assertEqual({r["id"] for r in data["receipts"]}, {self.first, self.third})
         self.login(self.member)
         page = self.client.get(f"/reports/purchases?start=2026-11-01&end=2026-11-05&customer_id={self.other}")
@@ -154,7 +155,7 @@ class ReportTests(unittest.TestCase):
         self.sale(self.member, [(self.tea, 1)], "2026-11-04 16:00:00")
         with self.request_context(), snapshot() as conn:
             data = generate(conn, Period(), self.member, product_id=self.tea)
-        self.assertEqual([point["price"] for point in data["price_history"]], [10, 10, 99])
+        self.assertEqual([point["price"] for point in data["price_history"]], [10, 10, 10, 99])
 
     def test_empty_period_has_zero_totals_and_no_personal_receipts(self):
         from reports.common import Period, snapshot

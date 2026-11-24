@@ -25,10 +25,16 @@ def generate(conn, period, customer_id, query="", product_id=None):
     spending = {day: 0.0 for day in period.days}
     for receipt in receipts:
         spending[period.local_day(receipt["created_at"])] += receipt["total"]
+    price_history = []
+    if product_id is not None:
+        price_history = rows(conn, """SELECT p.created_at, i.unit_price
+            FROM purchase_items i JOIN purchases p ON p.id = i.purchase_id
+            WHERE p.customer_id = ? AND i.product_id = ?
+            ORDER BY p.created_at, p.id, i.id""", (customer_id, product_id))
     return {"spending": [{"date": day, "total": currency(total)} for day, total in spending.items()],
             "receipts": [r for r in receipts if r["id"] in ids] if query or product_id else receipts,
             "total_spent": currency(sum(r["total"] for r in receipts)),
             "receipt_count": len(receipts), "products": options, "matches": matched,
             "purchase_times": len(ids), "units": sum(i["quantity"] for i in matched),
             "price_history": [{"date": datetime.fromisoformat(i["created_at"]).replace(tzinfo=timezone.utc).astimezone(period.zone).isoformat(),
-                               "price": i["unit_price"]} for i in matched] if product_id else []}
+                               "price": i["unit_price"]} for i in price_history]}

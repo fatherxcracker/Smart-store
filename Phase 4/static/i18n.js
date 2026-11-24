@@ -41,8 +41,8 @@
             "Le total dépensé inclut tous vos reçus de la période, après les rabais de points et avec les taxes. Les filtres d'article réduisent la liste des reçus et des achats correspondants, pas ce total.",
         "Spending over time": "Dépenses dans le temps", "What you paid each day (after points discounts, including tax).": "Ce que vous avez payé chaque jour (après rabais de points, taxes incluses).",
         "Inflation report: price history": "Rapport d'inflation : historique des prix",
-        "Unit prices paid on each purchase, before points discounts and tax. Product price changes today do not change this history.":
-            "Prix unitaires payés à chaque achat, avant les rabais de points et les taxes. Les changements de prix d'aujourd'hui ne modifient pas cet historique.",
+        "All purchases of the selected product are shown. Prices are per unit before points discounts and tax.":
+            "Tous les achats du produit sélectionné sont affichés. Les prix sont par unité, avant les rabais de points et les taxes.",
         "No purchases in this period. Try a different date range.": "Aucun achat pour cette période. Essayez une autre plage de dates.",
         "Choose one product above to display its price-history chart.": "Choisissez un produit ci-dessus pour afficher son graphique d'historique des prix.",
         "Matching item purchases": "Achats d'articles correspondants", "Date and time": "Date et heure", "Product": "Produit",
