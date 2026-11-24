@@ -34,7 +34,7 @@ html.embedded .ss-top, html.embedded .ss-side, html.embedded .ss-logo { display:
 html.embedded body.ss-layout { padding-top: 0; padding-left: 0; }
 
 @media (max-width: 900px) {
-    .ss-side { position: static; width: auto; height: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line, #e5eaf2); padding: 10px; }
+    .ss-side { position: static; width: auto; height: auto; min-height: 61px; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line, #e5eaf2); padding: 10px; }
     .ss-side .ss-title, .ss-side .ss-group, .ss-side .ss-foot { display: none; }
     .ss-item { width: auto; white-space: nowrap; }
     body.ss-layout { padding-left: 0; }
@@ -50,4 +50,43 @@ html.embedded .back-button:not(.stock-back), html.embedded .topbar, html.embedde
 /* Keep the Products & stock return links visible in cached templates too. */
 :is(body.ss-layout, html.embedded) :is(.stock-main, .history-main, .users-main) > a.back-button[data-i18n="backInventory"] {
     display: inline-flex !important;
+}
+
+/* Signed-in customer pages share the account layout. */
+@media screen {
+    body:has(.ss-side:not([hidden])) {
+        --customer-gutter: 24px;
+        --customer-heading-size: 33px;
+    }
+
+    body.customer-account:has(.ss-side:not([hidden])) .main,
+    body.customer-account:has(.ss-side:not([hidden])) .page:has(.customer-content) {
+        max-width: none;
+        padding: 0;
+    }
+
+    body:has(.ss-side:not([hidden])) .customer-content {
+        width: 100%;
+        max-width: 1148px;
+        margin: 0 auto;
+        padding: 24px var(--customer-gutter) 32px;
+    }
+
+    body:has(.ss-side:not([hidden])) .customer-heading h1 {
+        margin: 0 0 9px;
+        font: 700 var(--customer-heading-size)/1.2 Inter, Arial, sans-serif;
+        letter-spacing: -1px;
+    }
+
+    body:has(.ss-side:not([hidden])) .customer-heading .eyebrow,
+    body:has(.ss-side:not([hidden])) .customer-content .dashboard-back {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    body:has(.ss-side:not([hidden])) {
+        --customer-gutter: 14px;
+        --customer-heading-size: 27px;
+    }
 }

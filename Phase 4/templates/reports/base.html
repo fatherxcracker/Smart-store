@@ -30,8 +30,9 @@
 <span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
 <button type="button" id="print-report">Print / save PDF</button><a href="{{ url_for('shopping_cart') }}">Self-checkout</a></nav></header>
 {% endif %}
-<main>
+<main{% if active == 'purchases' %} class="customer-content"{% endif %}>
 {% if active == 'purchases' %}
+<div class="customer-heading"><p class="eyebrow">{{ "ADMIN DASHBOARD" if report_customer and report_customer.is_admin else "MY ACCOUNT" }}</p><h1>{{ title|default('Reports') }}</h1></div>
 <div class="report-actions">
 {% if report_customer and report_customer.is_admin %}
     <a class="ss-btn" href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>
@@ -40,9 +41,8 @@
 {% endif %}
     <button type="button" id="print-report" class="ss-btn">Print / save PDF</button>
 </div>
-{% endif %}
+{% else %}
 <p class="eyebrow">{{ "ADMIN DASHBOARD" if report_customer and report_customer.is_admin else "MY ACCOUNT" }}</p><h1>{{ title|default('Reports') }}</h1>
-{% if active != 'purchases' %}
 <nav class="tabs" aria-label="Reports">
 {% if report_customer and report_customer.is_admin %}
 <a href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>

@@ -102,7 +102,7 @@ html.embedded body{background:var(--bg)}
     .purchase-report .filters input,.purchase-report .filters select{width:100%}
 }
 html.embedded .purchase-report{padding-top:0}
-html.embedded .purchase-report .report-actions{display:none}
+html.embedded .purchase-report .report-actions,html.embedded .purchase-report .customer-heading>h1{display:none}
 @media print{
     body.purchase-report.ss-layout,.purchase-report{padding:0}
     .purchase-report .ss-top,.purchase-report .ss-side,.purchase-report .report-actions{display:none}
