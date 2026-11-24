@@ -366,7 +366,7 @@
         /* Adjusts checkout for tablets */
         @media (max-width: 900px) {
             .checkout-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
 
             .topbar .top-actions {
