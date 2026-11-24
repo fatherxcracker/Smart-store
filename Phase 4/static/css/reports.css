@@ -1,4 +1,4 @@
-/* Phase 4 pages: dashboard, reports, fridges, sensor. Light and dark themes via variables. */
+/* Phase 4 pages: dashboard, reports, fridges, sensor. */
 :root{
   --bg:#f6f8fc; --surface:#ffffff; --surface-2:#f0f3f9; --text:#171b26; --muted:#737e91; --line:#e5eaf2; --line-2:#edf0f6;
   --accent:#1769ff; --accent-hover:#0954db; --accent-soft:#e8f0ff; --link:#1769ff; --chart:#1769ff; --focus:#1769ff; --black:#101218;
@@ -6,15 +6,9 @@
   --good-bar:#2fa56a; --mod-bar:#e5a823; --low-bar:#e0534a;
   font-family:Inter,system-ui,sans-serif;color:var(--text);background:var(--bg);font-synthesis:none;color-scheme:light
 }
-html[data-theme="dark"]{
-  --bg:#07080b; --surface:#0e1118; --surface-2:#151925; --text:#e8ecf5; --muted:#8b95a9; --line:#1d2230; --line-2:#171b27;
-  --accent:#3b82ff; --accent-hover:#5b97ff; --accent-soft:#12254a; --link:#6ea4ff; --chart:#5b97ff; --focus:#6ea4ff; --black:#000;
-  --good-fg:#8fe0b3; --good-bg:#12301f; --mod-fg:#f0d37a; --mod-bg:#35290d; --low-fg:#ff9d96; --low-bg:#3d1b19;
-  color-scheme:dark
-}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}
 a{color:var(--link);text-underline-offset:4px}
-header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:90px;padding:0 max(24px,calc((100vw - 1200px)/2));background:var(--surface);border-bottom:1px solid var(--line)}
+header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:90px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line)}
 header nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:.82rem;font-weight:600}header nav a{color:var(--muted);text-decoration:none}header nav a:hover{color:var(--accent)}
 .brand{font-weight:800;letter-spacing:.05em;text-decoration:none;white-space:nowrap;color:var(--text)}
 .brand span{display:block;font-weight:400;letter-spacing:0;font-size:.8rem;margin-top:4px;color:var(--muted)}
@@ -88,10 +82,27 @@ footer{padding:24px;text-align:center;color:var(--muted);font-size:.8rem}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 @media(max-width:800px){.columns,.fridge-grid{grid-template-columns:1fr;gap:0}}
 @media(max-width:700px){header{align-items:start;flex-direction:column;padding:20px}header nav{gap:14px}main{padding:24px 16px}.panel,.metrics article{padding:18px}.filters label{width:100%}.filters input,.filters select{width:100%}.filters .export{margin-left:0}}
-@media print{header nav,.tabs,.filters,#refresh-status,footer,#theme-toggle{display:none}body{background:#fff;color:#000}.panel,.metrics article{break-inside:avoid;border-color:#bbb}.table-wrap{overflow:visible}main{max-width:none;padding:0}.date-list{max-height:none;overflow:visible}th,td{white-space:normal}.receipt{break-inside:avoid}}
+@media print{header nav,.tabs,.filters,#refresh-status,footer{display:none}body{background:#fff;color:#000}.panel,.metrics article{break-inside:avoid;border-color:#bbb}.table-wrap{overflow:visible}main{max-width:none;padding:0}.date-list{max-height:none;overflow:visible}th,td{white-space:normal}.receipt{break-inside:avoid}}
 
 /* Embedded inside the admin dashboard: the dashboard supplies the header, menu and footer. */
-html.embedded header,html.embedded footer,html.embedded .tabs,html.embedded .eyebrow,html.embedded main>h1,html.embedded .theme-float,html.embedded #print-report{display:none}
+html.embedded header,html.embedded footer,html.embedded .tabs,html.embedded .eyebrow,html.embedded main>h1,html.embedded #print-report{display:none}
 html.embedded main{max-width:none;padding:24px 28px 32px}
 html.embedded .filters{margin-top:0}
 html.embedded body{background:var(--bg)}
+
+.purchase-report{padding-top:64px}
+.purchase-report main{max-width:1148px;padding-top:24px}
+.purchase-report h1{letter-spacing:-.03em}
+.purchase-report .report-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.purchase-report .report-actions a{text-decoration:none}
+.purchase-report .filters{border-radius:16px}
+@media (min-width:481px) and (max-width:900px){
+    .purchase-report .filters label{flex:0 0 calc(50% - 7px);min-width:0}
+    .purchase-report .filters input,.purchase-report .filters select{width:100%}
+}
+html.embedded .purchase-report{padding-top:0}
+html.embedded .purchase-report .report-actions{display:none}
+@media print{
+    .purchase-report{padding-top:0}
+    .purchase-report .ss-top,.purchase-report .report-actions{display:none}
+}

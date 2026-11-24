@@ -9,6 +9,11 @@
 "use strict";
 
 document.getElementById("print-report")?.addEventListener("click", () => window.print());
+document.getElementById("report-logout")?.addEventListener("click", async event => {
+    const button = event.currentTarget;
+    const response = await fetch("/api/account/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
+    if (response?.ok) window.location.assign(button.dataset.home);
+});
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

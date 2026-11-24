@@ -3,27 +3,51 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title|default('Reports') }} | Smart Store</title>
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <script src="{{ url_for('static', filename='i18n.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
+    {% if active == 'purchases' %}<link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">{% endif %}
     <script src="{{ url_for('reports.static', filename='js/reports.js') }}" defer></script>
 </head>
-<body data-shell="{{ url_for('reports.index') if report_customer and report_customer.is_admin else '' }}" data-section="{{ active }}" data-live="{{ 'off' if no_refresh else 'on' }}">
+<body{% if active == 'purchases' %} class="purchase-report"{% endif %} data-shell="{{ url_for('reports.index') if report_customer and report_customer.is_admin else '' }}" data-section="{{ active }}" data-live="{{ 'off' if no_refresh else 'on' }}">
+{% if active == 'purchases' %}
+<div class="ss-top" role="banner">
+    <a class="ss-logo" href="{{ url_for('home') }}#dashboard" aria-label="Smart Store">SMART<br>STORE</a>
+    <button type="button" id="report-logout" class="ss-btn logout" data-home="{{ url_for('home') }}">Log Out</button>
+    <div class="language-switch" role="group" aria-label="Language">
+        <button type="button" id="lang-en" lang="en">EN</button>
+        <button type="button" id="lang-fr" lang="fr">FR</button>
+    </div>
+    <a class="ss-btn" href="{{ url_for('shopping_cart') }}">Self-checkout</a>
+</div>
+{% else %}
 <header><a class="brand" href="{{ url_for('reports.index') }}" target="_top">SMART STORE <span>Dashboard &amp; reports</span></a>
-<nav aria-label="Store"><a href="{{ url_for('home') }}#dashboard">Account</a><a href="{{ url_for('shopping_cart') }}">Checkout</a>
+<nav aria-label="Store"><a href="{{ url_for('home') }}#dashboard">Account</a>
 {% if report_customer and report_customer.is_admin %}<a href="{{ url_for('reports.index') }}">Admin dashboard</a>{% endif %}
 <span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
-<button type="button" id="theme-toggle" class="ghost" aria-label="Switch between light and dark mode">Dark mode</button>
-<button type="button" id="print-report">Print / save PDF</button></nav></header>
+<button type="button" id="print-report">Print / save PDF</button><a href="{{ url_for('shopping_cart') }}">Self-checkout</a></nav></header>
+{% endif %}
 <main>
+{% if active == 'purchases' %}
+<div class="report-actions">
+{% if report_customer and report_customer.is_admin %}
+    <a class="ss-btn" href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>
+{% else %}
+    <a class="ss-btn" href="{{ url_for('home') }}#dashboard">Back to dashboard</a>
+{% endif %}
+    <button type="button" id="print-report" class="ss-btn">Print / save PDF</button>
+</div>
+{% endif %}
 <p class="eyebrow">{{ "ADMIN DASHBOARD" if report_customer and report_customer.is_admin else "MY ACCOUNT" }}</p><h1>{{ title|default('Reports') }}</h1>
+{% if active != 'purchases' %}
 <nav class="tabs" aria-label="Reports">
 {% if report_customer and report_customer.is_admin %}
 <a href="{{ url_for('reports.index') }}#overview" target="_top">Back to the admin dashboard</a>
 {% else %}
-<a aria-current="page" href="{{ url_for('reports.purchase_report') }}">My purchases</a>
+<a href="{{ url_for('home') }}#dashboard">Back to dashboard</a>
 {% endif %}
 </nav>
+{% endif %}
 {% if period %}
 <form class="filters" method="get">
 <label>From <input type="date" name="start" value="{{ period.start }}" required></label>

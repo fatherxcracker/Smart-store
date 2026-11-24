@@ -18,12 +18,12 @@
         "Reports": "Rapports", "Store": "Magasin",
         // admin dashboard shell
         "Admin dashboard": "Tableau de bord administrateur", "ADMIN DASHBOARD": "TABLEAU DE BORD ADMINISTRATEUR", "MY ACCOUNT": "MON COMPTE",
-        "Overview": "Aperçu", "Live monitoring": "Surveillance en direct", "Products & stock": "Produits et stock", "Users": "Utilisateurs",
+        "Overview": "Aperçu", "Store overview": "Aperçu du magasin", "Live monitoring": "Surveillance en direct", "Products & stock": "Produits et stock", "Users": "Utilisateurs",
         "Notifications": "Notifications", "Log Out": "Déconnexion",
-        "My account": "Mon compte", "Account overview": "Aperçu du compte", "Purchase history": "Historique d'achats",
+        "My account": "Mon compte", "Membership & points": "Carte de membre et points", "Purchase history": "Historique d'achats",
         "Self-checkout": "Caisse libre-service",
         "Dashboard content": "Contenu du tableau de bord", "Dashboard sections": "Sections du tableau de bord",
-        "Back to the admin dashboard": "Retour au tableau de bord administrateur", "Store notifications": "Notifications du magasin",
+        "Back to dashboard": "Retour au tableau de bord", "Back to the admin dashboard": "Retour au tableau de bord administrateur", "Store notifications": "Notifications du magasin",
         "Latest 100 events: stock received, checkouts, low-stock notices, product changes and errors.": "100 derniers événements : stock reçu, achats, avis de stock bas, modifications de produits et erreurs.",
         "Message": "Message", "See all": "Tout voir", "No notifications yet.": "Aucune notification pour l'instant.",
         "Success": "Succès", "Warning": "Avertissement", "Info": "Info", "Error": "Erreur",
@@ -227,7 +227,6 @@
     function attributes(root) {
         var list = root.querySelectorAll ? root.querySelectorAll("[placeholder],[aria-label],[title]") : [];
         Array.prototype.forEach.call(list, function (el) {
-            if (el.id === "theme-toggle") return;       // theme.js labels this one itself
             ATTRS.forEach(function (a) {
                 if (!el.hasAttribute(a)) return;
                 var key = "data-en-" + a;

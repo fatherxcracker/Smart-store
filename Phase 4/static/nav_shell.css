@@ -1,12 +1,12 @@
-/* Shared chrome for every page: logo pinned top right, controls beside it,
-   and one sidebar that holds all navigation. Light and dark. */
+/* Shared store header and account sidebar. */
 .ss-top {
     position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 60;
     display: flex; align-items: center; justify-content: flex-end; gap: 10px;
     padding: 0 22px; background: var(--surface, #fff); border-bottom: 1px solid var(--line, #e5eaf2);
 }
-.ss-logo { font: 800 16px/1.15 Inter, system-ui, sans-serif; letter-spacing: .7px; text-align: right; color: var(--black, #101218); text-decoration: none; margin-left: 8px; }
+.ss-logo { font: 800 16px/1.15 Inter, system-ui, sans-serif; letter-spacing: .7px; color: var(--black, #101218); text-decoration: none; margin-right: auto; }
 .ss-btn { border: 1px solid var(--line, #e5eaf2); background: var(--surface, #fff); color: var(--text, #171b26); border-radius: 10px; padding: 9px 14px; font: 600 .8rem Inter, system-ui, sans-serif; cursor: pointer; }
+.ss-top a.ss-btn { text-decoration: none; text-align: center; }
 .ss-btn:hover { background: var(--surface-2, #f0f3f9); }
 .ss-btn.logout { background: var(--black, #101218); border-color: var(--black, #101218); color: #fff; font-weight: 700; }
 .ss-top .language-switch { display: flex; background: var(--surface-2, #f0f3f9); border-radius: 10px; padding: 3px; height: 38px; }
@@ -27,7 +27,8 @@
 
 /* Page content sits beside the sidebar and below the top bar. */
 body.ss-layout { padding-top: 64px; padding-left: 240px; }
-body.ss-layout .topbar, body.ss-layout .theme-float { display: none !important; }
+body.ss-layout .topbar, .ss-side[hidden], .ss-top .ss-btn[hidden] { display: none !important; }
+body.ss-layout:has(.ss-side[hidden]) { padding-left: 0; }
 
 html.embedded .ss-top, html.embedded .ss-side, html.embedded .ss-logo { display: none !important; }
 html.embedded body.ss-layout { padding-top: 0; padding-left: 0; }
@@ -39,7 +40,14 @@ html.embedded body.ss-layout { padding-top: 0; padding-left: 0; }
     body.ss-layout { padding-left: 0; }
     .ss-top { padding: 0 12px; gap: 6px; }
 }
-/* The sidebar is the only navigation: in-page "back" buttons are not needed. */
-body.ss-layout .back-button { display: none !important; }
+@media (max-width: 480px) {
+    .ss-top .ss-btn, .ss-top .language-switch button, .ss-top .langs button { padding-inline: 8px; }
+}
+body.ss-layout .back-button:not(.dashboard-back, .stock-back) { display: none !important; }
 /* Shown inside the admin dashboard: that page supplies the menu. */
-html.embedded .back-button, html.embedded .topbar { display: none !important; }
+html.embedded .back-button:not(.stock-back), html.embedded .topbar, html.embedded footer, html.embedded .embed-hide { display: none !important; }
+
+/* Keep the Products & stock return links visible in cached templates too. */
+:is(body.ss-layout, html.embedded) :is(.stock-main, .history-main, .users-main) > a.back-button[data-i18n="backInventory"] {
+    display: inline-flex !important;
+}

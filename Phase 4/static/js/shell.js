@@ -2,10 +2,11 @@
 (function () {
     "use strict";
     var frame = document.getElementById("stage");
-    var links = Array.prototype.slice.call(document.querySelectorAll(".side a[data-section]"));
+    var links = Array.prototype.slice.call(document.querySelectorAll("a[data-section][data-src]"));
     function current() {
-        var name = (location.hash || "").replace("#", "");
-        return links.filter(function (a) { return a.dataset.section === name; })[0] || links[0];
+        var name = location.hash.slice(1) || "account";
+        return links.filter(function (a) { return a.dataset.section === name; })[0] ||
+            document.querySelector(".side a[data-section]");
     }
     function show() {
         var link = current();

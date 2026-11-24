@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en" class="native">
+<html lang="en">
 
 <head>
     <!-- tells browser how to read page -->
@@ -11,6 +11,7 @@
 
     <!-- Name shown in the browser tab -->
     <title>Smart Store</title>
+    <script src="{{ url_for('static', filename='embedded.js') }}"></script>
 
     <!-- Connects CSS file to style website -->
     <link rel="stylesheet"
@@ -20,15 +21,13 @@
     <!-- defer: JavaScript runs after HTML is loaded -->
     <script src="{{ url_for('static', filename='account.js') }}"
         defer></script>
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='account_v2.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
     <script src="{{ url_for('static', filename='account_v2.js') }}" defer></script>
 </head>
 
-<body>
+<body class="customer-account">
 
 <!-- Contains whole website -->
 <div class="app">
@@ -36,41 +35,27 @@
     <!--Navigation-->
 
     <!-- Top bar of website -->
-    <div class="ss-top">
+    <header class="ss-top">
+        <a class="ss-logo" href="{{ url_for('home') }}" aria-label="Smart Store">SMART<br>STORE</a>
+        <nav id="account-nav" aria-label="Account" hidden>
+            <button class="ss-btn nav-link" type="button" data-page="history" data-ss="history">Purchase history</button>
+            <a class="ss-btn" href="{{ url_for('reports.purchase_report') }}" data-ss="reports">My purchase reports</a>
+            <button class="ss-btn nav-link" type="button" data-page="profile" data-v2="navProfile">My profile</button>
+            <a class="ss-btn" href="{{ url_for('reports.index') }}" data-admin="1" data-ss="dashboard" hidden>Admin dashboard</a>
+        </nav>
+        <a class="ss-btn" id="header-sign-in" href="#login-form" data-ss="signIn">Sign in</a>
+        <button id="logout-button" class="ss-btn logout" type="button" data-i18n="logout" hidden>Log Out</button>
         <div class="language-switch">
             <button id="lang-en" class="selected" type="button">EN</button>
             <button id="lang-fr" type="button">FR</button>
         </div>
-        <button id="theme-toggle" class="ss-btn" type="button">Dark mode</button>
-        <button id="logout-button" class="ss-btn logout" type="button" data-i18n="logout" hidden>Log Out</button>
-        <a class="ss-logo" href="{{ url_for('home') }}" aria-label="Smart Store">SMART<br>STORE</a>
-    </div>
-    <nav id="account-nav" hidden></nav>
+        <a class="ss-btn ss-checkout" href="{{ url_for('shopping_cart') }}" data-ss="checkout">Self-checkout</a>
+    </header>
 
     <!-- Displays success messages or errors -->
     <!-- JavaScript changes the message shown here -->
     <div id="message" role="status" aria-live="polite"></div>
 
-    <!-- Main content of website -->
-    <aside class="ss-side" aria-label="Menu">
-        <p class="ss-title" data-ss="account">MY ACCOUNT</p>
-        <div id="side-nav" hidden>
-            <button class="nav-link ss-item" type="button" data-page="dashboard" data-ss="overview">Overview</button>
-            <button class="nav-link ss-item" type="button" data-page="history" data-ss="history">Purchase history</button>
-            <a class="ss-item" href="{{ url_for('reports.purchase_report') }}" data-ss="reports">My purchase reports</a>
-            <p class="ss-group" data-ss="shop">Shop</p>
-            <a class="ss-item" href="{{ url_for('shopping_cart') }}" data-ss="checkout">Self-checkout</a>
-            <div id="side-admin" data-admin="1" hidden>
-                <p class="ss-group" data-ss="admin">Administration</p>
-                <a class="ss-item" href="{{ url_for('reports.index') }}" data-ss="dashboard">Admin dashboard</a>
-                <a class="ss-item" href="{{ url_for('inventory') }}" data-ss="products">Products &amp; stock</a>
-                <a class="ss-item" href="{{ url_for('manage_users') }}" data-ss="users">Users</a>
-            </div>
-        </div>
-        <div id="side-guest">
-            <a class="ss-item" href="{{ url_for('shopping_cart') }}" data-ss="checkout">Self-checkout</a>
-        </div>
-    </aside>
     <main class="main">
 
         <!--Login page-->
@@ -311,9 +296,7 @@
                 <div class="hero-grid">
                     <!-- Membership card -->
                     <div class="member-card" aria-label="Membership card">
-                        <div class="mc-top"><span class="mc-brand">SMART STORE</span>
-                            <svg class="mc-wave" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M12 6a8.5 8.5 0 0 1 0 12"/><path d="M15.5 3.5a12 12 0 0 1 0 17"/></svg></div>
-                        <div class="mc-chip" aria-hidden="true"></div>
+                        <span class="mc-brand">Smart Store</span>
                         <div class="mc-number" id="membership-number">---</div>
                         <div class="mc-bottom">
                             <div><small data-v2="cardHolder">MEMBER</small><strong id="card-name"></strong></div>
@@ -335,29 +318,6 @@
                     </div>
                 </div>
 
-                <div class="stat-grid">
-                    <div class="stat"><span data-v2="statOrders">Purchases</span><strong id="stat-orders">--</strong></div>
-                    <div class="stat"><span data-v2="statSpent">Total spent</span><strong id="stat-spent">--</strong></div>
-                    <div class="stat"><span data-v2="statEarned">Points earned</span><strong id="stat-earned">--</strong></div>
-                    <div class="stat"><span data-v2="statLast">Last purchase</span><strong id="stat-last">--</strong></div>
-                </div>
-
-                <div class="lower-grid">
-                    <div class="info-card recent-card">
-                        <div class="card-head"><span class="card-label" data-v2="recent">RECENT PURCHASES</span>
-                            <button class="text-button" type="button" data-page="history" data-v2="seeAll">See all</button></div>
-                        <ul id="recent-list" class="recent-list"><li class="muted" data-v2="loading">Loading…</li></ul>
-                    </div>
-                    <div class="info-card profile-card">
-                        <span class="card-label" data-i18n="profile">MY PROFILE</span>
-                        <p class="field-label" data-i18n="fullName">Full name</p>
-                        <strong id="customer-name">---</strong>
-                        <p class="field-label" data-i18n="email">Email address</p>
-                        <strong id="customer-email">---</strong>
-                        <p class="field-label" data-v2="phoneLabel">Phone</p>
-                        <strong id="customer-phone">--</strong>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -371,7 +331,7 @@
 
                 <!-- Returns to customer dashboard -->
                 <!-- Placed on the top left like the other back buttons -->
-                <button class="back-button"
+                <button class="back-button dashboard-back"
                         type="button"
                         data-page="dashboard"
                         data-i18n="backDashboard">
@@ -397,6 +357,13 @@
                     </div>
                 </div>
 
+                <div class="stat-grid">
+                    <div class="stat"><span data-v2="statOrders">Purchases</span><strong id="stat-orders">--</strong></div>
+                    <div class="stat"><span data-v2="statSpent">Total spent</span><strong id="stat-spent">--</strong></div>
+                    <div class="stat"><span data-v2="statEarned">Points earned</span><strong id="stat-earned">--</strong></div>
+                    <div class="stat"><span data-v2="statLast">Last purchase</span><strong id="stat-last">--</strong></div>
+                </div>
+
                 <!-- Card has purchase records -->
                 <div class="history-card">
 
@@ -415,6 +382,26 @@
                     <!-- Flask gets the purchases from the database -->
                     <div id="purchase-history"></div>
 
+                </div>
+            </div>
+        </section>
+
+        <section id="profile-page" class="page" hidden>
+            <div class="dashboard-container">
+                <button class="back-button dashboard-back" type="button" data-page="dashboard" data-i18n="backDashboard">
+                    ← Back to dashboard
+                </button>
+                <div class="page-heading">
+                    <h1 data-v2="navProfile">My profile</h1>
+                </div>
+                <div class="info-card profile-card">
+                    <span class="card-label" data-i18n="profile">MY PROFILE</span>
+                    <p class="field-label" data-i18n="fullName">Full name</p>
+                    <strong id="customer-name">---</strong>
+                    <p class="field-label" data-i18n="email">Email address</p>
+                    <strong id="customer-email">---</strong>
+                    <p class="field-label" data-v2="phoneLabel">Phone</p>
+                    <strong id="customer-phone">--</strong>
                 </div>
             </div>
         </section>

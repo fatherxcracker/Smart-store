@@ -26,8 +26,7 @@
             defer></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='cart_page.css') }}">
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
 </head>
@@ -121,10 +120,10 @@
     <main class="checkout-main">
 
         <!-- Returns to customer account -->
-        <a class="back-button"
+        <a class="back-button dashboard-back"
            href="{{ url_for('home') }}#dashboard"
-           data-i18n="backAccounts">
-            ← Back to Customer Accounts
+           data-i18n="backDashboard">
+            ← Back to dashboard
         </a>
 
         <!-- Checkout heading -->

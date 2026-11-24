@@ -1,19 +1,15 @@
-/* Account page extras: sidebar, role badge, points ring, statistics and recent purchases.
+/* Account page extras: header, role badge, points ring and purchase statistics.
    Uses its own small English/French dictionary (data-v2 attributes). */
 (function () {
     "use strict";
     var TEXT = {
-        en: { myAccount: "MY ACCOUNT", navOverview: "Overview", navHistory: "Purchase history", shop: "Shop", navCheckout: "Self-checkout",
-              navReports: "My purchase reports", admin: "Administration", navAdmin: "Admin dashboard", navProducts: "Products & stock",
+        en: { navProfile: "My profile",
               cardHolder: "MEMBER", since: "SINCE", pts: "points", worth: "Worth", pointsHow: "1 point per full dollar spent. Redeem each point for $0.10 at checkout.",
-              statOrders: "Purchases", statSpent: "Total spent", statEarned: "Points earned", statLast: "Last purchase", recent: "RECENT PURCHASES",
-              seeAll: "See all", loading: "Loading…", phoneLabel: "Phone", none: "No purchases yet. Scan your items at the self-checkout to start earning points.",
+              statOrders: "Purchases", statSpent: "Total spent", statEarned: "Points earned", statLast: "Last purchase", phoneLabel: "Phone",
               never: "Never", admin_badge: "Administrator", member_badge: "Member", toNext: "{n} more points to your next $10 reward", reward: "You have a $10 reward ready!" },
-        fr: { myAccount: "MON COMPTE", navOverview: "Aperçu", navHistory: "Historique d'achats", shop: "Magasin", navCheckout: "Caisse libre-service",
-              navReports: "Mes rapports d'achats", admin: "Administration", navAdmin: "Tableau de bord administrateur", navProducts: "Produits et stock",
+        fr: { navProfile: "Mon profil",
               cardHolder: "MEMBRE", since: "DEPUIS", pts: "points", worth: "Vaut", pointsHow: "1 point par dollar entier dépensé. Échangez chaque point contre 0,10 $ à la caisse.",
-              statOrders: "Achats", statSpent: "Total dépensé", statEarned: "Points gagnés", statLast: "Dernier achat", recent: "ACHATS RÉCENTS",
-              seeAll: "Tout voir", loading: "Chargement…", phoneLabel: "Téléphone", none: "Aucun achat pour l'instant. Scannez vos articles à la caisse libre-service pour gagner des points.",
+              statOrders: "Achats", statSpent: "Total dépensé", statEarned: "Points gagnés", statLast: "Dernier achat", phoneLabel: "Téléphone",
               never: "Jamais", admin_badge: "Administrateur", member_badge: "Membre", toNext: "Encore {n} points pour votre prochaine récompense de 10 $", reward: "Une récompense de 10 $ vous attend !" }
     };
     var customer = null, purchases = [];
@@ -46,23 +42,6 @@
         $("stat-spent").textContent = money(spent);
         $("stat-earned").textContent = earned;
         $("stat-last").textContent = purchases.length ? when(purchases[0].created_at) : tr("never");
-        var list = $("recent-list");
-        list.replaceChildren();
-        if (!purchases.length) {
-            var empty = document.createElement("li"); empty.className = "muted"; empty.textContent = tr("none"); list.appendChild(empty); return;
-        }
-        purchases.slice(0, 4).forEach(function (p) {
-            var li = document.createElement("li");
-            var left = document.createElement("div");
-            var a = document.createElement("strong"); a.textContent = p.receipt_number;
-            var b = document.createElement("small"); b.textContent = when(p.created_at);
-            left.appendChild(a); left.appendChild(b);
-            var right = document.createElement("div"); right.className = "right";
-            var c = document.createElement("strong"); c.textContent = money(p.total);
-            var d = document.createElement("small"); d.textContent = "+" + p.points_earned + " pts";
-            right.appendChild(c); right.appendChild(d);
-            li.appendChild(left); li.appendChild(right); list.appendChild(li);
-        });
     }
     function load() {
         Promise.all([
@@ -70,23 +49,23 @@
             fetch("/api/account/history", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : []; })
         ]).then(function (r) {
             customer = r[0]; purchases = Array.isArray(r[1]) ? r[1] : [];
-            showSide(); labels();
+            labels();
         }).catch(function () {});
     }
-    function showSide() {
-        // The sidebar is always there; the account menu only shows when signed in.
-        var out = $("account-nav").hidden;
-        $("side-nav").hidden = out; $("side-guest").hidden = !out;
+    function syncHeader() {
+        var signedOut = $("account-nav").hidden;
+        $("header-sign-in").hidden = !signedOut;
     }
     document.addEventListener("DOMContentLoaded", function () {
         labels();
-        new MutationObserver(function () { showSide(); if (!$("account-nav").hidden && !customer) load(); }).observe($("account-nav"), { attributes: true, attributeFilter: ["hidden"] });
+        syncHeader();
+        new MutationObserver(function () { syncHeader(); if (!$("account-nav").hidden && !customer) load(); }).observe($("account-nav"), { attributes: true, attributeFilter: ["hidden"] });
         new MutationObserver(labels).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
         $("logout-button").addEventListener("click", function () { customer = null; purchases = []; });
         if (!$("account-nav").hidden) load();
-        // Refresh the numbers whenever the dashboard is opened again.
+        // Refresh the numbers whenever the purchase history is opened again.
         document.addEventListener("click", function (e) {
-            var b = e.target.closest && e.target.closest("[data-page=dashboard]"); if (b && customer) load();
+            var b = e.target.closest && e.target.closest("[data-page=history]"); if (b && customer) load();
         });
     });
 })();

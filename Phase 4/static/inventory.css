@@ -15,10 +15,10 @@ main {
 }
 
 .eyebrow {
-    color: #176356;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    color: var(--blue);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
 }
 
 h1 {

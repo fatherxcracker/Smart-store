@@ -6,7 +6,7 @@ One Flask application on **port 5003** that contains everything built so far:
 |---|---|---|
 | 2 | Fridge monitoring: ESP32 + DHT11 -> Mosquitto -> temperature email -> reply **YES** -> fan (L293D + PWM) | `monitoring/`, `esp32/` |
 | 3 | Accounts, loyalty points, inventory, RFID stock (one EPC per item), self-checkout, receipts, EN/FR notifications | `storefront.py`, `db.py`, `cart.py`, `checkout.py`, `receipts.py`, `notifications.py`, `rfid_reader.py` |
-| 4 | Dashboard, admin + customer reports, CSV export, per-category stock alerts, dark mode, Minew MSP01 BLE sensor | `reports/`, `sensors/`, `templates/`, `static/` |
+| 4 | Dashboard, admin + customer reports, CSV export, per-category stock alerts, Minew MSP01 BLE sensor | `reports/`, `sensors/`, `templates/`, `static/` |
 
 The folder is **self-contained**: it does not import code from `Phase 2/` or `Phase 3/`.
 One login, one SQLite database (`smartstore.db`), one set of notifications.
@@ -20,11 +20,10 @@ One login, one SQLite database (`smartstore.db`), one set of notifications.
 | 2.2 Sales report: sold items per product in a range, most / least sold, total for a day or a range | **Reports > Sales** (a single day = same start and end date). Top/bottom N, daily line chart, taxes, discounts. |
 | 2.3 Customer activity: customers per day / range, new vs returning, busiest / quietest day | **Reports > Customer activity** |
 | 3.1 Receipt history per day or period (date and time, items, prices, total) | **My purchases** (customer) |
-| 3.2 Total spent in a period, spending graph | **My purchases** (total + "Spending over time" chart) |
+| 3.2 Total spent in a selected period | **My purchases**. The "Spending over time" chart is optional. |
 | 3.3 Search purchase history, times bought, dates and prices, inflation diagram | **My purchases**: search box, product selector, "Inflation report: price history" chart |
 | 4.1 GUI style, responsive | One design for the Phase 4 pages, mobile layouts, keyboard focus styles |
 | 4.2 Notifications | Low-stock alerts, purchase confirmations, fridge alerts, error messages (EN/FR for the store). Everything is in **Manage inventory > Notifications** and on the dashboard. |
-| 4.3 Light and dark theme | "Dark mode" / "Mode sombre" button on every page (remembered per browser, follows the system setting the first time) |
 | Bilingual EN / FR | EN / FR switch on every Phase 4 page, shared with the store portal's language choice (also saved on the account for receipt emails) |
 | 4.4 Extras | **CSV download** on every report, print / save as PDF, dashboard widgets |
 | 5 Minew MSP01 sensor + dashboard widgets | **Reports > Dashboard** (live tiles) and **MSP01 sensor** page (charts, motion log) |
@@ -78,7 +77,7 @@ Administrators get **one page that holds everything**: `/reports/` (the "Reports
 
 | Menu entry | What opens inside the dashboard |
 |---|---|
-| Overview | sales today, low stock, both fridges, fan, MSP01 sensor, recent notifications |
+| Store overview | sales today, low stock, both fridges, fan, MSP01 sensor, recent notifications |
 | Inventory report / Sales / Customer activity | the reports (filters, charts, Download CSV, per-category low-stock limits) |
 | Fridges & fan | live temperature and humidity, limits, fan control, alerts |
 | MSP01 sensor | temperature, humidity, light, motion, status |
@@ -86,9 +85,9 @@ Administrators get **one page that holds everything**: `/reports/` (the "Reports
 | Users | accounts, points, roles |
 | Notifications | the last 100 store events |
 
-Every page of the site uses the same chrome: the Smart Store logo is pinned in the top-right corner, the only buttons beside it are EN/FR, dark mode and Log Out, and all navigation lives in the left sidebar (`static/nav_shell.js` builds it on the store pages, so their old header links are hidden). Administrators who sign in land on `/reports/` instead of the account page; opening a report URL directly (for example `/reports/sales`) lands in the matching dashboard section.
+The store header places the Smart Store logo on the left and EN/FR and Self-checkout on the right. Guests can sign in from the header, and signed-in users can log out there. Administrators who sign in land on `/reports/`. Opening a report URL directly (for example `/reports/sales`) lands in the matching dashboard section.
 
-Customers get the same sidebar with their own entries: Overview, Purchase history, My purchase reports and Self-checkout.
+The customer dashboard shows the membership card and loyalty points. Its header opens Purchase history, My purchase reports, My profile, and Self-checkout.
 
 Every report accepts `?format=csv` (the "Download CSV" link). Sales and customer reports also have the daily table as CSV (`&table=daily` for sales).
 
@@ -118,7 +117,7 @@ A sensor with no reading for `SENSOR_STALE_SECONDS` is shown as **Offline (stale
 4. **Admin reports**: Sales (top/bottom, daily chart, CSV), Customer activity (new vs returning, busiest day).
 5. **Customer reports**: log in as a customer > My purchases: receipts, spending chart, search an item, pick it and show the inflation chart (change a product price in between to show a different price).
 6. **Fridges and sensor**: warm a DHT11 with your hand, show the email, reply YES, watch the fan start. Show the MSP01 tiles and the motion log.
-7. **Polish**: switch to dark mode, resize the window, download a CSV, show French in the store portal.
+7. **Polish**: resize the window, download a CSV, show French in the store portal.
 
 ## Database
 
@@ -156,5 +155,4 @@ They use temporary databases and never send email, open the MQTT broker, drive t
 - Not yet tested with the physical hardware in this combined app (CF600, DHT11 boards, fan, MSP01). The pieces come from Phases 2 and 3, which were tested separately.
 - Raw Bluetooth decoding of the MSP01 is partial (see above).
 - French on the Phase 4 pages comes from a phrase list in `static/i18n.js`; a new text added later shows in English until it is added there. Product names and server error pages (401/403) are not translated. CSV column names stay in English.
-- Dark mode on the older store pages inverts their colours, so it is close but not a hand-tuned palette.
 - `Phase 2/` and `Phase 3/` still run on their own (ports 5001 and 5002). Phase 4 is the version to demonstrate.

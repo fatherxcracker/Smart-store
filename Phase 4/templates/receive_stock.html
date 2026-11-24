@@ -21,8 +21,7 @@
           href="{{ url_for('static', filename='inventory.css') }}">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='receive_stock_page.css') }}">
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
 </head>
@@ -115,10 +114,10 @@
     <main class="stock-main">
 
         <!-- Returns to inventory -->
-        <a class="back-button"
+        <a class="back-button stock-back"
            href="{{ url_for('inventory') }}"
            data-i18n="backInventory">
-            ← Back to Inventory
+            ← Back to Products &amp; stock
         </a>
 
         <!-- Receive stock heading -->

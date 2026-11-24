@@ -1,23 +1,5 @@
-/* Account page redesign: same look as the admin dashboard (blue/black store style, light + dark). */
+/* Account page redesign: same look as the admin dashboard (blue/black store style). */
 :root { --surface:#fff; --surface-2:#f0f3f9; --line:#e5eaf2; --soft:#e8f0ff; }
-html[data-theme="dark"] {
-    --background:#07080b; --surface:#0e1118; --surface-2:#151925; --line:#1d2230; --soft:#12254a;
-    --text:#e8ecf5; --muted:#8b95a9; --border:#1d2230; --blue:#3b82ff; --blue-hover:#5b97ff; --white:#0e1118;
-}
-/* This page uses real dark colours, so the store's invert trick is switched off here. */
-html.native[data-theme="dark"] { filter:none; background:var(--background); color-scheme:dark; }
-html.native[data-theme="dark"] img { filter:none; }
-html[data-theme="dark"] body { background:var(--background); color:var(--text); }
-html[data-theme="dark"] .topbar, html[data-theme="dark"] footer { background:var(--surface); border-color:var(--line); }
-html[data-theme="dark"] .brand strong { color:var(--text); }
-html[data-theme="dark"] .login-card, html[data-theme="dark"] .history-card, html[data-theme="dark"] .info-card { background:var(--surface); border-color:var(--line); color:var(--text); }
-html[data-theme="dark"] input { background:var(--surface-2); color:var(--text); border-color:var(--line); }
-html[data-theme="dark"] .history-row, html[data-theme="dark"] .history-header { border-color:var(--line); background:transparent; color:var(--text); }
-html[data-theme="dark"] .history-row button, html[data-theme="dark"] .back-button { background:var(--surface-2); color:var(--text); border-color:var(--line); }
-html[data-theme="dark"] .language-switch { background:var(--surface-2); }
-html[data-theme="dark"] .language-switch button { color:var(--muted); }
-html[data-theme="dark"] .language-switch button.selected { background:var(--blue); color:#fff; }
-html[data-theme="dark"] .logout { background:var(--surface-2); color:var(--text); }
 
 
 
@@ -25,7 +7,6 @@ html[data-theme="dark"] .logout { background:var(--surface-2); color:var(--text)
 
 
 
-/* Layout: sidebar only when signed in */
 
 
 
@@ -42,21 +23,18 @@ html[data-theme="dark"] .logout { background:var(--surface-2); color:var(--text)
 .role-badge { margin-top:6px; padding:6px 14px; border-radius:999px; font-size:.78rem; font-weight:700; background:var(--surface-2); color:var(--muted); }
 .role-badge.admin { background:var(--blue); color:#fff; }
 
-/* Realistic membership card */
+/* Membership card */
 .hero-grid { display:grid; grid-template-columns:minmax(300px,1.15fr) 1fr; gap:20px; margin-bottom:20px; }
-.member-card { position:relative; overflow:hidden; border-radius:22px; padding:26px 28px; min-height:220px; color:#fff; display:flex; flex-direction:column; justify-content:space-between;
-    background:radial-gradient(120% 140% at 90% -10%, #2f7dff 0%, rgba(47,125,255,0) 55%), linear-gradient(135deg,#0b1736 0%,#101218 100%);
-    box-shadow:0 24px 40px -18px rgba(16,24,60,.55), inset 0 1px 0 rgba(255,255,255,.12); }
-.member-card::after { content:""; position:absolute; right:-70px; bottom:-90px; width:260px; height:260px; border-radius:50%; border:1px solid rgba(255,255,255,.12); box-shadow:0 0 0 40px rgba(255,255,255,.03), 0 0 0 80px rgba(255,255,255,.02); }
-.mc-top { display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
-.mc-brand { font-weight:800; letter-spacing:.14em; font-size:.95rem; }
-.mc-wave { opacity:.85; }
-.mc-chip { width:44px; height:33px; border-radius:7px; position:relative; z-index:1;
-    background:linear-gradient(135deg,#f3dc9a,#c9a24b 55%,#e8cf86); box-shadow:inset 0 0 0 1px rgba(0,0,0,.25); }
-.mc-chip::before { content:""; position:absolute; inset:7px 10px; border:1px solid rgba(0,0,0,.3); border-radius:3px; }
-.mc-number { font:600 1.45rem 'Courier New',monospace; letter-spacing:.14em; position:relative; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.4); margin:0; }
-.mc-bottom { display:flex; gap:34px; position:relative; z-index:1; }
-.mc-bottom small { display:block; font-size:.62rem; letter-spacing:.14em; opacity:.65; margin-bottom:3px; }
+.member-card {
+    display:flex; flex-direction:column; justify-content:space-between; gap:16px;
+    min-height:190px; padding:24px; border-radius:14px;
+    background:#1456cc; color:#fff;
+}
+.mc-brand { font-size:1rem; font-weight:700; }
+.member-card .mc-wave { display:none; }
+.mc-number { font-size:1.4rem; font-weight:700; font-variant-numeric:tabular-nums; }
+.mc-bottom { display:flex; flex-wrap:wrap; gap:12px 28px; }
+.mc-bottom small { display:block; font-size:.72rem; margin-bottom:4px; }
 .mc-bottom strong { font-size:.95rem; font-weight:600; }
 
 /* Points ring */
@@ -72,61 +50,31 @@ html[data-theme="dark"] .logout { background:var(--surface-2); color:var(--text)
 .points-next { margin:0; color:var(--blue); font-weight:600; font-size:.85rem; line-height:1.4; }
 .points-desc { margin:0; color:var(--muted); font-size:.82rem; line-height:1.5; }
 
-/* Stats + lower area */
+/* Purchase statistics and profile */
 .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
 .stat { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
 .stat span { display:block; color:var(--muted); font-size:.78rem; }
 .stat strong { display:block; margin-top:10px; font-size:1.5rem; letter-spacing:-.02em; color:var(--text); }
-.lower-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:20px; }
-.card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.recent-list { list-style:none; margin:0; padding:0; }
-.recent-list li { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); }
-.recent-list li:last-child { border-bottom:0; }
-.recent-list li.muted { color:var(--muted); display:block; line-height:1.5; }
-.recent-list small { display:block; color:var(--muted); margin-top:3px; }
-.recent-list .right { text-align:right; }
 .info-card.profile-card strong { display:block; margin-bottom:6px; }
 
-@media (max-width:900px) {
-        #side-admin { display:flex; gap:2px; } #side-admin[hidden] { display:none; }
-    .hero-grid, .lower-grid { grid-template-columns:1fr; } .stat-grid { grid-template-columns:1fr 1fr; }
-}
-
-
-/* Dark-mode touch-ups and top alignment */
-.main { display:block; }
-html[data-theme="dark"] .brand, html[data-theme="dark"] .brand * { color:var(--text); }
-html[data-theme="dark"] .language-switch { background:var(--surface-2); border-color:var(--line); }
-html[data-theme="dark"] .language-switch button { background:transparent; }
-html[data-theme="dark"] .language-switch button.selected { background:var(--blue); color:#fff; }
-html[data-theme="dark"] .logout { border:1px solid var(--line); }
-html[data-theme="dark"] .back-button { background:var(--surface-2) !important; color:var(--text) !important; border-color:var(--line) !important; }
-html[data-theme="dark"] .history-card { background:var(--surface); }
-html[data-theme="dark"] #message { color:var(--text); }
-html[data-theme="dark"] body .app > .topbar .brand strong { color:var(--text); }
-html[data-theme="dark"] body .app > .topbar .language-switch { background:var(--surface-2); }
-html[data-theme="dark"] body .app > .topbar .language-switch button { background:transparent; color:var(--muted); }
-html[data-theme="dark"] body .app > .topbar .language-switch button.selected { background:var(--blue); color:#fff; }
-.login-container { margin-left:auto; margin-right:auto; } .dashboard-container { margin-left:auto; margin-right:auto; width:100%; max-width:1100px; }
+/* Header navigation */
+body.customer-account.ss-layout { padding-left:0; }
+.customer-account #account-nav { display:flex; gap:6px; }
+.customer-account #account-nav[hidden] { display:none; }
+.customer-account #account-nav .ss-btn { white-space:nowrap; }
+.customer-account #account-nav .active { border-color:var(--blue); color:var(--blue); }
+#login-form { scroll-margin-top:76px; }
+.main { display:block; padding-top:12px; }
+.login-container, .dashboard-container, .page { margin-inline:auto; }
+.dashboard-container { width:100%; max-width:1100px; }
 .page { width:100%; }
 
-
-/* Page content next to the shared sidebar */
-#account-nav { display:none !important; }
-.main { padding-top: 12px; }
-.acct-layout .page, .page { margin-left:auto; margin-right:auto; }
-html[data-theme="dark"] .ss-top { background:var(--surface); border-color:var(--line); }
-@media (max-width:900px) { .hero-grid, .lower-grid { grid-template-columns:1fr; } .stat-grid { grid-template-columns:1fr 1fr; } }
-
-/* This page has real dark colours (no inversion), so the shared chrome follows them. */
-html[data-theme="dark"] .ss-top, html[data-theme="dark"] .ss-side { background:var(--surface); border-color:var(--line); }
-html[data-theme="dark"] .ss-logo { color:var(--text); }
-html[data-theme="dark"] .ss-btn { background:var(--surface); border-color:var(--line); color:var(--text); }
-html[data-theme="dark"] .ss-btn:hover { background:var(--surface-2); }
-html[data-theme="dark"] .ss-btn.logout { background:var(--surface-2); color:var(--text); }
-html[data-theme="dark"] .ss-item { color:var(--text); }
-html[data-theme="dark"] .ss-item:hover { background:var(--surface-2); }
-html[data-theme="dark"] .ss-item.active { background:var(--blue); color:#fff; }
-html[data-theme="dark"] .ss-top .language-switch { background:var(--surface-2); }
-html[data-theme="dark"] .ss-top .language-switch button { color:var(--muted); }
-html[data-theme="dark"] .ss-top .language-switch button.selected { background:var(--blue); color:#fff; }
+@media (max-width:1100px) {
+    .customer-account .ss-top:has(#account-nav:not([hidden])) { flex-wrap:wrap; height:110px; padding-block:8px; }
+    .customer-account #account-nav { order:1; flex-basis:100%; overflow-x:auto; }
+    body.customer-account.ss-layout:has(#account-nav:not([hidden])) { padding-top:110px; }
+}
+@media (max-width:900px) {
+    .hero-grid { grid-template-columns:1fr; }
+    .stat-grid { grid-template-columns:1fr 1fr; }
+}

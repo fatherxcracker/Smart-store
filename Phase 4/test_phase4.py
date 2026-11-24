@@ -1,5 +1,5 @@
 """Phase 4 tests: fridge monitoring (Phase 2 inside the store), MSP01 sensor,
-dashboard, CSV export, low-stock limits per category and dark-mode wiring.
+dashboard, CSV export, low-stock limits per category and shared navigation.
 Isolated databases; no real email, MQTT broker, GPIO or Bluetooth."""
 import tempfile
 import unittest
@@ -47,7 +47,7 @@ class FridgeMonitoringTests(Phase4Base):
         for path in ("/monitoring/", "/sensors/", "/reports/dashboard", "/reports/inventory", "/reports/"):
             response = self.client.get(path, follow_redirects=True)
             self.assertEqual(response.status_code, 200, path)
-            self.assertIn(b"theme.js", response.data, path)
+            self.assertIn(b"embedded.js", response.data, path)
 
     def test_warm_reading_creates_one_alert_and_email_with_cooldown(self):
         with patch.object(Monitor, "send_alert_email", return_value=True) as send:
@@ -273,13 +273,18 @@ class ReportFeatureTests(Phase4Base):
 
     def test_purchases_page_has_spending_chart(self):
         self.login(self.member)
-        self.assertIn(b"Spending over time", self.client.get("/reports/purchases").data)
+        response = self.client.get("/reports/purchases")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Spending over time", response.data)
+        self.assertIn(b'class="ss-top" role="banner"', response.data)
+        self.assertIn(b'href="/account#dashboard">Back to dashboard</a>', response.data)
+        self.assertIn(b'id="print-report"', response.data)
 
-    def test_report_pages_offer_french_and_theme(self):
+    def test_report_pages_offer_french(self):
         self.login(self.admin)
         for path in ("/reports/dashboard", "/reports/inventory", "/monitoring/", "/sensors/"):
             data = self.client.get(path).data
-            for marker in (b"i18n.js", b'id="lang-fr"', b'id="theme-toggle"'):
+            for marker in (b"i18n.js", b'id="lang-fr"'):
                 self.assertIn(marker, data, (path, marker))
 
     def test_every_dashboard_text_has_a_french_version(self):
@@ -295,6 +300,10 @@ class ReportFeatureTests(Phase4Base):
         for marker in (b'id="stage"', b"shell.js", b'data-section="notifications"', b'data-section="fridges"',
                        b'data-section="users"', b'data-section="products"', b'data-section="sales"'):
             self.assertIn(marker, page, marker)
+        menu = page.split(b'<aside class="side"', 1)[1].split(b'</aside>', 1)[0]
+        self.assertEqual(menu.count(b'data-section='), 8)
+        self.assertIn(b'data-section="sensor"', menu)
+        self.assertIn(b'data-section="fridges"', menu)
         self.assertEqual(self.client.get("/reports/notifications").status_code, 200)
         self.login(self.member)
         response = self.client.get("/reports/")
@@ -309,23 +318,41 @@ class ReportFeatureTests(Phase4Base):
             self.assertIn(b"nav_shell.js", data, path)
             self.assertIn(b"nav_shell.css", data, path)
         shell = self.client.get("/reports/").data
-        for marker in (b'class="ss-top"', b'class="ss-logo"', b'id="theme-toggle"', b'id="lang-fr"', b'id="logout"'):
+        for marker in (b'class="ss-top"', b'class="ss-logo"', b'id="lang-fr"', b'id="logout"'):
             self.assertIn(marker, shell, marker)
         account = self.client.get("/").data
-        for marker in (b'class="ss-top"', b'class="ss-logo"', b'class="ss-side"', b'data-page="history"'):
+        for marker in (b'class="ss-top"', b'class="ss-logo"', b'id="account-nav"', b'data-page="history"'):
             self.assertIn(marker, account, marker)
 
     def test_embedded_mode_hooks_exist(self):
         root = Path(__file__).parent / "static"
-        self.assertIn("embedded", (root / "theme.js").read_text(encoding="utf-8"))
-        self.assertIn("html.embedded .topbar", (root / "theme.css").read_text(encoding="utf-8"))
+        self.assertIn("embedded", (root / "embedded.js").read_text(encoding="utf-8"))
+        self.assertIn("html.embedded .topbar", (root / "nav_shell.css").read_text(encoding="utf-8"))
         self.assertIn("html.embedded header", (root / "css" / "reports.css").read_text(encoding="utf-8"))
 
-    def test_store_pages_carry_the_theme(self):
-        for path in ("/", "/cart"):
+    def test_account_header_has_sign_in_and_checkout(self):
+        data = self.client.get("/").data
+        top_bar = data.split(b'<header class="ss-top">', 1)[1].split(b'</header>', 1)[0]
+        self.assertIn(b'href="/cart" data-ss="checkout">Self-checkout</a>', top_bar)
+        self.assertEqual(data.count(b'data-ss="checkout"'), 1)
+        self.assertLess(top_bar.index(b'class="ss-logo"'), top_bar.index(b'data-ss="signIn"'))
+        self.assertLess(top_bar.index(b'data-ss="signIn"'), top_bar.index(b'data-ss="checkout"'))
+        for marker in (b'data-page="history"', b'data-page="profile"', b'data-ss="reports"'):
+            self.assertIn(marker, top_bar)
+        dashboard = data.split(b'id="dashboard-page"', 1)[1].split(b'</section>', 1)[0]
+        self.assertIn(b'id="membership-number"', dashboard)
+        self.assertIn(b'id="customer-points"', dashboard)
+        self.assertNotIn(b'id="customer-email"', dashboard)
+        for page in (b'history', b'profile'):
+            section = data.split(b'id="' + page + b'-page"', 1)[1].split(b'</section>', 1)[0]
+            self.assertIn(b'data-page="dashboard"', section)
+
+    def test_store_and_report_pages_use_light_theme(self):
+        self.login(self.admin)
+        for path in ("/", "/cart", "/inventory", "/reports/", "/reports/dashboard", "/monitoring/", "/sensors/"):
             data = self.client.get(path).data
-            self.assertIn(b"theme.js", data, path)
-            self.assertIn(b"theme.css", data, path)
+            for marker in (b"theme.js", b"theme.css", b'id="theme-toggle"'):
+                self.assertNotIn(marker, data, path)
 
 
 if __name__ == "__main__":

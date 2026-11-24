@@ -1,16 +1,12 @@
-/* One sidebar and one top bar for every page.
-   The top bar keeps only the language switch, the dark-mode button, the log-out
-   button and the Smart Store logo; all page navigation lives in the sidebar.
-   Store pages (cart, inventory, users, ...) get both built here, so their old
-   header links are hidden and never have to be kept in step by hand. */
+/* Build the shared header and sidebar for store pages. */
 (function () {
     "use strict";
     var TEXT = {
         en: { account: "MY ACCOUNT", overview: "Overview", history: "Purchase history", reports: "My purchase reports",
-              shop: "Shop", checkout: "Self-checkout", admin: "Administration", dashboard: "Admin dashboard",
+              checkout: "Self-checkout", admin: "Administration", dashboard: "Admin dashboard",
               products: "Products & stock", users: "Users", logout: "Log Out", signIn: "Sign in" },
         fr: { account: "MON COMPTE", overview: "Aperçu", history: "Historique d'achats", reports: "Mes rapports d'achats",
-              shop: "Magasin", checkout: "Caisse libre-service", admin: "Administration", dashboard: "Tableau de bord administrateur",
+              checkout: "Caisse libre-service", admin: "Administration", dashboard: "Tableau de bord administrateur",
               products: "Produits et stock", users: "Utilisateurs", logout: "Déconnexion", signIn: "Se connecter" }
     };
     function lang() { try { return localStorage.getItem("smartstore-language") === "fr" ? "fr" : "en"; } catch (e) { return "en"; } }
@@ -26,13 +22,15 @@
     var top = document.querySelector(".ss-top");
     if (!top) {
         top = el("div", "ss-top");
+        var logo = el("a", "ss-logo");
+        logo.href = "/"; logo.innerHTML = "SMART<br>STORE"; logo.setAttribute("aria-label", "Smart Store");
+        top.appendChild(logo);
+        var signIn = el("a", "ss-btn", tr("signIn"));
+        signIn.href = "/";
+        signIn.dataset.ss = "signIn";
+        top.appendChild(signIn);
         // Keep the page's own language switch (its script is already wired to it).
         var langs = document.querySelector(".language-switch");
-        if (langs) top.appendChild(langs);
-        var theme = document.getElementById("theme-toggle");
-        if (!theme) { theme = el("button", "ss-btn", "Dark mode"); theme.id = "theme-toggle"; theme.type = "button"; }
-        else theme.className = "ss-btn";
-        top.appendChild(theme);
         var out = document.getElementById("logout-button");
         if (!out) {
             out = el("button", "ss-btn logout", tr("logout"));
@@ -43,21 +41,23 @@
             });
         } else out.className = "ss-btn logout";
         top.appendChild(out);
-        var logo = el("a", "ss-logo");
-        logo.href = "/"; logo.innerHTML = "SMART<br>STORE"; logo.setAttribute("aria-label", "Smart Store");
-        top.appendChild(logo);
+        if (langs) top.appendChild(langs);
+        var checkout = el("a", "ss-btn ss-checkout", tr("checkout"));
+        checkout.href = "/cart";
+        checkout.dataset.ss = "checkout";
+        top.appendChild(checkout);
         document.body.insertBefore(top, document.body.firstChild);
     }
 
     var side = document.querySelector(".ss-side");
     var links = [];
-    if (!side) {
+    if (!side && !document.body.classList.contains("customer-account")) {
         side = el("aside", "ss-side");
         side.setAttribute("aria-label", "Menu");
+        side.hidden = true;
         var title = el("p", "ss-title", tr("account")); title.dataset.ss = "account"; side.appendChild(title);
         var items = [["overview", "/#dashboard", "auth"], ["history", "/#history", "auth"], ["reports", "/reports/purchases", "auth"],
-                     ["signIn", "/", "guest"],
-                     ["#shop"], ["checkout", "/cart"], ["#admin", "admin"],
+                     ["#admin", "admin"],
                      ["dashboard", "/reports/", "admin"], ["products", "/inventory", "admin"], ["users", "/admin/users", "admin"]];
         items.forEach(function (item) {
             var node;
@@ -72,7 +72,6 @@
             var flag = item[item.length - 1];
             if (flag === "admin") node.dataset.admin = "1";
             if (flag === "auth") node.dataset.auth = "1";
-            if (flag === "guest") { node.dataset.guest = "1"; node.hidden = true; }
             side.appendChild(node);
             links.push(node);
         });
@@ -88,7 +87,8 @@
     document.body.classList.add("ss-layout");
 
     function labels() {
-        side.querySelectorAll("[data-ss]").forEach(function (node) { node.textContent = tr(node.dataset.ss); });
+        top.querySelectorAll("[data-ss]").forEach(function (node) { node.textContent = tr(node.dataset.ss); });
+        if (side) side.querySelectorAll("[data-ss]").forEach(function (node) { node.textContent = tr(node.dataset.ss); });
         var out = document.getElementById("logout-button");
         if (out && !out.dataset.i18n) out.textContent = tr("logout");
     }
@@ -98,9 +98,13 @@
             .then(function (customer) {
                 var out = document.getElementById("logout-button");
                 if (out && !out.dataset.i18n) out.hidden = !customer;
-                side.querySelectorAll("[data-admin]").forEach(function (node) { node.hidden = !(customer && customer.is_admin); });
+                document.querySelectorAll(".ss-top [data-admin], .ss-side [data-admin]").forEach(function (node) { node.hidden = !(customer && customer.is_admin); });
+                if (!side) return;
                 side.querySelectorAll("[data-auth]").forEach(function (node) { node.hidden = !customer; });
-                side.querySelectorAll("[data-guest]").forEach(function (node) { node.hidden = !!customer; });
+                if (signIn) {
+                    signIn.hidden = !!customer;
+                    side.hidden = !customer;
+                }
             }).catch(function () {});
     }
     ["lang-en", "lang-fr"].forEach(function (id) {
