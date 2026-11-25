@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from email.utils import parseaddr
 
-from flask import Blueprint, Response, abort, current_app, jsonify, render_template, request, session
+from flask import Blueprint, abort, current_app, jsonify, render_template, request, session
 
 import db
 from . import motor_control
@@ -67,6 +67,10 @@ class Monitor:
     @property
     def stale_seconds(self):
         return max(1, int(self.app.config.get("FRIDGE_STALE_SECONDS", _env("FRIDGE_STALE_SECONDS", "30"))))
+
+    @property
+    def alert_ttl_seconds(self):
+        return max(1, int(self.app.config.get("ALERT_TOKEN_TTL_SECONDS", _env("ALERT_TOKEN_TTL_SECONDS", "900"))))
 
     def smtp(self):
         return {
@@ -133,18 +137,46 @@ class Monitor:
             conn.close()
         return token
 
-    def resolve_alert(self, token, status):
-        """(row, just_resolved). Answering the same alert twice does nothing."""
+    def _alert_row(self, conn, token):
+        # SQLite timestamps are UTC. Keep expiry compatible with existing databases.
+        row = conn.execute("""SELECT *, datetime(created_at, ?) AS expires_at,
+                              (julianday(created_at) IS NULL
+                               OR julianday(created_at) > julianday('now')
+                               OR julianday(created_at) <= julianday('now', ?)) AS token_expired
+                              FROM fridge_alerts WHERE token = ?""",
+                           (f"+{self.alert_ttl_seconds} seconds", f"-{self.alert_ttl_seconds} seconds", token)).fetchone()
+        if row is None:
+            return None
+        alert = dict(row)
+        expired = alert.pop("token_expired")
+        if alert["status"] == "pending" and expired:
+            alert["status"] = "expired"
+        return alert
+
+    def get_alert(self, token):
         conn = db.get_connection()
         try:
-            row = conn.execute("SELECT * FROM fridge_alerts WHERE token = ?", (token,)).fetchone()
-            if not row:
-                return None, False
+            return self._alert_row(conn, token)
+        finally:
+            conn.close()
+
+    def resolve_alert(self, token, status):
+        """(row, just_resolved). Expired or already answered alerts cannot act."""
+        if status not in ("confirmed", "declined"):
+            raise ValueError("Unknown alert response.")
+        conn = db.get_connection()
+        try:
+            # Serialize competing email replies/form submissions before checking expiry.
+            conn.execute("BEGIN IMMEDIATE")
+            row = self._alert_row(conn, token)
+            if row is None or row["status"] != "pending":
+                return row, False
             changed = conn.execute(
                 "UPDATE fridge_alerts SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE token = ? AND status = 'pending'",
                 (status, token)).rowcount
+            row = self._alert_row(conn, token)
             conn.commit()
-            return dict(row), bool(changed)
+            return row, bool(changed)
         finally:
             conn.close()
 
@@ -173,7 +205,9 @@ class Monitor:
         body = (f"The current temperature is {temperature:.1f}C in Refrigerator {fridge_id} "
                 f"(above the configured threshold). Would you like to turn on the fan?\n\n"
                 f"Reply to this email with YES to turn on the fan, or NO to leave it off.\n\n"
-                f"(Backup if you can't reply: YES {yes}  |  NO {no})\n")
+                f"Approval expires {self.alert_ttl_seconds / 60:g} minutes after this alert was created.\n"
+                f"Backup links open a confirmation page; opening a link does not operate the fan.\n"
+                f"YES {yes}\nNO {no}\n")
         msg = MIMEText(body)
         msg["Subject"] = f"Smart Store Alert: Refrigerator {fridge_id} temperature is {temperature:.1f}C [ref:{token}]"
         msg["From"] = cfg["user"]
@@ -218,9 +252,12 @@ class Monitor:
 
     def handle_alert_response(self, token, action, source):
         """YES (email reply or backup link) -> fan on. NO -> nothing happens."""
-        action = "yes" if action == "yes" else "no"
+        if action not in ("yes", "no"):
+            raise ValueError("Choose YES or NO.")
         with self.app.app_context():
             row, just_resolved = self.resolve_alert(token, "confirmed" if action == "yes" else "declined")
+            if row is not None:
+                row["just_resolved"] = just_resolved
             if row is None or not just_resolved:
                 return row
             fridge_id, temperature = row["fridge_id"], row["temperature"]
@@ -435,6 +472,9 @@ def require_admin():
 @monitoring_bp.after_request
 def no_store(response):
     response.headers["Cache-Control"] = "private, no-store"
+    if request.endpoint == "monitoring.alert_confirm":
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Frame-Options"] = "DENY"
     return response
 
 
@@ -565,15 +605,29 @@ def api_fan_toggle():
     return jsonify(m.fan)
 
 
-@monitoring_bp.get("/alert/confirm")
+@monitoring_bp.route("/alert/confirm", methods=["GET", "POST"])
 def alert_confirm():
-    token = request.args.get("token", "")
-    action = "yes" if request.args.get("action", "") == "yes" else "no"
-    row = monitor().handle_alert_response(token, action, source="email link")
-    if row is None:
-        return Response("<h1>This alert link isn't valid or has expired.</h1>", mimetype="text/html", status=404)
-    if action == "yes":
-        html = f"<h1>Fan turned on</h1><p>The fan is now running for Refrigerator {int(row['fridge_id'])}. You can close this tab.</p>"
+    values = request.form if request.method == "POST" else request.args
+    token, action = values.get("token", ""), values.get("action", "")
+    if action not in ("yes", "no"):
+        abort(400, "Choose YES or NO using the link in your alert email.")
+    if request.method == "POST":
+        expected = session.get("alert_confirmation_csrf", "")
+        submitted = request.form.get("csrf_token", "")
+        if not expected or not secrets.compare_digest(expected.encode("utf-8"), submitted.encode("utf-8")):
+            abort(403, "Reopen the alert link and confirm your choice on that page.")
+        row = monitor().handle_alert_response(token, action, source="email link")
     else:
-        html = f"<h1>No action taken</h1><p>The fan was left off for Refrigerator {int(row['fridge_id'])}. You can close this tab.</p>"
-    return Response(html, mimetype="text/html")
+        # Email scanners, previews and browser prefetches must never operate the fan.
+        row = monitor().get_alert(token)
+    if row is None:
+        state, code = "invalid", 404
+    elif row["status"] == "expired":
+        state, code = "expired", 410
+    elif row["status"] != "pending":
+        state, code = ("recorded" if row.get("just_resolved") else "answered"), 200
+    else:
+        state, code = "confirm", 200
+        session.setdefault("alert_confirmation_csrf", secrets.token_urlsafe(32))
+    return render_template("alert_confirmation.html", alert=row, action=action, state=state,
+                           csrf_token=session.get("alert_confirmation_csrf", "")), code

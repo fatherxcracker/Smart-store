@@ -8,6 +8,24 @@
     var KEY = "smartstore-language";
 
     var FR = {
+        // fan approval links
+        "Fan approval": "Autorisation du ventilateur", "Confirm your response": "Confirmez votre réponse",
+        "Refrigerator": "Réfrigérateur", "Approval expires at": "L'autorisation expire le",
+        "Confirm to turn on the fan.": "Confirmez pour allumer le ventilateur.",
+        "Confirm to decline this request. The fan will keep its current setting.": "Confirmez pour refuser cette demande. Le réglage du ventilateur restera inchangé.",
+        "Confirm YES — turn on fan": "Confirmer OUI — allumer le ventilateur",
+        "Confirm NO — decline request": "Confirmer NON — refuser la demande",
+        "Closing this page leaves the request unanswered.": "Fermer cette page laisse la demande sans réponse.",
+        "This approval has expired": "Cette autorisation a expiré",
+        "No action was taken. Use a newer alert or the admin dashboard to control the fan.": "Aucune action effectuée. Utilisez une alerte récente ou le tableau de bord administrateur pour commander le ventilateur.",
+        "This alert link is invalid": "Ce lien d'alerte est invalide",
+        "Open the complete link from your alert email.": "Ouvrez le lien complet du courriel d'alerte.",
+        "This alert was already answered": "Cette alerte a déjà reçu une réponse",
+        "This request cannot change the fan again.": "Cette demande ne peut plus modifier le ventilateur.",
+        "Response recorded": "Réponse enregistrée",
+        "Your YES response turned on the fan.": "Votre réponse OUI a allumé le ventilateur.",
+        "Your NO response declined the request. The fan setting was unchanged.": "Votre réponse NON a refusé la demande. Le réglage du ventilateur est resté inchangé.",
+        "You can close this page.": "Vous pouvez fermer cette page.",
         // header and navigation
         "Dashboard & reports": "Tableau de bord et rapports", "Account": "Compte", "Checkout": "Caisse",
         "Manage inventory": "Gérer l'inventaire", "Print / save PDF": "Imprimer / enregistrer en PDF",

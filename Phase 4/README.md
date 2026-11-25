@@ -125,8 +125,8 @@ lost** instead of continuing to show Normal. This applies to both Store overview
 and Fridges & fan; it does not change fan controls or the temperature-alert flow.
 
 1. A DHT11 reading above the fridge's limit creates an alert and sends an email (subject ends with `[ref:...]`). At most one email per fridge every `ALERT_COOLDOWN_SECONDS`.
-2. **Reply YES** to the email: the Pi reads the Gmail inbox (IMAP, every `IMAP_POLL_SECONDS`) and turns the fan on. **Reply NO**: nothing happens. Only the address in `ALERT_RECIPIENT_EMAIL` can answer, and each alert can be answered once.
-3. The email also contains backup YES/NO links (`PUBLIC_BASE_URL`, must be reachable from your phone).
+2. **Reply YES** to the email: the Pi reads the Gmail inbox (IMAP, every `IMAP_POLL_SECONDS`) and turns the fan on. **Reply NO**: nothing happens. Only the address in `ALERT_RECIPIENT_EMAIL` can answer, and each alert can be answered once. Approvals expire after 15 minutes (`ALERT_TOKEN_TTL_SECONDS=900`); expired replies and links cannot operate the fan, including alerts created before this update.
+3. The email also contains backup YES/NO links (`PUBLIC_BASE_URL`, must be reachable from your phone). Opening a link shows a confirmation page; press its confirmation button to submit your choice. Link previews and email scanners cannot activate the fan by opening the link. NO declines that request and leaves the fan's current setting unchanged. Already answered links report that outcome without operating the fan again.
 4. Temperature limits, the fan switch and the PWM speed slider are on **Fridges & fan**. All events also appear in the store's notification log.
 
 ## Minew MSP01 sensor (temperature, humidity, light, motion)

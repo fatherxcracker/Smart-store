@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Fan approval | Smart Store</title>
+    <link rel="stylesheet" href="{{ url_for('reports.static', filename='css/reports.css') }}">
+    <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
+</head>
+<body>
+<header><span class="brand">SMART STORE</span>
+    <span class="langs" role="group" aria-label="Language">
+        <button type="button" id="lang-en" class="ghost" lang="en">EN</button>
+        <button type="button" id="lang-fr" class="ghost" lang="fr">FR</button>
+    </span>
+</header>
+<main><section class="panel">
+{% if state == 'confirm' %}
+    <h1>Confirm your response</h1>
+    <p><span>Refrigerator</span> {{ alert.fridge_id }}: {{ '%.1f'|format(alert.temperature) }} °C</p>
+    <p><span>Approval expires at</span> {{ alert.expires_at|local_time }}</p>
+    {% if action == 'yes' %}
+    <p>Confirm to turn on the fan.</p>
+    {% else %}
+    <p>Confirm to decline this request. The fan will keep its current setting.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('monitoring.alert_confirm') }}">
+        <input type="hidden" name="token" value="{{ alert.token }}">
+        <input type="hidden" name="action" value="{{ action }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit">{{ 'Confirm YES — turn on fan' if action == 'yes' else 'Confirm NO — decline request' }}</button>
+    </form>
+    <p class="note">Closing this page leaves the request unanswered.</p>
+{% elif state == 'expired' %}
+    <h1>This approval has expired</h1>
+    <p>No action was taken. Use a newer alert or the admin dashboard to control the fan.</p>
+{% elif state == 'invalid' %}
+    <h1>This alert link is invalid</h1>
+    <p>Open the complete link from your alert email.</p>
+{% elif state == 'answered' %}
+    <h1>This alert was already answered</h1>
+    <p>This request cannot change the fan again.</p>
+{% else %}
+    <h1>Response recorded</h1>
+    <p>{{ 'Your YES response turned on the fan.' if alert.status == 'confirmed' else 'Your NO response declined the request. The fan setting was unchanged.' }}</p>
+{% endif %}
+{% if state != 'confirm' %}<p>You can close this page.</p>{% endif %}
+</section></main>
+</body>
+</html>
