@@ -1,0 +1,21 @@
+<details class="report-export">
+    <summary>Export</summary>
+    <div class="report-export-options">
+        {% if active == 'inventory' %}
+        <a href="{{ url_for('reports.inventory_report', category=category, format='csv') }}">Download CSV</a>
+        <a href="{{ url_for('reports.inventory_report', category=category, format='xlsx') }}">Download Excel</a>
+        {% elif active == 'sales' and period %}
+        <a href="?{{ dict(request.args, format='csv', table='products') | urlencode }}">Download CSV (products)</a>
+        <a href="?{{ dict(request.args, format='csv', table='daily') | urlencode }}">Download CSV (daily sales)</a>
+        {% elif period %}
+        <a href="?{{ dict(request.args, format='csv') | urlencode }}">Download CSV</a>
+        {% endif %}
+        {% if period %}
+        <a href="?{{ dict(request.args, format='xlsx') | urlencode }}">Download Excel</a>
+        {% endif %}
+        {% if period or active == 'inventory' %}
+        <button type="button" id="download-report-png" data-renderer="{{ url_for('reports.static', filename='vendor/html2canvas-1.4.1.min.js') }}">Download PNG</button>
+        {% endif %}
+        <button type="button" id="print-report">Print / save PDF</button>
+    </div>
+</details>

@@ -8,7 +8,93 @@
 })();
 "use strict";
 
-document.getElementById("print-report")?.addEventListener("click", () => window.print());
+const reportExport = document.querySelector(".report-export");
+if (reportExport) {
+    const summary = reportExport.querySelector("summary");
+    document.addEventListener("click", event => {
+        if (!reportExport.open) return;
+        const option = event.target.closest(".report-export-options a, .report-export-options button");
+        if (option || !reportExport.contains(event.target)) reportExport.open = false;
+        if (option) summary.focus();
+    });
+    reportExport.addEventListener("keydown", event => {
+        if (event.key !== "Escape" || !reportExport.open) return;
+        reportExport.open = false;
+        summary.focus();
+    });
+    document.getElementById("print-report").addEventListener("click", () => window.print());
+    document.getElementById("download-report-png")?.addEventListener("click", downloadReportPng);
+}
+
+function loadPngRenderer(url) {
+    if (window.html2canvas) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = url;
+        script.addEventListener("load", resolve, { once: true });
+        script.addEventListener("error", () => {
+            script.remove();
+            reject(new Error("Could not load the PNG renderer"));
+        }, { once: true });
+        document.head.append(script);
+    });
+}
+
+async function downloadReportPng(event) {
+    const button = event.currentTarget;
+    const status = document.getElementById("report-export-status");
+    const report = document.getElementById("report-content");
+    button.disabled = true;
+    status.textContent = "Preparing PNG…";
+    try {
+        await loadPngRenderer(button.dataset.renderer);
+        const options = {
+            logging: false,
+            windowWidth: Math.max(window.innerWidth, 960),
+            onclone(doc, snapshot) {
+                snapshot.classList.add("report-png-snapshot");
+                const title = doc.createElement("h1");
+                title.textContent = document.querySelector("main h1").textContent;
+                snapshot.prepend(title);
+                if (snapshot.dataset.exportContext) {
+                    const context = doc.createElement("p");
+                    context.className = "note";
+                    context.textContent = snapshot.dataset.exportContext;
+                    title.after(context);
+                }
+
+                // The renderer serializes SVGs as images, so chart styles must travel with them.
+                for (const part of snapshot.querySelectorAll(".chart svg :is(line, polyline, circle, text)")) {
+                    const style = doc.defaultView.getComputedStyle(part);
+                    for (const property of ["fill", "stroke", "stroke-width", "font-size", "font-family"]) {
+                        part.style.setProperty(property, style.getPropertyValue(property));
+                    }
+                }
+
+                const { width, height } = snapshot.getBoundingClientRect();
+                // Bound both the canvas dimensions and the amount of pixel memory.
+                options.scale = Math.min(1.5, 16000 / Math.max(width, height), Math.sqrt(12_000_000 / (width * height)));
+            }
+        };
+        const canvas = await window.html2canvas(report, options);
+        const png = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if (!png) throw new Error("Could not encode the PNG");
+        const download = document.createElement("a");
+        const url = URL.createObjectURL(png);
+        download.href = url;
+        download.download = `smart-store-${document.body.dataset.section}.png`;
+        document.body.append(download);
+        download.click();
+        download.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+        status.textContent = "";
+    } catch {
+        status.textContent = "PNG download failed. Try again or choose another format.";
+    } finally {
+        button.disabled = false;
+    }
+}
+
 document.getElementById("report-logout")?.addEventListener("click", async event => {
     const button = event.currentTarget;
     const response = await fetch("/api/account/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);

@@ -1,7 +1,7 @@
 {% extends 'reports/base.html' %}
 {% block filters %}
 <form method="get" class="filters"><label>Category <select name="category"><option value="">All categories</option>{% for value in data.categories %}<option {% if value==category %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label><button>Apply filter</button>
-<a class="export" href="{{ url_for('reports.inventory_report', category=category, format='csv') }}">Download CSV</a></form>
+{% include 'reports/_export.html' %}</form>
 {% if saved %}<p class="banner ok" role="status">{{ saved }}</p>{% endif %}{% if error %}<p class="banner bad" role="alert">{{ error }}</p>{% endif %}
 {% endblock %}
 {% block content %}

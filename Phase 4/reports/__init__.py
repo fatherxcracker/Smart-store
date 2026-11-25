@@ -82,8 +82,9 @@ def inventory_report():
     category = request.args.get("category", "").strip()
     with snapshot() as conn:
         data = inventory.generate(conn, category)
-    if request.args.get("format") == "csv":
-        return exports.inventory_csv(data, lambda v: report_time(v) if v else "Never")
+    fmt = request.args.get("format")
+    if fmt in exports.FORMATS:
+        return exports.inventory_export(fmt, data, lambda v: report_time(v) if v else "Never")
     return render_template("reports/inventory.html", data=data, category=category, title="Inventory report", active="inventory",
                            saved=request.args.get("saved", ""), error=request.args.get("error", ""))
 
@@ -120,12 +121,13 @@ def filtered_report(kind, title, active):
             except ValueError:
                 raise ValueError("Choose a valid product.")
             data = purchases.generate(conn, period, session["customer_id"], request.args.get("q", "").strip(), product_id)
-    if request.args.get("format") == "csv":
+    fmt = request.args.get("format")
+    if fmt in exports.FORMATS:
         if kind == "sales":
-            return exports.sales_csv(data, period, request.args.get("table", "products"))
+            return exports.sales_export(fmt, data, period, request.args.get("table", "products"))
         if kind == "customers":
-            return exports.customers_csv(data, period)
-        return exports.purchases_csv(data, report_time, period)
+            return exports.customers_export(fmt, data, period)
+        return exports.purchases_export(fmt, data, report_time, period)
     return render_template(f"reports/{kind}.html", data=data, period=period, limit=limit,
                            title=title, active=active, timezone=current_app.config["REPORT_TIMEZONE"])
 
