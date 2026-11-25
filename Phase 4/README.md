@@ -46,6 +46,12 @@ Open `http://<pi-ip>:5003`. The first start creates `smartstore.db` with the sam
 
 Mosquitto must be running for the fridges (`sudo systemctl status mosquitto`), and the ESP32 sketches in `esp32/` publish to topics `Frig1` and `Frig2` (wiring and Wi-Fi setup: `Phase 2/README.md`). The app still starts without the broker; the fridge tiles just say "Waiting for data".
 
+MQTT connects in the background and retries automatically if the broker is
+unavailable at startup or disconnects later. Retry delays increase from 1 second
+to a maximum of 30 seconds. When the broker returns, the app resubscribes to both
+fridge topics and the configured MSP01 topic without an app restart. Rejected
+connections stay disconnected; stopping the app also stops retries.
+
 ### Windows (testing without hardware)
 
 ```powershell
@@ -165,15 +171,6 @@ See the [Phase 4 ER diagram](docs/ER_diagram.png) and its [Mermaid source](docs/
 - Price charts show the unit price actually paid, not today's catalog price.
 - Days include the whole local day in `REPORT_TIMEZONE` (default `America/Toronto`). Maximum period: 366 days.
 - Stock = number of unsold RFID tags of the product (every item has its own EPC).
-
-## Tests
-
-```bash
-python -m unittest -v test_reports test_phase4 test_checkout
-python test_database.py                                         # 53 checks
-```
-
-They use temporary databases and never send email, open the MQTT broker, drive the GPIO pins or use Bluetooth.
 
 ## Known limits
 

@@ -314,6 +314,10 @@ class Monitor:
 
     # ---------------------------------------------------------------------- MQTT
     def on_connect(self, client, userdata, flags, reason_code, properties=None):
+        if reason_code != 0:
+            self.mqtt_connected = False
+            print(f"[mqtt] Connection rejected (reason={reason_code}); retrying in the background.")
+            return
         self.mqtt_connected = True
         print(f"[mqtt] Connected (reason={reason_code})")
         for topic in list(MQTT_TOPICS) + [_env("MSP01_MQTT_TOPIC", "MSP01")]:
@@ -321,6 +325,10 @@ class Monitor:
 
     def on_disconnect(self, client, userdata, *args, **kwargs):
         self.mqtt_connected = False
+
+    def on_connect_fail(self, client, userdata):
+        self.mqtt_connected = False
+        print("[mqtt] Broker unavailable; retrying in the background (up to 30s between attempts).")
 
     def on_message(self, client, userdata, msg):
         try:
@@ -359,13 +367,18 @@ class Monitor:
         host, port = _env("MQTT_BROKER_HOST", "localhost"), int(_env("MQTT_BROKER_PORT", "1883"))
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="smart-store-phase4")
         client.on_connect, client.on_message, client.on_disconnect = self.on_connect, self.on_message, self.on_disconnect
+        client.on_connect_fail = self.on_connect_fail
+        client.reconnect_delay_set(min_delay=1, max_delay=30)
         try:
-            client.connect(host, port, keepalive=60)
-            client.loop_start()
+            # The background loop retries even when the very first connection fails.
+            client.connect_async(host, port, keepalive=60)
             self.mqtt_client = client
+            client.loop_start()
         except Exception as error:
-            print(f"[mqtt] Could not connect to broker at {host}:{port} ({error})")
-            print("[mqtt] The app still runs; readings appear when the broker is reachable.")
+            client.disconnect()
+            client.loop_stop()
+            self.mqtt_client = None
+            print(f"[mqtt] Could not start MQTT for {host}:{port} ({error}); check MQTT configuration.")
 
     def start(self):
         self.start_mqtt()
@@ -376,7 +389,9 @@ class Monitor:
     def shutdown(self):
         self.stop.set()
         if self.mqtt_client is not None:
+            self.mqtt_client.disconnect()
             self.mqtt_client.loop_stop()
+        self.mqtt_connected = False
         motor_control.cleanup()
 
 
