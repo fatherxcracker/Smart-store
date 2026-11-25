@@ -8,7 +8,16 @@
 .ss-btn { border: 1px solid var(--line, light-dark(#e5eaf2, #303d51)); background: var(--surface, light-dark(#fff, #171f2d)); color: var(--text, light-dark(#171b26, #eef3fb)); border-radius: 10px; padding: 9px 14px; font: 600 .8rem Inter, system-ui, sans-serif; cursor: pointer; }
 .ss-top a.ss-btn { text-decoration: none; text-align: center; }
 .ss-btn:hover { background: var(--surface-2, light-dark(#f0f3f9, #222d3e)); }
-.ss-btn.logout { background: var(--black, #101218); border-color: var(--black, #101218); color: #fff; font-weight: 700; }
+.ss-btn.logout, body .app > .topbar .ss-btn.logout {
+    background: #c34b55;
+    border-color: #c34b55;
+    color: #fff;
+    font-weight: 700;
+}
+.ss-btn.logout:hover, body .app > .topbar .ss-btn.logout:hover {
+    background: #a93743;
+    border-color: #a93743;
+}
 .ss-top .language-switch { display: flex; background: var(--surface-2, light-dark(#f0f3f9, #222d3e)); border-radius: 10px; padding: 3px; height: 38px; }
 .ss-top .language-switch button { border: 0; background: transparent; color: var(--muted, light-dark(#737e91, #b3bfd2)); font: 700 .8rem Inter, system-ui, sans-serif; padding: 0 14px; border-radius: 8px; cursor: pointer; }
 .ss-top .language-switch button.selected, .ss-top .language-switch button[aria-pressed="true"] { background: var(--blue, #1769ff); color: #fff; }
