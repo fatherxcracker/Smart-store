@@ -110,6 +110,14 @@ Every report accepts `?format=csv` (the "Download CSV" link). Sales and customer
 
 ## The fridge alert flow (Phase 2)
 
+Fridge readings are shown as **Offline (stale)** after `FRIDGE_STALE_SECONDS`
+(default 30 seconds) without an update. The last temperature, humidity and full
+reading timestamp stay visible for reference. A fridge with no readings shows
+**Waiting for data**. The next fresh reading automatically restores Normal or
+Too warm. If the browser cannot reach the app, fridge badges show **Connection
+lost** instead of continuing to show Normal. This applies to both Store overview
+and Fridges & fan; it does not change fan controls or the temperature-alert flow.
+
 1. A DHT11 reading above the fridge's limit creates an alert and sends an email (subject ends with `[ref:...]`). At most one email per fridge every `ALERT_COOLDOWN_SECONDS`.
 2. **Reply YES** to the email: the Pi reads the Gmail inbox (IMAP, every `IMAP_POLL_SECONDS`) and turns the fan on. **Reply NO**: nothing happens. Only the address in `ALERT_RECIPIENT_EMAIL` can answer, and each alert can be answered once.
 3. The email also contains backup YES/NO links (`PUBLIC_BASE_URL`, must be reachable from your phone).

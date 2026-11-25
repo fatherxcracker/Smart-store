@@ -24,9 +24,11 @@ function renderDashboard(d) {
         for (const [id, r] of Object.entries(d.fridges.readings)) {
             const tile = el("article");
             tile.append(el("span", "", `Refrigerator ${id}`), el("strong", "", number(r.temperature, 1, " °C")));
-            const pill = el("span", "pill " + (r.temperature === null ? "" : r.status === "warning" ? "low" : "good"),
-                r.temperature === null ? "Waiting for data" : r.status === "warning" ? "Too warm" : "Normal");
+            const status = fridgeStatus(r);
+            const pill = el("span", "pill " + status.level, status.text);
+            pill.dataset.fridgeStatus = id;
             tile.append(pill, el("small", "", `Humidity ${number(r.humidity, 0, " %")} · limit ${number(r.threshold, 1, " °C")}`));
+            tile.append(el("small", "", fridgeUpdated(r)));
             tiles.append(tile);
         }
         const fan = el("article");
@@ -51,10 +53,11 @@ function renderDashboard(d) {
 async function loadDashboard() {
     try {
         const response = await fetch("/reports/api/dashboard", { credentials: "same-origin", cache: "no-store" });
-        if (response.status === 401 || response.status === 403) { setText("dash-status", "Log in again as an administrator."); return; }
+        if (response.status === 401 || response.status === 403) { markFridgeConnectionLost(); setText("dash-status", "Log in again as an administrator."); return; }
         if (!response.ok) throw new Error();
         renderDashboard(await response.json());
     } catch {
+        markFridgeConnectionLost();
         setText("dash-status", "Could not refresh. Retrying shortly.");
     }
     setTimeout(loadDashboard, 5000);

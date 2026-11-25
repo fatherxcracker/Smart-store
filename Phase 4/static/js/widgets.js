@@ -29,6 +29,25 @@ function number(value, digits = 1, unit = "") {
 
 function setText(id, text) { const node = $(id); if (node) node.textContent = text; }
 
+function fridgeStatus(reading) {
+    if (reading.temperature === null || reading.status === "waiting") return {text:"Waiting for data", level:""};
+    if (!reading.online || reading.status === "offline") return {text:"Offline (stale)", level:"low"};
+    return reading.status === "warning" ? {text:"Too warm", level:"low"} : {text:"Normal", level:"good"};
+}
+
+function fridgeUpdated(reading) {
+    if (!reading.updated_at) return "No reading received yet.";
+    const stamp = new Date(reading.updated_at);
+    return Number.isNaN(stamp.getTime()) ? "Last reading time unavailable." : `Last reading: ${stamp.toLocaleString()}`;
+}
+
+function markFridgeConnectionLost() {
+    for (const pill of document.querySelectorAll("[data-fridge-status], #status1, #status2")) {
+        pill.textContent = "Connection lost";
+        pill.className = "pill low";
+    }
+}
+
 /* The MSP01 tiles are used on both the dashboard and the sensor page. */
 function renderSensor(data, prefix) {
     const online = data.online;

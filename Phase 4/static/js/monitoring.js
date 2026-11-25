@@ -28,11 +28,12 @@ async function refreshReadings() {
             setText("temp" + id, number(r.temperature, 1, " °C"));
             setText("humidity" + id, number(r.humidity, 1, " %"));
             const pill = $("status" + id);
-            pill.textContent = r.temperature === null ? "Waiting for data" : r.status === "warning" ? "Too warm" : "Normal";
-            pill.className = "pill " + (r.temperature === null ? "" : r.status === "warning" ? "low" : "good");
-            setText("updated" + id, r.updated_at ? `Updated ${new Date(r.updated_at).toLocaleTimeString()}` : "No reading received yet.");
+            const status = fridgeStatus(r);
+            pill.textContent = status.text;
+            pill.className = "pill " + status.level;
+            setText("updated" + id, fridgeUpdated(r));
         }
-    } catch (error) { console.error("Readings:", error); }
+    } catch (error) { markFridgeConnectionLost(); console.error("Readings:", error); }
 }
 
 async function loadThresholds() {

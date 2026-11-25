@@ -2,6 +2,7 @@
 dashboard, CSV export, low-stock limits per category and shared navigation.
 Isolated databases; no real email, MQTT broker, GPIO or Bluetooth."""
 from contextlib import closing
+from datetime import datetime, timedelta, timezone
 import tempfile
 import unittest
 from pathlib import Path
@@ -129,6 +130,75 @@ class FridgeMonitoringTests(Phase4Base):
             self.monitor.handle_reading(1, 15.0, 50)
         messages = [n["message_en"] for n in db.get_notifications(10)]
         self.assertTrue(any("Temperature alert" in m for m in messages))
+
+    def fridge_payload_at(self, now):
+        with patch("monitoring.datetime", wraps=datetime) as clock:
+            clock.now.return_value = now
+            return self.client.get("/monitoring/api/readings").get_json()
+
+    def test_fridges_with_no_data_are_waiting_not_normal(self):
+        self.login(self.admin)
+        payload = self.client.get("/monitoring/api/readings").get_json()
+        for reading in payload.values():
+            self.assertEqual(reading["status"], "waiting")
+            self.assertFalse(reading["online"])
+            self.assertIsNone(reading["age_seconds"])
+
+    def test_stale_cool_and_warm_readings_are_both_offline(self):
+        self.login(self.admin)
+        self.app.config["FRIDGE_STALE_SECONDS"] = 60
+        now = datetime(2026, 11, 25, 15, tzinfo=timezone.utc)
+        stamp = (now - timedelta(seconds=61)).isoformat()
+        for fridge, temperature in ((1, 4.0), (2, 15.0)):
+            self.monitor.latest[fridge] = {"temperature": temperature, "humidity": 45, "updated_at": stamp}
+        payload = self.fridge_payload_at(now)
+        for fridge, temperature in (("1", 4.0), ("2", 15.0)):
+            self.assertEqual(payload[fridge]["status"], "offline")
+            self.assertFalse(payload[fridge]["online"])
+            self.assertEqual(payload[fridge]["temperature"], temperature)
+            self.assertEqual(payload[fridge]["updated_at"], stamp)
+            self.assertEqual(payload[fridge]["age_seconds"], 61)
+            self.assertEqual(payload[fridge]["stale_after_seconds"], 60)
+        with patch("monitoring.datetime", wraps=datetime) as clock:
+            clock.now.return_value = now
+            dashboard = self.client.get("/reports/api/dashboard").get_json()
+        self.assertEqual(dashboard["fridges"]["readings"]["1"]["status"], "offline")
+
+    def test_each_fridge_has_its_own_timeout_and_fresh_warm_state(self):
+        self.login(self.admin)
+        self.app.config["FRIDGE_STALE_SECONDS"] = 30
+        now = datetime(2026, 11, 25, 15, tzinfo=timezone.utc)
+        self.monitor.latest[1] = {"temperature": 4.0, "humidity": 40, "updated_at": (now - timedelta(seconds=31)).isoformat()}
+        self.monitor.latest[2] = {"temperature": 15.0, "humidity": 45, "updated_at": now.isoformat()}
+        payload = self.fridge_payload_at(now)
+        self.assertEqual(payload["1"]["status"], "offline")
+        self.assertEqual(payload["2"]["status"], "warning")
+        self.assertTrue(payload["2"]["online"])
+
+    def test_timeout_boundary_and_recovery_with_new_utc_reading(self):
+        self.login(self.admin)
+        self.app.config["FRIDGE_STALE_SECONDS"] = 10
+        now = datetime(2026, 11, 25, 15, tzinfo=timezone.utc)
+        self.monitor.latest[1] = {"temperature": 4.0, "humidity": 40, "updated_at": (now - timedelta(seconds=10)).isoformat()}
+        self.assertEqual(self.fridge_payload_at(now)["1"]["status"], "normal")
+        self.assertEqual(self.fridge_payload_at(now + timedelta(seconds=1))["1"]["status"], "offline")
+        with patch("monitoring.datetime", wraps=datetime) as clock:
+            clock.now.return_value = now + timedelta(seconds=2)
+            self.monitor.handle_reading(1, 5.0, 42)
+        reading = self.fridge_payload_at(now + timedelta(seconds=2))["1"]
+        self.assertEqual(reading["status"], "normal")
+        self.assertEqual(reading["temperature"], 5.0)
+        self.assertEqual(reading["age_seconds"], 0)
+        self.assertEqual(datetime.fromisoformat(reading["updated_at"]).utcoffset(), timedelta(0))
+
+    def test_missing_or_invalid_reading_time_is_not_treated_as_live(self):
+        self.login(self.admin)
+        for stamp in (None, "not-a-date"):
+            with self.subTest(stamp=stamp):
+                self.monitor.latest[1] = {"temperature": 4.0, "humidity": 40, "updated_at": stamp}
+                reading = self.client.get("/monitoring/api/readings").get_json()["1"]
+                self.assertEqual(reading["status"], "offline")
+                self.assertFalse(reading["online"])
 
 
 class SensorTests(Phase4Base):

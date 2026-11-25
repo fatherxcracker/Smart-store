@@ -64,6 +64,10 @@ class Monitor:
     def history_seconds(self):
         return int(self.app.config.get("FRIDGE_HISTORY_SECONDS", _env("FRIDGE_HISTORY_SECONDS", "30")))
 
+    @property
+    def stale_seconds(self):
+        return max(1, int(self.app.config.get("FRIDGE_STALE_SECONDS", _env("FRIDGE_STALE_SECONDS", "30"))))
+
     def smtp(self):
         return {
             "host": _env("SMTP_HOST", "smtp.gmail.com"), "port": int(_env("SMTP_PORT", "587")),
@@ -190,7 +194,7 @@ class Monitor:
         """One DHT11 reading: remember it, store it, and alert if it is too warm."""
         with self.lock:
             self.latest[fridge_id] = {"temperature": temperature, "humidity": humidity,
-                                      "updated_at": datetime.now().isoformat(timespec="seconds")}
+                                      "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
         with self.app.app_context():
             self.store_reading(fridge_id, temperature, humidity)
             threshold = self.get_threshold(fridge_id)
@@ -429,10 +433,27 @@ def readings_payload():
     out = {}
     with m.lock:
         snapshot = {f: dict(r) for f, r in m.latest.items()}
+    now = datetime.now(timezone.utc)
+    stale_after = m.stale_seconds
     for fridge_id, reading in snapshot.items():
         threshold = m.get_threshold(fridge_id)
+        age = None
+        if reading["updated_at"]:
+            try:
+                received = datetime.fromisoformat(reading["updated_at"])
+                # Support an older in-memory timestamp without a UTC offset.
+                if received.tzinfo is None:
+                    received = received.astimezone()
+                age = max(0, (now - received).total_seconds())
+            except (ValueError, TypeError):
+                pass
+        has_reading = reading["temperature"] is not None
+        online = has_reading and age is not None and age <= stale_after
         warm = reading["temperature"] is not None and reading["temperature"] > threshold
-        out[fridge_id] = {**reading, "threshold": threshold, "status": "warning" if warm else "normal"}
+        status = "waiting" if not has_reading else "offline" if not online else "warning" if warm else "normal"
+        out[fridge_id] = {**reading, "threshold": threshold, "status": status,
+                          "online": online, "age_seconds": None if age is None else int(age),
+                          "stale_after_seconds": stale_after}
     return out
 
 

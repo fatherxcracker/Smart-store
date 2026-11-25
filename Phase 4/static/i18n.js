@@ -68,6 +68,7 @@
         "Open sensor page": "Ouvrir la page du capteur", "Temperature": "Température", "Humidity": "Humidité",
         "Light intensity": "Intensité lumineuse", "Motion": "Mouvement", "Sensor status": "État du capteur",
         "Online": "En ligne", "No data yet": "Pas encore de données", "Offline (stale)": "Hors ligne (données périmées)",
+        "Connection lost": "Connexion perdue", "Last reading time unavailable.": "Heure du dernier relevé indisponible.",
         "Motion detected": "Mouvement détecté", "No motion": "Aucun mouvement", "No motion yet": "Aucun mouvement pour l'instant",
         "Simulated": "Simulation", "Includes simulated data": "Inclut des données simulées",
         "Simulated (stale)": "Simulation (données périmées)", "Offline (includes simulated data)": "Hors ligne (inclut des données simulées)",
@@ -157,6 +158,7 @@
 
     // Texts with numbers or names inside: [pattern, replacement]
     var RULES = [
+        [/^Last reading: (.+)$/, "Dernier relevé : $1"],
         [/^Signed in as (.*)$/, "Connecté en tant que $1"],
         [/^Dates include the whole selected day in (.+)\. Maximum period: 366 days\.$/, "Les dates incluent toute la journée sélectionnée (fuseau : $1). Période maximale : 366 jours."],
         [/^Updated (.+) · refreshes every 5 seconds$/, "Mis à jour à $1 · actualisation toutes les 5 secondes"],
