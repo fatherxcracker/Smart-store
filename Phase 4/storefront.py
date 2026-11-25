@@ -636,12 +636,14 @@ def create_app(config=None):
     # Reads every tag on the reader at once (CDC mode) for "Assign several tags"
     @app.get("/api/rfid/read-all")
     def read_all_rfid_tags():
-        try:
-            product_id = int(request.args.get("product_id", ""))
-        except ValueError:
-            return jsonify(success=False, message="Unknown product."), 400
-        if not db.get_product(product_id):
-            return jsonify(success=False, message="Unknown product."), 404
+        product_id = None
+        if request.args.get("product_id"):
+            try:
+                product_id = int(request.args["product_id"])
+            except ValueError:
+                return jsonify(success=False, message="Unknown product."), 400
+            if not db.get_product(product_id):
+                return jsonify(success=False, message="Unknown product."), 404
         try:
             epcs = rfid_reader.read_tags()
         except rfid_reader.RFIDError as error:
