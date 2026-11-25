@@ -17,24 +17,30 @@
         updateButton();
     }
 
-    try {
-        setTheme(localStorage.getItem(key));
-    } catch {
-        setTheme("light");
+    function restoreTheme() {
+        try {
+            setTheme(localStorage.getItem(key));
+        } catch {
+            setTheme(root.dataset.theme);
+        }
     }
+
+    restoreTheme();
+    window.addEventListener("pageshow", event => {
+        if (event.persisted) restoreTheme();
+    });
     window.addEventListener("storage", event => {
-        if (event.key === key) setTheme(event.newValue);
+        if (event.key === key || event.key === null) restoreTheme();
     });
 
     document.addEventListener("DOMContentLoaded", () => {
         if (root.classList.contains("embedded")) return;
         const header = document.querySelector(".ss-top") ||
             document.querySelector("header nav") || document.querySelector("header");
-        if (!header) return;
+        const template = document.getElementById("theme-toggle-template");
+        if (!header || !template) return;
 
-        button = document.createElement("button");
-        button.type = "button";
-        button.className = "ss-btn theme-toggle";
+        button = template.content.firstElementChild.cloneNode(true);
         const language = header.querySelector(".language-switch, .langs");
         if (language) language.after(button);
         else header.append(button);
