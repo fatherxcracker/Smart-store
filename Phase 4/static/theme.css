@@ -2,6 +2,14 @@ html[data-theme="light"] { color-scheme: light; }
 html[data-theme="dark"] { color-scheme: dark; }
 
 @media screen {
+    .ss-top .language-switch button:is(.selected, [aria-pressed="true"]),
+    .langs button:is(.active, [aria-pressed="true"]),
+    body .app > .topbar .language-switch button.selected {
+        background: #23804b;
+        border-color: #23804b;
+        color: #fff;
+    }
+
     .theme-toggle {
         display: inline-flex;
         flex: none;
