@@ -54,6 +54,7 @@ class Monitor:
         self.mqtt_connected = False
         self.threads = []
         self.stop = threading.Event()
+        self.active_admin = None  # (email, monotonic time) of the admin who last used the store
 
     # ---------------------------------------------------------------- settings
     @property
@@ -71,6 +72,19 @@ class Monitor:
     @property
     def alert_ttl_seconds(self):
         return max(1, int(self.app.config.get("ALERT_TOKEN_TTL_SECONDS", _env("ALERT_TOKEN_TTL_SECONDS", "900"))))
+
+    def note_admin_activity(self, email):
+        """Called on every request from a logged-in admin."""
+        if email:
+            self.active_admin = (email.strip().lower(), time.monotonic())
+
+    def alert_recipient(self):
+        """The admin who is logged in and used the store in the last
+        ALERT_ACTIVE_ADMIN_MINUTES (default 30); otherwise ALERT_RECIPIENT_EMAIL from .env."""
+        minutes = float(_env("ALERT_ACTIVE_ADMIN_MINUTES", "30"))
+        if self.active_admin and time.monotonic() - self.active_admin[1] <= minutes * 60:
+            return self.active_admin[0]
+        return _env("ALERT_RECIPIENT_EMAIL") or _env("SMTP_EMAIL")
 
     def smtp(self):
         return {
@@ -126,16 +140,31 @@ class Monitor:
         created = datetime.fromisoformat(row["created_at"]).replace(tzinfo=timezone.utc)
         return (datetime.now(timezone.utc) - created).total_seconds() < self.cooldown
 
-    def create_alert(self, fridge_id, temperature):
+    def create_alert(self, fridge_id, temperature, recipient=None):
         token = secrets.token_urlsafe(16)
         conn = db.get_connection()
         try:
-            conn.execute("INSERT INTO fridge_alerts (fridge_id, temperature, token) VALUES (?, ?, ?)",
-                         (fridge_id, temperature, token))
+            conn.execute("INSERT INTO fridge_alerts (fridge_id, temperature, token, recipient) VALUES (?, ?, ?, ?)",
+                         (fridge_id, temperature, token, recipient))
             conn.commit()
         finally:
             conn.close()
         return token
+
+    def is_pending(self, token):
+        """True while the alert can still be answered (not answered, not expired)."""
+        alert = self.get_alert(token)
+        return bool(alert) and alert["status"] == "pending"
+
+    def recipient_of(self, token):
+        """Email address an alert was sent to (older alerts: the .env address)."""
+        conn = db.get_connection()
+        try:
+            row = conn.execute("SELECT recipient FROM fridge_alerts WHERE token = ?", (token,)).fetchone()
+        finally:
+            conn.close()
+        recipient = row["recipient"] if row and row["recipient"] else self.smtp()["to"]
+        return (recipient or "").lower()
 
     def _alert_row(self, conn, token):
         # SQLite timestamps are UTC. Keep expiry compatible with existing databases.
@@ -195,8 +224,10 @@ class Monitor:
             conn.close()
 
     # --------------------------------------------------------------------- email
-    def send_alert_email(self, fridge_id, temperature, token):
+    def send_alert_email(self, fridge_id, temperature, token, recipient=None):
         cfg = self.smtp()
+        if recipient:
+            cfg["to"] = recipient
         if not cfg["user"] or not cfg["password"] or not cfg["to"]:
             print("[email] SMTP_EMAIL / SMTP_APP_PASSWORD / ALERT_RECIPIENT_EMAIL not set in .env - skipping send.")
             return False
@@ -204,7 +235,8 @@ class Monitor:
         no = f"{cfg['base']}/monitoring/alert/confirm?token={token}&action=no"
         body = (f"The current temperature is {temperature:.1f}C in Refrigerator {fridge_id} "
                 f"(above the configured threshold). Would you like to turn on the fan?\n\n"
-                f"Reply to this email with YES to turn on the fan, or NO to leave it off.\n\n"
+                f"Reply to this email with YES (in ALL CAPS) to turn on the fan, or NO (in ALL CAPS) to leave it off.\n"
+                f"Write only YES or NO on the first line of your reply.\n\n"
                 f"Approval expires {self.alert_ttl_seconds / 60:g} minutes after this alert was created.\n"
                 f"Backup links open a confirmation page; opening a link does not operate the fan.\n"
                 f"YES {yes}\nNO {no}\n")
@@ -217,7 +249,7 @@ class Monitor:
                 server.starttls()
                 server.login(cfg["user"], cfg["password"])
                 server.send_message(msg)
-            print(f"[email] Alert sent for fridge {fridge_id} ({temperature:.1f}C)")
+            print(f"[email] Alert sent to {cfg['to']} for fridge {fridge_id} ({temperature:.1f}C)")
             return True
         except Exception as error:
             print(f"[email] Failed to send alert: {error}")
@@ -233,8 +265,9 @@ class Monitor:
             self.store_reading(fridge_id, temperature, humidity)
             threshold = self.get_threshold(fridge_id)
             if temperature > threshold and not self.recent_alert(fridge_id):
-                token = self.create_alert(fridge_id, temperature)
-                sent = self.send_alert_email(fridge_id, temperature, token)
+                recipient = self.alert_recipient()
+                token = self.create_alert(fridge_id, temperature, recipient)
+                sent = self.send_alert_email(fridge_id, temperature, token, recipient)
                 tail = "Email sent - waiting for a response." if sent else "The alert email could not be sent (check .env SMTP settings)."
                 self.add_notification(
                     fridge_id,
@@ -310,19 +343,24 @@ class Monitor:
         try:
             mail.login(cfg["user"], cfg["password"])
             mail.select("INBOX")
-            status, data = mail.search(None, '(UNSEEN SUBJECT "ref:")')
+            # Read or unread doesn't matter: if the store's Gmail is open somewhere,
+            # Gmail marks replies as read before we see them. Look at every alert reply
+            # from the last 2 days instead; only pending alerts are acted on, and an
+            # alert can only be answered once (resolve_alert).
+            since = (datetime.now() - timedelta(days=2)).strftime("%d-%b-%Y")
+            status, data = mail.search(None, f'(SINCE {since} SUBJECT "ref:")')
             if status != "OK":
                 return
             for num in data[0].split():
-                status, msg_data = mail.fetch(num, "(RFC822)")
+                status, msg_data = mail.fetch(num, "(BODY.PEEK[])")
                 if status != "OK" or not msg_data or not isinstance(msg_data[0], tuple):
                     continue
                 message = email.message_from_bytes(msg_data[0][1])
                 subject = str(email.header.make_header(email.header.decode_header(message.get("Subject", ""))))
                 match = REF_PATTERN.search(subject)
-                if not match:
+                if not match or not self.is_pending(match.group(1)):
                     continue
-                if parseaddr(message.get("From", ""))[1].lower() != cfg["to"].lower():
+                if parseaddr(message.get("From", ""))[1].lower() != self.recipient_of(match.group(1)):
                     continue  # only the person the alert was sent to may answer
                 answer = self.parse_reply_answer(self.plain_text(message))
                 if answer is None:
@@ -456,6 +494,17 @@ def monitor_shutdown(app):
 # ---------------------------------------------------------------------- routes
 def _current_user():
     return db.get_customer(session["customer_id"]) if session.get("customer_id") else None
+
+
+@monitoring_bp.before_app_request
+def remember_active_admin():
+    """Temperature alerts go to the admin who is currently using the store."""
+    monitor = current_app.extensions.get("monitor")
+    if monitor is None or not session.get("customer_id"):
+        return
+    user = _current_user()
+    if user and user.get("is_admin"):
+        monitor.note_admin_activity(user.get("email"))
 
 
 @monitoring_bp.before_request

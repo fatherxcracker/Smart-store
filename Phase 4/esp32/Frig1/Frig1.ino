@@ -19,7 +19,7 @@ const char* ssid = "wifi network";
 const char* password = "passwd";
 
 // --- Raspberry Pi MQTT broker IP address (edit: run `hostname -I` on the Pi) ---
-const char* mqtt_server = "ip";
+const char* mqtt_server = "172.20.10.11";
 
 // --- Identity for THIS board - do not change between boards except here ---
 const char* mqtt_topic = "Frig1";

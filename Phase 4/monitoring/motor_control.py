@@ -11,8 +11,48 @@ IN2 = 17   # L293D IN2: direction
 DEFAULT_DUTY_CYCLE = 40  # percent; adjust as needed (0-100)
 PWM_FREQUENCY = 1000     # Hz
 
+def _use_header_gpio_chip():
+    """Point gpiozero at the gpiochip that drives the 40-pin header.
+
+    gpiozero 2.0.1 only tries gpiochip4 (Pi 5) or gpiochip0. On newer Pi 5
+    kernels the header chip ("pinctrl-rp1") can have another number
+    (gpiochip15 on our Pi), so gpiozero finds no pins and the fan silently
+    falls back to the mock driver. Needs the lgpio package in the venv.
+    """
+    import glob
+    import lgpio
+    from gpiozero import Device
+    from gpiozero.pins.lgpio import LGPIOFactory, LGPIOPin
+    from gpiozero.pins.local import LocalPiFactory
+
+    for path in sorted(glob.glob("/dev/gpiochip*")):
+        number = int(path.removeprefix("/dev/gpiochip"))
+        try:
+            handle = lgpio.gpiochip_open(number)
+        except lgpio.error:
+            continue
+        label = lgpio.gpio_get_chip_info(handle)[3]
+        if label == "pinctrl-rp1" or label.startswith("pinctrl-bcm"):
+            class HeaderFactory(LGPIOFactory):
+                def __init__(self):
+                    LocalPiFactory.__init__(self)
+                    self._handle = handle
+                    self._chip = number
+                    self.pin_class = LGPIOPin
+
+            Device.pin_factory = HeaderFactory()
+            print(f"[hardware] Using {path} ({label}) for the GPIO header.")
+            return
+        lgpio.gpiochip_close(handle)
+
+
 try:
     from gpiozero import OutputDevice, PWMOutputDevice
+
+    try:
+        _use_header_gpio_chip()
+    except ImportError:
+        pass  # no lgpio: let gpiozero pick its default pin factory
 
     enable = PWMOutputDevice(
         EN1,

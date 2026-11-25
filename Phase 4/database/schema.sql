@@ -162,6 +162,7 @@ CREATE TABLE IF NOT EXISTS fridge_alerts (
     fridge_id   INTEGER NOT NULL,
     temperature REAL NOT NULL,
     token       TEXT NOT NULL UNIQUE,
+    recipient   TEXT,                -- who the email went to (only they may answer)
     status      TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'declined')),
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP
