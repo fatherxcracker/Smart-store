@@ -399,4 +399,4 @@ button:hover {
     color: #172b4d;
     cursor: pointer;
 }
-.language-choice button[aria-pressed="true"] { background: #23804b; color: #fff; }
+.language-choice button[aria-pressed="true"] { background: #288550; color: #fff; }

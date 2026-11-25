@@ -5,8 +5,8 @@ html[data-theme="dark"] { color-scheme: dark; }
     .ss-top .language-switch button:is(.selected, [aria-pressed="true"]),
     .langs button:is(.active, [aria-pressed="true"]),
     body .app > .topbar .language-switch button.selected {
-        background: #23804b;
-        border-color: #23804b;
+        background: #288550;
+        border-color: #288550;
         color: #fff;
     }
 
