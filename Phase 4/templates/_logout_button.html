@@ -1,0 +1,1 @@
+<button type="button" id="{{ logout_id|default('logout-button') }}" class="ss-btn logout"{% if not logout_id %} data-i18n="logout" hidden{% elif logout_id == 'report-logout' %} data-home="{{ url_for('home') }}"{% endif %}>Log Out</button>

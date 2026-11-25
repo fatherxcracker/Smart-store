@@ -47,7 +47,7 @@
             <a class="ss-btn" href="{{ url_for('reports.index') }}" data-admin="1" data-ss="dashboard" hidden>Admin dashboard</a>
         </nav>
         <a class="ss-btn" id="header-sign-in" href="#login-form" data-ss="signIn">Sign in</a>
-        <button id="logout-button" class="ss-btn logout" type="button" data-i18n="logout" hidden>Log Out</button>
+        {% include '_logout_button.html' %}
         <div class="language-switch">
             <button id="lang-en" class="selected" type="button">EN</button>
             <button id="lang-fr" type="button">FR</button>

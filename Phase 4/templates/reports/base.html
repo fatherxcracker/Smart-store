@@ -21,7 +21,7 @@
 {% if active == 'purchases' %}
 <div class="ss-top" role="banner">
     <a class="ss-logo" href="{{ url_for('home') }}#dashboard" aria-label="Smart Store">SMART<br>STORE</a>
-    <button type="button" id="report-logout" class="ss-btn logout" data-home="{{ url_for('home') }}">Log Out</button>
+    {% with logout_id = 'report-logout' %}{% include '_logout_button.html' %}{% endwith %}
     <div class="language-switch" role="group" aria-label="Language">
         <button type="button" id="lang-en" lang="en">EN</button>
         <button type="button" id="lang-fr" lang="fr">FR</button>

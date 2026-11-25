@@ -14,7 +14,7 @@
 <body class="shell-body">
 <div class="ss-top">
 <a class="ss-logo" href="{{ url_for('reports.index') }}" aria-label="Smart Store">SMART<br>STORE</a>
-<button type="button" id="logout" class="ss-btn logout">Log Out</button>
+{% with logout_id = 'logout' %}{% include '_logout_button.html' %}{% endwith %}
 <span class="langs" role="group" aria-label="Language"><button type="button" id="lang-en" class="ghost" lang="en">EN</button><button type="button" id="lang-fr" class="ghost" lang="fr">FR</button></span>
 <a class="ss-btn ss-checkout" href="#checkout" data-section="checkout" data-src="{{ url_for('shopping_cart') }}">Self-checkout</a>
 </div>
