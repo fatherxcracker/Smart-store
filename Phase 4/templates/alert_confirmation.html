@@ -16,12 +16,16 @@
     </span>
 </header>
 <main><section class="panel">
+{% if state in ('confirm', 'recorded') and fan.hardware_mode == 'mock' %}
+    <p><span class="pill moderate">Simulation mode</span></p>
+    <p>Fan controls are simulated. No physical fan is controlled.</p>
+{% endif %}
 {% if state == 'confirm' %}
     <h1>Confirm your response</h1>
     <p><span>Refrigerator</span> {{ alert.fridge_id }}: {{ '%.1f'|format(alert.temperature) }} °C</p>
     <p><span>Approval expires at</span> {{ alert.expires_at|local_time }}</p>
     {% if action == 'yes' %}
-    <p>Confirm to turn on the fan.</p>
+    <p>{{ 'Confirm to simulate turning on the fan.' if fan.hardware_mode == 'mock' else 'Confirm to turn on the fan.' }}</p>
     {% else %}
     <p>Confirm to decline this request. The fan will keep its current setting.</p>
     {% endif %}
@@ -29,7 +33,7 @@
         <input type="hidden" name="token" value="{{ alert.token }}">
         <input type="hidden" name="action" value="{{ action }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit">{{ 'Confirm YES — turn on fan' if action == 'yes' else 'Confirm NO — decline request' }}</button>
+        <button type="submit">{{ ('Confirm YES — simulate fan' if fan.hardware_mode == 'mock' else 'Confirm YES — turn on fan') if action == 'yes' else 'Confirm NO — decline request' }}</button>
     </form>
     <p class="note">Closing this page leaves the request unanswered.</p>
 {% elif state == 'expired' %}
@@ -43,7 +47,11 @@
     <p>This request cannot change the fan again.</p>
 {% else %}
     <h1>Response recorded</h1>
-    <p>{{ 'Your YES response turned on the fan.' if alert.status == 'confirmed' else 'Your NO response declined the request. The fan setting was unchanged.' }}</p>
+    {% if alert.status == 'confirmed' %}
+    <p>{{ 'Your YES response started the simulated fan.' if fan.hardware_mode == 'mock' else 'Your YES response turned on the fan.' }}</p>
+    {% else %}
+    <p>Your NO response declined the request. The fan setting was unchanged.</p>
+    {% endif %}
 {% endif %}
 {% if state != 'confirm' %}<p>You can close this page.</p>{% endif %}
 </section></main>

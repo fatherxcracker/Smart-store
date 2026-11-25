@@ -32,7 +32,10 @@ function renderDashboard(d) {
             tiles.append(tile);
         }
         const fan = el("article");
-        fan.append(el("span", "", "Fan"), el("strong", "", d.fridges.fan.status),
+        fan.dataset.fan = "";
+        const presentation = fanPresentation(d.fridges.fan);
+        fan.append(el("span", "", "Fan"), el("strong", "", presentation.status),
+            el("span", "pill " + presentation.level, presentation.mode), el("small", "", presentation.note),
             el("small", "", `${d.fridges.fan.duty_cycle}% duty cycle · MQTT ${d.fridges.mqtt ? "connected" : "not connected"}`));
         tiles.append(fan);
     }

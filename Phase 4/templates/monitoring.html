@@ -16,11 +16,13 @@
 </article>
 {% endfor %}
 </section>
-<section class="panel fan-panel"><h2>Fan control <span class="pill" id="fanStatus">OFF</span></h2>
+<section class="panel fan-panel"><h2>Fan control <span class="pill" id="fanStatus">{{ fan.status }}{{ ' (simulated)' if fan.hardware_mode == 'mock' else '' }}</span></h2>
+<p><span class="pill {{ 'moderate' if fan.hardware_mode == 'mock' else '' }}" id="fanMode">{{ 'Simulation mode' if fan.hardware_mode == 'mock' else 'Hardware control' }}</span></p>
+<p class="note" id="fanModeNote">{{ 'Fan controls are simulated. No physical fan is controlled.' if fan.hardware_mode == 'mock' else 'Commands are sent to the fan hardware.' }}</p>
 <div class="fan-row">
 <svg id="fanIcon" class="fan-icon" viewBox="0 0 100 100" role="img" aria-label="Fan"><circle cx="50" cy="50" r="46" class="fan-ring"/><g class="fan-blades"><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z"/><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(120 50 50)"/><path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z" transform="rotate(240 50 50)"/></g><circle cx="50" cy="50" r="7" class="fan-hub"/></svg>
 <div><strong class="big" id="rpmDisplay">0%</strong><span class="note"> duty cycle</span>
-<p><button type="button" id="powerButton">Turn ON</button></p>
+<p><button type="button" id="powerButton">{{ 'Simulate ON' if fan.hardware_mode == 'mock' else 'Turn ON' }}</button></p>
 <label class="stack">Speed <span id="speedValue">40% duty cycle</span><input type="range" id="fanSlider" min="0" max="100" step="5" value="40" disabled></label></div>
 </div></section>
 <section class="panel"><h2>Alerts and notifications</h2><ul class="plain" id="notifications"><li>No active alerts.</li></ul></section>

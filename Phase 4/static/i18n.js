@@ -8,6 +8,17 @@
     var KEY = "smartstore-language";
 
     var FR = {
+        // fan driver mode
+        "Simulation mode": "Mode simulation", "Hardware control": "Commande matérielle",
+        "Fan controls are simulated. No physical fan is controlled.": "Les commandes du ventilateur sont simulées. Aucun ventilateur physique n'est commandé.",
+        "Commands are sent to the fan hardware.": "Les commandes sont envoyées au matériel du ventilateur.",
+        "ON (simulated)": "ALLUMÉ (simulation)", "OFF (simulated)": "ÉTEINT (simulation)",
+        "Simulate ON": "Simuler l'allumage", "Simulate OFF": "Simuler l'arrêt",
+        "Status unavailable": "État indisponible", "Mode unavailable": "Mode indisponible",
+        "Fan control mode is unavailable.": "Le mode de commande du ventilateur est indisponible.",
+        "Confirm to simulate turning on the fan.": "Confirmez pour simuler l'allumage du ventilateur.",
+        "Confirm YES — simulate fan": "Confirmer OUI — simuler le ventilateur",
+        "Your YES response started the simulated fan.": "Votre réponse OUI a démarré le ventilateur simulé.",
         // fan approval links
         "Fan approval": "Autorisation du ventilateur", "Confirm your response": "Confirmez votre réponse",
         "Refrigerator": "Réfrigérateur", "Approval expires at": "L'autorisation expire le",
@@ -222,6 +233,7 @@
         var trimmed = text.trim();
         if (!trimmed) return text;
         var lead = text.slice(0, text.indexOf(trimmed)), tail = text.slice(text.indexOf(trimmed) + trimmed.length);
+        if (trimmed.indexOf("Simulation: ") === 0) return lead + "Simulation : " + translate(trimmed.slice("Simulation: ".length)) + tail;
         var found = FR[trimmed];
         if (found === undefined) {
             for (var i = 0; i < RULES.length; i++) {

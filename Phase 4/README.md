@@ -129,6 +129,13 @@ and Fridges & fan; it does not change fan controls or the temperature-alert flow
 3. The email also contains backup YES/NO links (`PUBLIC_BASE_URL`, must be reachable from your phone). Opening a link shows a confirmation page; press its confirmation button to submit your choice. Link previews and email scanners cannot activate the fan by opening the link. NO declines that request and leaves the fan's current setting unchanged. Already answered links report that outcome without operating the fan again.
 4. Temperature limits, the fan switch and the PWM speed slider are on **Fridges & fan**. All events also appear in the store's notification log.
 
+When GPIO is unavailable, the app uses its mock motor driver. **Store overview**
+and **Fridges & fan** show **Simulation mode** and label ON/OFF as simulated.
+The controls still work for demonstrations, but do not control a physical fan.
+Fan notifications, alert emails and the approval page also identify simulation.
+With the real GPIO driver, the pages show **Hardware control**; ON/OFF represents
+the commanded state, not a measurement of whether the fan is physically spinning.
+
 ## Minew MSP01 sensor (temperature, humidity, light, motion)
 
 1. Configure the sensor with the **BeaconSET+** app so it advertises temperature, humidity, illuminance and motion. The reelyActive guide describes the steps: https://reelyactive.github.io/diy/minew-msp01-config/

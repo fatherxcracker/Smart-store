@@ -233,11 +233,14 @@ class Monitor:
             return False
         yes = f"{cfg['base']}/monitoring/alert/confirm?token={token}&action=yes"
         no = f"{cfg['base']}/monitoring/alert/confirm?token={token}&action=no"
+        mode_note = ("Simulation mode: fan commands do not control a physical fan.\n"
+                     if motor_control.HARDWARE_MODE == "mock" else "")
         body = (f"The current temperature is {temperature:.1f}C in Refrigerator {fridge_id} "
                 f"(above the configured threshold). Would you like to turn on the fan?\n\n"
                 f"Reply to this email with YES (in ALL CAPS) to turn on the fan, or NO (in ALL CAPS) to leave it off.\n"
                 f"Write only YES or NO on the first line of your reply.\n\n"
                 f"Approval expires {self.alert_ttl_seconds / 60:g} minutes after this alert was created.\n"
+                f"{mode_note}"
                 f"Backup links open a confirmation page; opening a link does not operate the fan.\n"
                 f"YES {yes}\nNO {no}\n")
         msg = MIMEText(body)
@@ -276,6 +279,16 @@ class Monitor:
                     f"Alerte de température : le réfrigérateur {fridge_id} est à {temperature:.1f}C (seuil {threshold:.1f}C).")
 
     # ----------------------------------------------------------------------- fan
+    def fan_payload(self):
+        """Commanded fan state and the driver actually handling those commands."""
+        return {**self.fan, "hardware_mode": motor_control.HARDWARE_MODE}
+
+    def add_fan_notification(self, fridge_id, message, level="info", message_fr=None):
+        if motor_control.HARDWARE_MODE == "mock":
+            message_fr = "Simulation : " + (message_fr or message)
+            message = "Simulation: " + message
+        self.add_notification(fridge_id, message, level, message_fr)
+
     def start_fan(self):
         duty = self.fan["duty_cycle"] or motor_control.DEFAULT_DUTY_CYCLE
         self.fan["duty_cycle"] = duty
@@ -296,7 +309,7 @@ class Monitor:
             fridge_id, temperature = row["fridge_id"], row["temperature"]
             if action == "yes":
                 duty = self.start_fan()
-                self.add_notification(
+                self.add_fan_notification(
                     fridge_id, f"User replied YES ({source}) - fan turned ON at {duty}% (Refrigerator {fridge_id} was {temperature:.1f}C).",
                     "success", f"Réponse OUI ({source}) - ventilateur allumé à {duty} % (réfrigérateur {fridge_id} : {temperature:.1f}C).")
             else:
@@ -529,7 +542,8 @@ def no_store(response):
 
 @monitoring_bp.get("/")
 def page():
-    return render_template("monitoring.html", title="Fridges & fan", active="monitoring", no_refresh=True)
+    return render_template("monitoring.html", title="Fridges & fan", active="monitoring", no_refresh=True,
+                           fan=monitor().fan_payload())
 
 
 def readings_payload():
@@ -617,7 +631,7 @@ def api_notifications():
 
 @monitoring_bp.get("/api/fan/status")
 def api_fan_status():
-    return jsonify(monitor().fan)
+    return jsonify(monitor().fan_payload())
 
 
 @monitoring_bp.post("/api/fan/speed")
@@ -635,8 +649,8 @@ def api_fan_speed():
         motor_control.set_fan_speed(duty)
         if duty == 0:
             m.fan["status"] = "OFF"
-        m.add_notification(None, f"Fan duty cycle set to {duty}%.", "info", f"Vitesse du ventilateur réglée à {duty} %.")
-    return jsonify(success=True, **m.fan)
+        m.add_fan_notification(None, f"Fan duty cycle set to {duty}%.", "info", f"Vitesse du ventilateur réglée à {duty} %.")
+    return jsonify(success=True, **m.fan_payload())
 
 
 @monitoring_bp.post("/api/fan/toggle")
@@ -644,14 +658,14 @@ def api_fan_toggle():
     m = monitor()
     if m.fan["status"] == "OFF":
         duty = m.start_fan()
-        m.add_notification(None, f"Fan turned ON manually at {duty}% duty cycle.", "info",
+        m.add_fan_notification(None, f"Fan turned ON manually at {duty}% duty cycle.", "info",
                            f"Ventilateur allumé manuellement à {duty} %.")
     else:
         motor_control.fan_off()
         m.fan["status"] = "OFF"
-        m.add_notification(None, "Fan turned OFF manually from the dashboard.", "info",
+        m.add_fan_notification(None, "Fan turned OFF manually from the dashboard.", "info",
                            "Ventilateur éteint manuellement depuis le tableau de bord.")
-    return jsonify(m.fan)
+    return jsonify(m.fan_payload())
 
 
 @monitoring_bp.route("/alert/confirm", methods=["GET", "POST"])
@@ -679,4 +693,4 @@ def alert_confirm():
         state, code = "confirm", 200
         session.setdefault("alert_confirmation_csrf", secrets.token_urlsafe(32))
     return render_template("alert_confirmation.html", alert=row, action=action, state=state,
-                           csrf_token=session.get("alert_confirmation_csrf", "")), code
+                           csrf_token=session.get("alert_confirmation_csrf", ""), fan=monitor().fan_payload()), code

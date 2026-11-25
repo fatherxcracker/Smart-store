@@ -18,7 +18,7 @@ def generate(conn, app):
     monitor = app.extensions.get("monitor")
     if monitor is not None:
         from monitoring import readings_payload
-        fridges = {"readings": readings_payload(), "fan": dict(monitor.fan), "mqtt": monitor.mqtt_connected}
+        fridges = {"readings": readings_payload(), "fan": monitor.fan_payload(), "mqtt": monitor.mqtt_connected}
     notes = db.get_notifications(8)
     return {
         "today": {"date": today.isoformat(), "total": day["totals"]["total"], "orders": day["orders"],

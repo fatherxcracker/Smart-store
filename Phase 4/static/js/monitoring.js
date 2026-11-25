@@ -58,10 +58,14 @@ async function refreshHistory() {
 
 function applyFan(state) {
     fanIsOn = state.status === "ON";
-    setText("fanStatus", state.status);
-    $("fanStatus").className = "pill " + (fanIsOn ? "good" : "");
+    const presentation = fanPresentation(state);
+    setText("fanStatus", presentation.status);
+    $("fanStatus").className = "pill " + (presentation.level || (fanIsOn ? "good" : ""));
+    setText("fanMode", presentation.mode);
+    $("fanMode").className = "pill " + presentation.level;
+    setText("fanModeNote", presentation.note);
     $("fanIcon").classList.toggle("spinning", fanIsOn);
-    setText("powerButton", fanIsOn ? "Turn OFF" : "Turn ON");
+    setText("powerButton", state.hardware_mode === "mock" ? (fanIsOn ? "Simulate OFF" : "Simulate ON") : (fanIsOn ? "Turn OFF" : "Turn ON"));
     const slider = $("fanSlider");
     slider.disabled = !fanIsOn;
     if (!sliderBusy && state.duty_cycle !== undefined) slider.value = state.duty_cycle;
@@ -82,7 +86,7 @@ async function refreshNotifications() {
         for (const n of items) {
             const item = el("li", "note-" + n.level);
             item.append(el("span", "pill " + (n.level === "warning" ? "low" : n.level === "success" ? "good" : ""), n.level),
-                document.createTextNode(` [${new Date(n.created_at).toLocaleTimeString()}] ${n.message}`));
+                document.createTextNode(` [${new Date(n.created_at).toLocaleTimeString()}] `), el("span", "", n.message));
             list.append(item);
         }
     } catch (error) { console.error("Notifications:", error); }

@@ -29,6 +29,17 @@ function number(value, digits = 1, unit = "") {
 
 function setText(id, text) { const node = $(id); if (node) node.textContent = text; }
 
+function fanPresentation(state) {
+    if (state.hardware_mode === "mock") return {
+        status: state.status === "ON" ? "ON (simulated)" : "OFF (simulated)",
+        mode: "Simulation mode", note: "Fan controls are simulated. No physical fan is controlled.", level: "moderate"
+    };
+    if (state.hardware_mode === "real") return {
+        status: state.status, mode: "Hardware control", note: "Commands are sent to the fan hardware.", level: ""
+    };
+    return {status: "Status unavailable", mode: "Mode unavailable", note: "Fan control mode is unavailable.", level: "low"};
+}
+
 function fridgeStatus(reading) {
     if (reading.temperature === null || reading.status === "waiting") return {text:"Waiting for data", level:""};
     if (!reading.online || reading.status === "offline") return {text:"Offline (stale)", level:"low"};
