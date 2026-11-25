@@ -171,11 +171,14 @@ def build_receipt_html(receipt, lang=None):
   <p style="margin:2px 0">{L['date']}: {_date(receipt['created_at'])}</p>
   <p style="margin:2px 0 12px">{L['member']}: {member}</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <thead>
     <tr style="border-bottom:1px solid #cbd5e1;text-align:left">
       <th style="padding:6px 0">{L['item']}</th><th>{L['qty']}</th>
       <th style="text-align:right">{L['price']}</th><th style="text-align:right">{L['amount']}</th>
     </tr>
-    {rows}
+    </thead>
+    <tbody>{rows}</tbody>
+    <tfoot>
     <tr><td colspan="4" style="border-top:1px solid #cbd5e1"></td></tr>
     {total_row(L['subtotal'], _money(receipt['subtotal'], lang))}
     {points_rows}
@@ -183,6 +186,7 @@ def build_receipt_html(receipt, lang=None):
     {total_row(L['qst'], _money(receipt['qst'], lang))}
     {total_row(L['total'], _money(receipt['total'], lang), bold=True)}
     {total_row(L['payment'], escape(receipt['payment_method'].upper()))}
+    </tfoot>
   </table>
   {points_html}
   <p style="margin-top:20px;color:#64748b">{L['thanks']}</p>

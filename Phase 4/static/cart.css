@@ -51,8 +51,8 @@
 }
 
 .cart-table th {
-    background: #f0f4fa;
-    color: #526079;
+    background: light-dark(#f0f4fa, #222d3e);
+    color: light-dark(#526079, #b3bfd2);
     font-size: 11px;
     font-weight: 800;
 }
@@ -127,7 +127,7 @@
 }
 
 .cart-grand-total dd {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     font-weight: 800;
 }
 
@@ -147,7 +147,7 @@
 
 .cart-summary .secondary-button:disabled:hover {
     border-color: var(--border);
-    color: var(--black);
+    color: light-dark(var(--black), #f2f5fb);
 }
 
 .cart-payment-note {
@@ -190,7 +190,7 @@
     min-width: 0;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: #fbfcfe;
+    background: light-dark(#fbfcfe, #131b28);
     padding: 12px 14px;
 }
 
@@ -200,9 +200,9 @@
 }
 
 .cart-remove {
-    background: #fff0f0;
-    color: #a32929;
-    border: 1px solid #f4d4d4;
+    background: light-dark(#fff0f0, #382129);
+    color: light-dark(#a32929, #ffb8bd);
+    border: 1px solid light-dark(#f4d4d4, #6d3c47);
     border-radius: 7px;
     padding: 8px 12px;
     font: inherit;
@@ -211,7 +211,7 @@
 
 .cart-unavailable {
     display: block;
-    color: #a32929;
+    color: light-dark(#a32929, #ffb8bd);
     font-size: 11px;
     margin-top: 6px;
 }
@@ -230,7 +230,7 @@
     padding: 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: #fbfcfe;
+    background: light-dark(#fbfcfe, #131b28);
     color: var(--text);
     font: inherit;
 }
@@ -271,7 +271,7 @@
     width: 100%;
     height: 620px;
     border: 0;
-    background: white;
+    background: light-dark(white, #171f2d);
 }
 
 #cart-message {
@@ -286,23 +286,23 @@
     padding: 14px 18px;
     margin-bottom: 22px;
     border-radius: 9px;
-    background: #eaf2ff;
-    color: #154da5;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
 }
 
 #cart-message[data-level="error"] {
-    background: #fff0f0;
-    color: #a32929;
+    background: light-dark(#fff0f0, #382129);
+    color: light-dark(#a32929, #ffb8bd);
 }
 
 #cart-message[data-level="success"] {
-    background: #e8f6ee;
-    color: #215739;
+    background: light-dark(#e8f6ee, #1b382f);
+    color: light-dark(#215739, #a6e6c6);
 }
 
 #cart-message[data-level="warning"] {
-    background: #fff7e0;
-    color: #805b08;
+    background: light-dark(#fff7e0, #463419);
+    color: light-dark(#805b08, #f9d487);
 }
 
 @media (max-width: 850px) {

@@ -27,6 +27,9 @@
     <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    {% include '_theme.html' %}
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -121,7 +124,7 @@
 
 
     <!-- Main user management content -->
-    <main class="inventory-main users-main">
+    <main id="user-management" class="inventory-main users-main">
 
         <a class="back-button stock-back" href="{{ url_for('inventory') }}" data-i18n="backInventory">
             ← Back to Products &amp; stock

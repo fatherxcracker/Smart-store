@@ -12,6 +12,9 @@
     <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    {% include '_theme.html' %}
 </head>
 <body data-home-url="{{ url_for('home') }}">
 <!-- Contains whole website -->
@@ -113,7 +116,7 @@
             <p class="form-error" role="alert">{{ error }}</p>
         {% endif %}
 
-        <div class="tags-content">
+        <div class="tags-content" data-screen-sections>
             <!-- Main way to add stock: scan every tag on the reader at once (CDC mode), then add the new ones -->
             <form method="post" class="product-form tags-form bulk-tags-form" id="bulk-tags-form"
                   action="{{ url_for('assign_product_tags_bulk', product_id=product.id) }}"
@@ -130,7 +133,7 @@
                 <input type="hidden" name="language" value="en">
                 <button id="read-all-tags" type="button" data-i18n="scanAll">Scan tags on reader</button>
                 <p id="bulk-status" class="tag-status" role="status" aria-live="polite"></p>
-                <ul id="bulk-tag-list" class="bulk-tag-list" hidden></ul>
+                <ul id="bulk-tag-list" data-page-list="4" class="bulk-tag-list" hidden></ul>
                 <button id="bulk-assign" type="submit" class="save-button" hidden></button>
             </form>
 

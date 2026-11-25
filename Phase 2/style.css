@@ -44,12 +44,6 @@ main {
   padding: 0 20px;
 }
 
-.fridge-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 25px;
-}
-
 .fridge-card, .panel {
   background: white;
   border-radius: 16px;
@@ -60,6 +54,29 @@ main {
 
 .fridge-card h2 {
   margin-top: 0;
+}
+
+@media screen and (min-width: 601px) {
+  main.screen-fit {
+    margin-block: 14px;
+  }
+
+  .dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 14px;
+  }
+
+  .screen-fit :is(.fridge-card, .panel) {
+    margin-bottom: 0;
+    padding: 16px;
+  }
+
+  .screen-fit .gauges { margin-block: 12px; }
+  .screen-fit .gauge { width: 110px; height: 110px; }
+  .screen-fit .fan-display { padding: 8px; }
+  .screen-fit .fan-icon { width: 75px; height: 75px; }
 }
 
 /* Four circular gauges */
@@ -181,10 +198,6 @@ button:hover {
 
 /* Smaller screens */
 @media (max-width: 750px) {
-  .fridge-grid {
-    grid-template-columns: 1fr;
-  }
-
   header {
     flex-direction: column;
     align-items: flex-start;

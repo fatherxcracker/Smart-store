@@ -1,0 +1,55 @@
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
+@media screen {
+    .theme-toggle {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        min-height: 36px;
+        padding: 5px 10px;
+        border: 1px solid light-dark(#e5eaf2, #303d51);
+        border-radius: 10px;
+        color: light-dark(#171b26, #eef3fb);
+        background: light-dark(#fff, #171f2d);
+        font: 600 .8rem Inter, system-ui, sans-serif;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .theme-toggle:hover { background: light-dark(#f0f3f9, #222d3e); }
+    .theme-toggle:focus-visible { outline: 2px solid light-dark(#1769ff, #92bcff); outline-offset: 2px; }
+
+    html[data-theme="dark"] body[data-fit-screen] {
+        background: #171f2d;
+        color: #eef3fb;
+    }
+
+    html[data-theme="dark"] body[data-fit-screen] > div {
+        color: #eef3fb !important;
+    }
+
+    html[data-theme="dark"] body[data-fit-screen] > div > h2 {
+        color: #a6e6c6 !important;
+    }
+
+    html[data-theme="dark"] body[data-fit-screen] > div > p {
+        color: #b3bfd2 !important;
+    }
+}
+
+@media screen and (max-width: 750px) {
+    .theme-toggle { padding-inline: 6px; }
+}
+
+@media screen and (max-width: 450px) {
+    .ss-top:has(.theme-toggle) { gap: 4px; padding-inline: 8px; }
+    .ss-top:has(.theme-toggle) .ss-btn { padding-inline: 6px; }
+}
+
+@media print {
+    html[data-theme] { color-scheme: light; }
+    .theme-toggle { display: none; }
+}

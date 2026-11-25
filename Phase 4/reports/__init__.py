@@ -92,11 +92,13 @@ def inventory_report():
 @report_pages.post("/inventory/limits")
 def save_low_stock_limit():
     category = request.form.get("category", "")
+    report_category = request.form.get("report_category") or None
     try:
         value = db.set_category_threshold(category, request.form.get("low_stock", ""))
     except db.DatabaseError as error:
-        return redirect(url_for("reports.inventory_report", error=str(error)))
-    return redirect(url_for("reports.inventory_report", saved=f"{category}: low stock is now below {value} units."))
+        return redirect(url_for("reports.inventory_report", view="limits", category=report_category, error=str(error)))
+    return redirect(url_for("reports.inventory_report", view="limits", category=report_category,
+                            saved=f"{category}: low stock is now below {value} units."))
 
 
 def filtered_report(kind, title, active):

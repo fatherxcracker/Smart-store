@@ -8,10 +8,10 @@
     --blue-hover: #0954db;
     --black: #101218;
     --white: #ffffff;
-    --background: #f6f8fc;
-    --text: #171b26;
-    --muted: #737e91;
-    --border: #e5eaf2;
+    --background: light-dark(#f6f8fc, #0f1521);
+    --text: light-dark(#171b26, #eef3fb);
+    --muted: light-dark(#737e91, #b3bfd2);
+    --border: light-dark(#e5eaf2, #303d51);
 }
 
 /* Makes padding and borders part of element sizes */
@@ -79,7 +79,7 @@ body .app > .topbar {
     align-items: center !important;
     justify-content: space-between !important;
     gap: 10px !important;
-    background: white;
+    background: light-dark(white, #171f2d);
     border-bottom: 1px solid var(--border);
     flex-wrap: nowrap !important;
     overflow: visible !important;
@@ -120,7 +120,7 @@ body .app > .topbar .brand strong {
     font-weight: 800;
     letter-spacing: .7px;
     line-height: 1.15;
-    color: var(--black);
+    color: light-dark(var(--black), #f2f5fb);
     max-width: 95px;
 }
 
@@ -163,7 +163,7 @@ body .app > .topbar .nav-link {
     padding: 7px 1px !important;
     background: transparent;
     border: none;
-    color: #566176;
+    color: light-dark(#566176, #b3bfd2);
     text-decoration: none;
     font-size: 11px !important;
     font-weight: 600;
@@ -175,7 +175,7 @@ body .app > .topbar .nav-link {
 /* Highlights navigation on hover */
 body .app > .topbar .nav-link:hover,
 body .app > .topbar .nav-link.active {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
 }
 
 /* Styles language switch */
@@ -185,7 +185,7 @@ body .app > .topbar .language-switch {
     flex-shrink: 0;
     height: 38px !important;
     padding: 3px !important;
-    background: #f0f3f8;
+    background: light-dark(#f0f3f8, #222d3e);
     border-radius: 9px;
 }
 
@@ -195,7 +195,7 @@ body .app > .topbar .language-switch button {
     height: 32px !important;
     padding: 6px !important;
     background: transparent;
-    color: #6d7687;
+    color: light-dark(#6d7687, #b3bfd2);
     border: none;
     border-radius: 7px;
     font-size: 11px !important;
@@ -279,7 +279,7 @@ body .app > .topbar [hidden] {
 
 /* Styles small blue headings */
 .eyebrow {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     font-size: 10px;
     letter-spacing: 1.6px;
     font-weight: 800;
@@ -304,7 +304,7 @@ body .app > .topbar [hidden] {
 
 /* Creates login card */
 .login-card {
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 30px 34px;
@@ -342,9 +342,9 @@ body .app > .topbar [hidden] {
 /* Styles form inputs */
 .login-card input {
     height: 44px;
-    border: 1px solid #dce3ed;
+    border: 1px solid light-dark(#dce3ed, #303d51);
     border-radius: 8px;
-    background: #fbfcfe;
+    background: light-dark(#fbfcfe, #131b28);
     padding: 0 13px;
     margin-bottom: 17px;
     outline: none;
@@ -353,7 +353,7 @@ body .app > .topbar [hidden] {
 /* Highlights selected input */
 .login-card input:focus {
     border-color: var(--blue);
-    background: white;
+    background: light-dark(white, #171f2d);
     box-shadow: 0 0 0 3px rgba(23,105,255,.08);
 }
 
@@ -397,7 +397,7 @@ body .app > .topbar [hidden] {
 .text-button {
     background: none;
     border: 0;
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     font-weight: 700;
     padding: 5px;
 }
@@ -405,7 +405,7 @@ body .app > .topbar [hidden] {
 /* Styles login footer text */
 .login-footnote {
     text-align: center;
-    color: #9aa4b4;
+    color: light-dark(#9aa4b4, #b3bfd2);
     font-size: 11px;
     margin-top: 23px;
 }
@@ -452,7 +452,7 @@ body .app > .topbar [hidden] {
 /* Styles all customer cards */
 .info-card {
     min-height: 225px;
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 25px;
@@ -508,7 +508,7 @@ body .app > .topbar [hidden] {
 .points-number {
     font-size: 58px;
     font-weight: 800;
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     margin: 16px 0 8px;
 }
 
@@ -538,7 +538,7 @@ body .app > .topbar [hidden] {
 
 /* Creates purchase history card */
 .history-card {
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
@@ -556,10 +556,10 @@ body .app > .topbar [hidden] {
 
 /* Styles purchase history headings */
 .history-header {
-    background: #f0f4fa;
+    background: light-dark(#f0f4fa, #222d3e);
     font-size: 11px;
     font-weight: 800;
-    color: #526079;
+    color: light-dark(#526079, #b3bfd2);
 }
 
 /* Styles each purchase row */
@@ -571,24 +571,11 @@ body .app > .topbar [hidden] {
 /* Styles receipt buttons */
 .history-row button {
     border: none;
-    color: var(--blue);
-    background: #edf4ff;
+    color: light-dark(var(--blue), #92bcff);
+    background: light-dark(#edf4ff, #203552);
     border-radius: 7px;
     padding: 9px;
     font-weight: 700;
-}
-
-/* Allows history to scroll */
-#purchase-history {
-    max-height: 390px;
-    overflow-y: auto;
-}
-
-/* Styles expanded receipt details */
-.receipt-details {
-    padding: 16px 22px;
-    background: #f8faff;
-    border-top: 1px solid var(--border);
 }
 
 
@@ -599,9 +586,9 @@ body .app > .topbar [hidden] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: white;
-    color: #171b26;
-    border: 1px solid #e5eaf2;
+    background: light-dark(white, #171f2d);
+    color: light-dark(#171b26, #eef3fb);
+    border: 1px solid light-dark(#e5eaf2, #303d51);
     border-radius: 10px;
     padding: 14px 20px;
     font-family: 'Inter', Arial, sans-serif;
@@ -618,8 +605,8 @@ body .app > .topbar [hidden] {
 #history-page .back-button:hover,
 #history-page .back-button:active,
 #history-page .back-button:focus-visible {
-    background: white;
-    color: #1769ff;
+    background: light-dark(white, #171f2d);
+    color: light-dark(#1769ff, #92bcff);
     border-color: #1769ff;
 }
 
@@ -628,9 +615,9 @@ body .app > .topbar [hidden] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: white;
-    color: #171b26;
-    border: 1px solid #e5eaf2;
+    background: light-dark(white, #171f2d);
+    color: light-dark(#171b26, #eef3fb);
+    border: 1px solid light-dark(#e5eaf2, #303d51);
     border-radius: 10px;
     padding: 14px 20px;
     font-weight: 700;
@@ -641,8 +628,8 @@ body .app > .topbar [hidden] {
 /* Highlights other back buttons */
 .back-button:hover,
 .back-button:active {
-    background: white;
-    color: #1769ff;
+    background: light-dark(white, #171f2d);
+    color: light-dark(#1769ff, #92bcff);
     border-color: #1769ff;
 }
 
@@ -657,8 +644,8 @@ body .app > .topbar [hidden] {
     transform: translateX(-50%);
     z-index: 110;
     max-width: min(500px, 90vw);
-    background: #eaf2ff;
-    color: #154da5;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
     padding: 12px 20px;
     border-radius: 9px;
     font-weight: 600;
@@ -678,7 +665,7 @@ footer {
     min-height: 50px;
     padding: 15px 5%;
     border-top: 1px solid var(--border);
-    background: white;
+    background: light-dark(white, #171f2d);
     color: var(--muted);
     font-size: 11px;
     display: flex;
@@ -715,7 +702,7 @@ footer {
 
 /* Styles shared cards */
 .store-card {
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 25px;
@@ -744,14 +731,14 @@ footer {
 
 /* Styles secondary actions */
 .store-action.secondary {
-    background: white;
+    background: light-dark(white, #171f2d);
     color: var(--text);
     border: 1px solid var(--border);
 }
 
 /* Highlights secondary actions */
 .store-action.secondary:hover {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     border-color: var(--blue);
 }
 

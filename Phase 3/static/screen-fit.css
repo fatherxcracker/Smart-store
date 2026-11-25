@@ -1,0 +1,50 @@
+@media screen {
+    .screen-fit {
+        zoom: var(--screen-scale, 1);
+    }
+
+    .screen-fit [data-off-screen-page]:not(.report-png-snapshot *),
+    .screen-pager[hidden] {
+        display: none !important;
+    }
+
+    .screen-fit .report-png-snapshot .screen-pager {
+        display: none;
+    }
+
+    .screen-pager {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 6px 0;
+        font-size: .82rem;
+    }
+
+    .screen-pager button {
+        padding: 5px 10px;
+        border: 1px solid var(--line, #dbe3ef);
+        border-radius: 6px;
+        background: var(--surface, #fff);
+        color: var(--text, #18243a);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .screen-pager button:disabled {
+        opacity: .5;
+        cursor: default;
+    }
+
+    .screen-fit :is(th, td) {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media print {
+    .screen-pager {
+        display: none;
+    }
+}

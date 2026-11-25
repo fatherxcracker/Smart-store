@@ -16,8 +16,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 24px;
-            background: white;
-            border-bottom: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            border-bottom: 1px solid light-dark(#e5eaf2, #303d51);
             flex-wrap: nowrap;
         }
 
@@ -35,7 +35,7 @@
             font-weight: 800;
             letter-spacing: 1px;
             line-height: 1.15;
-            color: #101218;
+            color: light-dark(#101218, #f2f5fb);
             max-width: 100px;
         }
 
@@ -66,7 +66,7 @@
             padding: 10px 4px;
             border: none;
             background: none;
-            color: #566176;
+            color: light-dark(#566176, #b3bfd2);
             text-decoration: none;
             font-size: 16px;
             font-weight: 600;
@@ -76,7 +76,7 @@
         /* Highlights selected navigation */
         .topbar .nav-link:hover,
         .topbar .nav-link.active {
-            color: #1769ff;
+            color: light-dark(#1769ff, #92bcff);
         }
 
         /* Keeps language buttons same size */
@@ -86,7 +86,7 @@
             flex-shrink: 0;
             height: 48px;
             padding: 4px;
-            background: #f0f3f8;
+            background: light-dark(#f0f3f8, #222d3e);
             border-radius: 9px;
         }
 
@@ -97,7 +97,7 @@
             border: 0;
             border-radius: 7px;
             background: transparent;
-            color: #6d7687;
+            color: light-dark(#6d7687, #b3bfd2);
             font-size: 12px;
             font-weight: 700;
         }
@@ -140,9 +140,9 @@
             align-items: center;
             padding: 11px 16px;
             margin-bottom: 28px;
-            background: white;
-            color: #171b26;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            color: light-dark(#171b26, #eef3fb);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
@@ -150,20 +150,20 @@
         }
 
         .checkout-main .back-button:hover {
-            color: #1769ff;
+            color: light-dark(#1769ff, #92bcff);
             border-color: #1769ff;
         }
 
         /* Styles checkout heading */
         .checkout-heading h1 {
             font-size: 33px;
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
             margin: 10px 0;
             letter-spacing: -1px;
         }
 
         .checkout-heading p {
-            color: #737e91;
+            color: light-dark(#737e91, #b3bfd2);
             font-size: 13px;
             margin: 0;
         }
@@ -179,8 +179,8 @@
 
         /* Creates white cards for checkout */
         .checkout-card {
-            background: white;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 14px;
             padding: 25px;
             box-shadow: 0 12px 35px rgba(18,33,60,.04);
@@ -190,22 +190,14 @@
         /* Styles checkout card headings */
         .checkout-card h2 {
             font-size: 19px;
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
             margin: 0 0 10px;
         }
 
         /* Styles descriptions inside checkout cards */
         .checkout-card p {
-            color: #737e91;
+            color: light-dark(#737e91, #b3bfd2);
             line-height: 1.6;
-        }
-
-        /* Keeps scan controls together */
-        .scan-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 18px 0;
         }
 
         /* Styles barcode and membership input */
@@ -213,10 +205,10 @@
         .checkout-card select {
             width: 100%;
             padding: 12px 14px;
-            border: 1px solid #dce3ed;
+            border: 1px solid light-dark(#dce3ed, #303d51);
             border-radius: 8px;
-            background: #fbfcfe;
-            color: #171b26;
+            background: light-dark(#fbfcfe, #131b28);
+            color: light-dark(#171b26, #eef3fb);
             outline: none;
         }
 
@@ -224,7 +216,7 @@
         .checkout-card input:focus,
         .checkout-card select:focus {
             border-color: #1769ff;
-            background: white;
+            background: light-dark(white, #171f2d);
             box-shadow: 0 0 0 3px rgba(23,105,255,.08);
         }
 
@@ -234,7 +226,7 @@
             font-size: 12px;
             font-weight: 700;
             margin-bottom: 8px;
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
         }
 
         /* Styles blue checkout buttons */
@@ -254,9 +246,9 @@
 
         /* Styles secondary buttons */
         .checkout-card .secondary-button {
-            background: white;
-            color: #171b26;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            color: light-dark(#171b26, #eef3fb);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 8px;
             padding: 12px 17px;
             font-weight: 600;
@@ -278,8 +270,8 @@
 
         /* Styles cart table headings */
         .cart-table th {
-            background: #f0f4fa;
-            color: #526079;
+            background: light-dark(#f0f4fa, #222d3e);
+            color: light-dark(#526079, #b3bfd2);
             font-size: 11px;
             font-weight: 800;
             text-align: left;
@@ -289,7 +281,7 @@
         /* Styles cart table rows */
         .cart-table td {
             padding: 14px;
-            border-top: 1px solid #e5eaf2;
+            border-top: 1px solid light-dark(#e5eaf2, #303d51);
             font-size: 12px;
         }
 
@@ -309,12 +301,12 @@
         }
 
         .total-row strong {
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
         }
 
         /* Makes final total larger */
         .total-row.final {
-            border-top: 1px solid #e5eaf2;
+            border-top: 1px solid light-dark(#e5eaf2, #303d51);
             padding-top: 18px;
             font-size: 18px;
             font-weight: 800;
@@ -341,9 +333,9 @@
         #receipt-frame {
             width: 100%;
             min-height: 420px;
-            border: 1px solid #e5eaf2;
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 8px;
-            background: white;
+            background: light-dark(white, #171f2d);
         }
 
         /* Adjusts header on smaller screens */
@@ -411,4 +403,181 @@
 
 .cart-inline-2 { width: 100% }
 
-.cart-inline-1 { margin-top: 20px }
+@media screen {
+    .app:has(.checkout-main) {
+        min-height: 0;
+    }
+
+    body .app main.screen-fit.checkout-main {
+        padding-block: 12px;
+    }
+
+    .checkout-main .back-button {
+        margin-bottom: 10px;
+    }
+
+    .screen-fit .checkout-layout {
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .screen-fit .checkout-card { padding: 16px; }
+    .screen-fit .checkout-field { margin-bottom: 10px; }
+    .screen-fit #cart-message:empty { margin: 0; }
+
+    .checkout-steps {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+    }
+
+    .checkout-steps button {
+        padding: 9px 12px;
+        border: 1px solid light-dark(#dce3ed, #303d51);
+        border-radius: 8px;
+        background: light-dark(white, #171f2d);
+        color: light-dark(#171b26, #eef3fb);
+        font: inherit;
+        font-size: .875rem;
+        text-align: start;
+        cursor: pointer;
+    }
+
+    .checkout-steps button[aria-current="step"] {
+        background: #1769ff;
+        border-color: #1769ff;
+        color: white;
+    }
+
+    .checkout-panels { min-width: 0; }
+
+    .checkout-loyalty {
+        width: min(420px, calc(100% - 24px));
+        max-height: calc(100dvh - 24px);
+        padding: 18px;
+        border: 1px solid light-dark(#dce3ed, #303d51);
+        border-radius: 14px;
+        color: light-dark(#171b26, #eef3fb);
+        background: light-dark(white, #171f2d);
+    }
+
+    .checkout-loyalty::backdrop { background: rgb(16 18 24 / 35%); }
+    .checkout-loyalty form { margin-top: 14px; }
+    #open-checkout-loyalty { align-self: start; }
+
+    .checkout-loyalty .checkout-field { margin: 8px 0 0; }
+    .checkout-loyalty label { margin-bottom: 4px; }
+    .checkout-loyalty #points-help { margin: 0 0 4px; }
+
+    .checkout-points-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .checkout-points-controls input { flex: 1 1 55px; min-width: 0; }
+
+    #checkout-payment:not([hidden]) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+        gap: 8px 18px;
+        align-items: start;
+    }
+
+    .checkout-cart-actions,
+    .checkout-summary-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .checkout-cart-actions .primary-button,
+    .checkout-summary-heading button {
+        margin-inline-start: auto;
+    }
+
+    .checkout-summary-heading {
+        grid-column: 1 / -1;
+        justify-content: space-between;
+    }
+
+    .checkout-summary-heading h2 { margin: 0; }
+
+    #checkout-payment .checkout-totals { margin: 0; }
+
+    #checkout-payment #reset-cart {
+        grid-column: 2;
+        margin-top: 0;
+    }
+
+    #receipt-panel { margin-top: 0; }
+
+    #receipt-frame {
+        display: block;
+        min-height: 0;
+        height: clamp(270px, calc(100dvh - 285px), 460px);
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .screen-fit .checkout-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .checkout-steps {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .checkout-steps button { padding: 7px 9px; }
+
+    body .app main.screen-fit.checkout-main { padding: 8px 12px; }
+
+    #checkout-payment:not([hidden]) {
+        grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+        gap: 8px 10px;
+    }
+
+    #checkout-payment .checkout-totals {
+        gap: 6px;
+        font-size: .8rem;
+    }
+
+    #checkout-payment :is(input, select, button) {
+        max-width: 100%;
+        padding: 8px 7px;
+    }
+
+    #checkout-payment .checkout-totals .total-row {
+        gap: 4px;
+        padding-block: 3px;
+    }
+
+    .checkout-cart-actions :is(.primary-button, .secondary-button) {
+        padding: 7px 9px;
+    }
+
+    #checkout-cart .cart-table-wrapper { margin-top: 10px; }
+
+    .checkout-panels .cart-table { min-width: 0; }
+    .checkout-panels .cart-table :is(th, td) { padding: 6px 4px; }
+
+    body .app .screen-fit.checkout-main .checkout-heading h1 {
+        margin-block: 2px;
+        font-size: 26px;
+    }
+
+    .checkout-panels .checkout-card { padding: 12px; }
+
+    .app:has(.checkout-main) > footer {
+        min-height: 0;
+        padding-block: 7px;
+    }
+
+    #receipt-frame { height: clamp(190px, calc(100dvh - 380px), 430px); }
+
+    .checkout-main :is(.eyebrow, .checkout-heading p) { display: none; }
+}

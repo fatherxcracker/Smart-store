@@ -567,68 +567,42 @@ async function showHistory() {
             const button = document.createElement("button");
             button.textContent = t("viewReceipt");
 
-            // Create a hidden area for receipt details
-            const details = document.createElement("div");
-            details.className = "receipt-details";
-            details.hidden = true;
-
-            // This runs when customer clicks View receipt
+            button.setAttribute("aria-haspopup", "dialog");
             button.addEventListener("click", async () => {
-
-                // If the receipt is already open close it
-                if (!details.hidden) {
-                    details.hidden = true;
-                    button.textContent = t("viewReceipt");
-                    return;
-                }
-
+                button.disabled = true;
                 try {
-                    // Ask Flask for this purchase's receipt
-                    // Example: /api/account/receipt/5
-                    const receipt = await api(
-                        "/api/account/receipt/" + purchase.id
-                    );
+                    const receipt = await api("/api/account/receipt/" + purchase.id);
+                    if (currentPage !== "history" || !row.isConnected) return;
 
-                    // Remove any previous receipt details
-                    details.replaceChildren();
-
-                    // Create a list for the purchased products
+                    const dialog = document.getElementById("history-receipt");
+                    if (dialog.open) return;
+                    document.getElementById("history-receipt-title").textContent = purchase.receipt_number;
                     const list = document.createElement("ul");
-
-                    // Add each purchased product to the list
-                    for (const item of receipt.items) {
-
+                    list.dataset.pageList = "5";
+                    list.append(...receipt.items.map(item => {
                         const li = document.createElement("li");
-
-                        // Show product name quantity and price
-                        li.textContent =
-                            item.product_name + " × " + item.quantity +
+                        li.textContent = item.product_name + " × " + item.quantity +
                             " — $" + Number(item.line_total).toFixed(2);
+                        return li;
+                    }));
+                    document.getElementById("history-receipt-items").replaceChildren(list);
 
-                        list.appendChild(li);
-                    }
-
-                    // Display the receipt list
-                    details.appendChild(list);
+                    const discount = document.getElementById("history-receipt-discount");
+                    discount.hidden = !receipt.points_redeemed;
                     if (receipt.points_redeemed) {
-                        const discount = document.createElement("p");
                         const amount = new Intl.NumberFormat(currentLanguage === "fr" ? "fr-CA" : "en-CA",
                             { style: "currency", currency: "CAD" }).format(receipt.points_discount);
                         discount.textContent = currentLanguage === "fr"
                             ? `${receipt.points_redeemed} points utilisés : réduction de ${amount}`
                             : `${receipt.points_redeemed} points redeemed: ${amount} discount`;
-                        details.appendChild(discount);
                     }
-
-                    // Make the receipt visible
-                    details.hidden = false;
-
-                    // Change the button text to Close receipt
-                    button.textContent = t("closeReceipt");
-
+                    button.disabled = false;
+                    button.focus({ preventScroll: true });
+                    dialog.showModal();
                 } catch (error) {
-                    // Display an error if the receipt cannot load
                     message.textContent = error.message;
+                } finally {
+                    button.disabled = false;
                 }
             });
 
@@ -637,9 +611,7 @@ async function showHistory() {
                 receiptNumber, date, total, points, button
             );
 
-            // Add the row and receipt details to the html page
             container.appendChild(row);
-            container.appendChild(details);
         }
 
     } catch (error) {

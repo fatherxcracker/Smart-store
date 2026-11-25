@@ -1,0 +1,11 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+pyserial==3.5
+tzdata>=2024.1
+openpyxl==3.1.5
+# Phase 2: fridge monitoring (MQTT broker + motor driver)
+paho-mqtt==2.1.0
+gpiozero==2.0.1
+# GPIO backend for gpiozero on Raspberry Pi 5 (fan PWM)
+# Phase 4: Minew MSP01 Bluetooth scan (only used when MSP01_BLE=1)
+bleak>=0.22

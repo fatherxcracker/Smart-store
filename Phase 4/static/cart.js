@@ -452,7 +452,7 @@ async function updateCart(url, method, body = null, messageKey = null) {
         );
 
         // Hide old receipt
-        receiptPanel.hidden = true;
+        hideCheckoutReceipt();
 
     } catch (error) {
 
@@ -476,6 +476,7 @@ function displayReceipt(html) {
     // Build a separate receipt page using the settings from the HTML template
     const receiptDocument = document.implementation.createHTMLDocument("");
     receiptDocument.documentElement.lang = cartLanguage;
+    receiptDocument.body.setAttribute("data-fit-screen", "");
     receiptDocument.head.replaceChildren(
         document.getElementById("receipt-document").content.cloneNode(true)
     );
@@ -487,13 +488,10 @@ function displayReceipt(html) {
         receiptDocument.documentElement.outerHTML;
 
     // Show receipt panel
-    receiptPanel.hidden = false;
+    receiptStep.hidden = false;
+    openCheckoutPanel("receipt-panel");
 
-    // Scroll to receipt
-    receiptPanel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
+    receiptPanel.focus({ preventScroll: true });
 }
 
 
@@ -549,7 +547,7 @@ async function scanRfid({ quiet = false } = {}) {
 
         // Hide old receipt if new products were scanned
         if (!unchanged) {
-            receiptPanel.hidden = true;
+            hideCheckoutReceipt();
         }
 
     } catch (error) {

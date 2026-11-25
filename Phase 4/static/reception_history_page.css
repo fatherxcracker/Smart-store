@@ -16,8 +16,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 24px;
-            background: white;
-            border-bottom: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            border-bottom: 1px solid light-dark(#e5eaf2, #303d51);
             flex-wrap: nowrap;
         }
 
@@ -35,7 +35,7 @@
             font-weight: 800;
             letter-spacing: 1px;
             line-height: 1.15;
-            color: #101218;
+            color: light-dark(#101218, #f2f5fb);
             max-width: 100px;
         }
 
@@ -66,7 +66,7 @@
             padding: 10px 4px;
             border: none;
             background: none;
-            color: #566176;
+            color: light-dark(#566176, #b3bfd2);
             text-decoration: none;
             font-size: 16px;
             font-weight: 600;
@@ -76,7 +76,7 @@
         /* Highlights selected navigation */
         .topbar .nav-link:hover,
         .topbar .nav-link.active {
-            color: #1769ff;
+            color: light-dark(#1769ff, #92bcff);
         }
 
         /* Keeps language buttons same size */
@@ -86,7 +86,7 @@
             flex-shrink: 0;
             height: 48px;
             padding: 4px;
-            background: #f0f3f8;
+            background: light-dark(#f0f3f8, #222d3e);
             border-radius: 9px;
         }
 
@@ -97,7 +97,7 @@
             border: 0;
             border-radius: 7px;
             background: transparent;
-            color: #6d7687;
+            color: light-dark(#6d7687, #b3bfd2);
             font-size: 12px;
             font-weight: 700;
         }
@@ -140,9 +140,9 @@
             align-items: center;
             padding: 11px 16px;
             margin-bottom: 28px;
-            background: white;
-            color: #171b26;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            color: light-dark(#171b26, #eef3fb);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
@@ -150,7 +150,7 @@
         }
 
         .history-main .back-button:hover {
-            color: #1769ff;
+            color: light-dark(#1769ff, #92bcff);
             border-color: #1769ff;
         }
 
@@ -167,14 +167,14 @@
         /* Styles page heading */
         .history-heading h1 {
             font-size: 33px;
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
             margin: 10px 0;
             letter-spacing: -1px;
         }
 
         /* Styles description under heading */
         .history-heading p {
-            color: #737e91;
+            color: light-dark(#737e91, #b3bfd2);
             font-size: 13px;
             margin: 0;
         }
@@ -185,8 +185,8 @@
             align-items: flex-end;
             gap: 10px;
             flex-wrap: wrap;
-            background: white;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 10px;
             padding: 14px;
         }
@@ -202,17 +202,17 @@
         .filter-field label {
             font-size: 12px;
             font-weight: 700;
-            color: #171b26;
+            color: light-dark(#171b26, #eef3fb);
         }
 
         /* Styles product dropdown */
         .filter-field select {
             min-width: 230px;
             padding: 11px 14px;
-            border: 1px solid #dce3ed;
+            border: 1px solid light-dark(#dce3ed, #303d51);
             border-radius: 8px;
-            background: #fbfcfe;
-            color: #171b26;
+            background: light-dark(#fbfcfe, #131b28);
+            color: light-dark(#171b26, #eef3fb);
             outline: none;
         }
 
@@ -239,8 +239,8 @@
 
         /* Creates white card for reception history */
         .history-main .reception-card {
-            background: white;
-            border: 1px solid #e5eaf2;
+            background: light-dark(white, #171f2d);
+            border: 1px solid light-dark(#e5eaf2, #303d51);
             border-radius: 14px;
             overflow: hidden;
             box-shadow: 0 12px 35px rgba(18,33,60,.04);
@@ -261,7 +261,7 @@
 
         /* Styles table heading background */
         .reception-table thead {
-            background: #f0f4fa;
+            background: light-dark(#f0f4fa, #222d3e);
         }
 
         /* Styles table headings */
@@ -270,7 +270,7 @@
             padding: 17px 18px;
             font-size: 11px;
             font-weight: 800;
-            color: #526079;
+            color: light-dark(#526079, #b3bfd2);
             white-space: nowrap;
         }
 
@@ -278,14 +278,14 @@
         .reception-table td {
             padding: 17px 18px;
             font-size: 12px;
-            border-top: 1px solid #e5eaf2;
-            color: #171b26;
+            border-top: 1px solid light-dark(#e5eaf2, #303d51);
+            color: light-dark(#171b26, #eef3fb);
             vertical-align: middle;
         }
 
         /* Highlights row when hovered */
         .reception-table tbody tr:hover {
-            background: #f8faff;
+            background: light-dark(#f8faff, #131b28);
         }
 
         /* Styles product names */
@@ -296,13 +296,13 @@
         /* Highlights received quantities */
         .received-quantity {
             font-weight: 700;
-            color: #1769ff;
+            color: light-dark(#1769ff, #92bcff);
         }
 
         /* Styles empty history message */
         .empty-history {
             padding: 30px;
-            color: #737e91;
+            color: light-dark(#737e91, #b3bfd2);
             text-align: center;
         }
 

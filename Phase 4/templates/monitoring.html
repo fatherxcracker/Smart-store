@@ -1,9 +1,18 @@
 {% extends 'reports/base.html' %}
+{% set views = {'fridges': 'Fridges', 'fan': 'Fan Control', 'alerts': 'Alerts'} %}
+{% set requested_view = request.args.get('view') %}
+{% set selected_view = requested_view if requested_view in views else 'fridges' %}
+
+{% block report_views %}
+    {% with view_label = 'Fridges and fan pages' %}
+        {% include 'reports/_views.html' %}
+    {% endwith %}
+{% endblock %}
+
 {% block content %}
 <script src="{{ url_for('reports.static', filename='js/widgets.js') }}"></script>
 <script src="{{ url_for('reports.static', filename='js/monitoring.js') }}" defer></script>
-<p class="note">Two DHT11 sensors (ESP32 → Mosquitto) watch the refrigerators. Above the limit, an email asks whether to turn on the fan: reply <strong>YES</strong> and the fan starts; reply NO and nothing happens.</p>
-<section class="fridge-grid">
+<section class="fridge-grid"{% if selected_view != 'fridges' %} data-off-screen-page{% endif %}>
 {% for n in (1, 2) %}
 <article class="panel fridge" data-fridge="{{ n }}">
 <h2>Refrigerator {{ n }} <span class="pill" id="status{{ n }}">Waiting for data</span></h2>
@@ -16,7 +25,7 @@
 </article>
 {% endfor %}
 </section>
-<section class="panel fan-panel"><h2>Fan control <span class="pill" id="fanStatus">{{ fan.status }}{{ ' (simulated)' if fan.hardware_mode == 'mock' else '' }}</span></h2>
+<section class="panel fan-panel"{% if selected_view != 'fan' %} data-off-screen-page{% endif %}><h2>Fan control <span class="pill" id="fanStatus">{{ fan.status }}{{ ' (simulated)' if fan.hardware_mode == 'mock' else '' }}</span></h2>
 <p><span class="pill {{ 'moderate' if fan.hardware_mode == 'mock' else '' }}" id="fanMode">{{ 'Simulation mode' if fan.hardware_mode == 'mock' else 'Hardware control' }}</span></p>
 <p class="note" id="fanModeNote">{{ 'Fan controls are simulated. No physical fan is controlled.' if fan.hardware_mode == 'mock' else 'Commands are sent to the fan hardware.' }}</p>
 <div class="fan-row">
@@ -25,5 +34,7 @@
 <p><button type="button" id="powerButton">{{ 'Simulate ON' if fan.hardware_mode == 'mock' else 'Turn ON' }}</button></p>
 <label class="stack">Speed <span id="speedValue">40% duty cycle</span><input type="range" id="fanSlider" min="0" max="100" step="5" value="40" disabled></label></div>
 </div></section>
-<section class="panel"><h2>Alerts and notifications</h2><ul class="plain" id="notifications"><li>No active alerts.</li></ul></section>
+<section class="panel"{% if selected_view != 'alerts' %} data-off-screen-page{% endif %}><h2>Alerts and notifications</h2>
+<p class="note">Two DHT11 sensors (ESP32 → Mosquitto) watch the refrigerators. Above the limit, an email asks whether to turn on the fan: reply <strong>YES</strong> and the fan starts; reply NO and nothing happens.</p>
+<ul class="plain" id="notifications"><li>No active alerts.</li></ul></section>
 {% endblock %}

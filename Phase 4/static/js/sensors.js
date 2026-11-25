@@ -60,7 +60,18 @@ async function loadHistory() {
     } catch (error) { console.error("History:", error); }
 }
 
-$("range").addEventListener("change", loadHistory);
+$("range").addEventListener("change", event => {
+    const hours = event.target.value;
+    const current = new URL(location.href);
+    current.searchParams.set("hours", hours);
+    history.replaceState(history.state, "", current);
+    for (const link of document.querySelectorAll(".report-views a")) {
+        const target = new URL(link.href);
+        target.searchParams.set("hours", hours);
+        link.href = target.href;
+    }
+    loadHistory();
+});
 loadSensor(); loadHistory();
 setInterval(loadSensor, 5000);
 setInterval(loadHistory, 30000);

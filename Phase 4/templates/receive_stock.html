@@ -24,6 +24,9 @@
     <script src="{{ url_for('static', filename='embedded.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    {% include '_theme.html' %}
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -111,11 +114,11 @@
 
 
     <!-- Main page content -->
-    <main class="stock-main">
+    <main class="stock-main receive-stock-main">
 
         <!-- Returns to inventory -->
         <a class="back-button stock-back"
-           href="{{ url_for('inventory') }}"
+           href="{{ url_for('inventory', _anchor='products-and-stock') }}"
            data-i18n="backInventory">
             ← Back to Products &amp; stock
         </a>
@@ -149,112 +152,121 @@
         <!-- Check if products exist in inventory -->
         {% if products %}
 
+            <nav class="receive-steps" aria-label="Receive Stock steps" hidden>
+                <button type="button" class="ss-btn" aria-controls="receive-details" data-i18n="deliveryDetails">Delivery Details</button>
+                <button type="button" class="ss-btn" aria-controls="receive-tags" data-i18n="rfidStep">RFID Tags</button>
+            </nav>
+
             <!-- Receive stock form -->
             <!-- Sends delivery information to Flask -->
             <form method="post"
                   action="{{ url_for('receive_stock') }}"
-                  class="product-form">
+                  class="product-form" id="receive-stock-form"{% if error %} data-receive-error{% endif %}>
 
-                <h2 data-i18n="deliveryDetails">
-                    Delivery Details
-                </h2>
+                <section id="receive-details" data-receive-step>
+                    <h2 tabindex="-1" data-i18n="deliveryDetails">
+                        Delivery Details
+                    </h2>
 
-                <p class="form-description" data-i18n="formDescription">
-                    Enter the information for the received stock
-                </p>
+                    <p class="form-description" data-i18n="formDescription">
+                        Enter the information for the received stock
+                    </p>
 
 
-                <!-- Select product to receive -->
-                <label for="product_id" data-i18n="product">
-                    Product
-                </label>
+                    <!-- Select product to receive -->
+                    <label for="product_id" data-i18n="product">
+                        Product
+                    </label>
 
-                <select id="product_id"
-                        name="product_id"
-                        required>
+                    <select id="product_id"
+                            name="product_id"
+                            required>
 
-                    <!-- Default dropdown option -->
-                    <option value=""
-                            data-i18n="selectProduct">
-                        Select a product
-                    </option>
-
-                    <!-- Display products from database -->
-                    {% for product in products %}
-
-                        <option value="{{ product.id }}"
-                                data-product-name="{{ product.name }}"
-                                data-product-stock="{{ product.in_stock }}"
-                            {% if values.get('product_id', '')|string == product.id|string %}
-                                selected
-                            {% endif %}>
-                            {{ product.name }} — {{ product.in_stock }} in stock
+                        <!-- Default dropdown option -->
+                        <option value=""
+                                data-i18n="selectProduct">
+                            Select a product
                         </option>
 
-                    {% endfor %}
+                        <!-- Display products from database -->
+                        {% for product in products %}
 
-                </select>
+                            <option value="{{ product.id }}"
+                                    data-product-name="{{ product.name }}"
+                                    data-product-stock="{{ product.in_stock }}"
+                                {% if values.get('product_id', '')|string == product.id|string %}
+                                    selected
+                                {% endif %}>
+                                {{ product.name }} — {{ product.in_stock }} in stock
+                            </option>
 
+                        {% endfor %}
 
-                <!-- RFID tags of the items received: one tag per item -->
-                <label for="epcs" data-i18n="epcsLabel">RFID tags of the items received (one per item)</label>
-                <p class="form-description" data-i18n="epcsHelp">
-                    Put the items on the reader (one or many) and click "Read RFID tags". Scan again to add more.
-                    Each item in stock needs its own tag, so the quantity is the number of tags.
-                </p>
-                <button type="button" id="receive-read-tag" data-i18n="readOneTag">Read RFID tags</button>
-                <p id="receive-tag-status" role="status" aria-live="polite"></p>
-                <textarea id="epcs" name="epcs" rows="5"
-                          data-i18n-placeholder="epcsPlaceholder"
-                          placeholder="One EPC per line"
-                          class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
+                    </select>
 
-                <!-- Quantity received = number of tags (counted automatically) -->
-                <label for="quantity" data-i18n="quantityReceived">
-                    Quantity Received
-                </label>
-                <input id="quantity"
-                       type="number"
-                       value="0"
-                       readonly
-                       tabindex="-1"
-                       aria-describedby="epc-count">
-                <p id="epc-count" class="form-description" aria-live="polite" data-i18n="quantityCounted">
-                    Counted from the tags above.
-                </p>
+                    <!-- Date and time of delivery -->
+                    <label for="received_at" data-i18n="receptionDate">
+                        Reception Date and Time
+                    </label>
 
-                <!-- Date and time of delivery -->
-                <label for="received_at" data-i18n="receptionDate">
-                    Reception Date and Time
-                </label>
-
-                <input id="received_at"
-                       name="received_at"
-                       type="datetime-local"
-                       value="{{ values.get('received_at', '') }}"
-                       required>
+                    <input id="received_at"
+                           name="received_at"
+                           type="datetime-local"
+                           value="{{ values.get('received_at', '') }}"
+                           required>
 
 
-                <!-- Optional delivery note -->
-                <label for="note" data-i18n="note">
-                    Note (optional)
-                </label>
+                    <!-- Optional delivery note -->
+                    <label for="note" data-i18n="note">
+                        Note (optional)
+                    </label>
 
-                <input id="note"
-                       name="note"
-                       type="text"
-                       value="{{ values.get('note', '') }}"
-                       placeholder="Add a delivery note"
-                       data-i18n-placeholder="notePlaceholder">
+                    <input id="note"
+                           name="note"
+                           type="text"
+                           value="{{ values.get('note', '') }}"
+                           placeholder="Add a delivery note"
+                           data-i18n-placeholder="notePlaceholder">
 
+                    <button type="button" class="save-button" data-receive-next data-i18n="continueToTags" hidden>Continue to RFID Tags</button>
+                </section>
 
-                <!-- Saves delivery to database -->
-                <button type="submit"
-                        class="save-button"
-                        data-i18n="recordDelivery">
-                    Record Delivery
-                </button>
+                <section id="receive-tags" data-receive-step>
+                    <h2 tabindex="-1" data-i18n="rfidStep">RFID Tags</h2>
+                    <!-- RFID tags of the items received: one tag per item -->
+                    <label for="epcs" data-i18n="epcsLabel">RFID tags of the items received (one per item)</label>
+                    <p class="form-description" data-i18n="epcsHelp">
+                        Put the items on the reader (one or many) and click "Read RFID tags". Scan again to add more.
+                        Each item in stock needs its own tag, so the quantity is the number of tags.
+                    </p>
+                    <button type="button" id="receive-read-tag" data-i18n="readOneTag">Read RFID tags</button>
+                    <p id="receive-tag-status" role="status" aria-live="polite"></p>
+                    <textarea id="epcs" name="epcs" rows="5"
+                              data-i18n-placeholder="epcsPlaceholder"
+                              placeholder="One EPC per line"
+                              class="receive_stock-inline-1" required>{{ values.get('epcs', '') }}</textarea>
 
+                    <!-- Quantity received = number of tags (counted automatically) -->
+                    <label for="quantity" data-i18n="quantityReceived">
+                        Quantity Received
+                    </label>
+                    <input id="quantity"
+                           type="number"
+                           value="0"
+                           readonly
+                           tabindex="-1"
+                           aria-describedby="epc-count">
+                    <p id="epc-count" class="form-description" aria-live="polite" data-i18n="quantityCounted">
+                        Counted from the tags above.
+                    </p>
+
+                    <!-- Saves delivery to database -->
+                    <button type="submit"
+                            class="save-button"
+                            data-i18n="recordDelivery">
+                        Record Delivery
+                    </button>
+                </section>
             </form>
 
         {% else %}

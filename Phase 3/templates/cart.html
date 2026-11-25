@@ -26,6 +26,8 @@
             defer></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='cart_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -114,7 +116,7 @@
 
 
     <!-- Main checkout content -->
-    <main class="checkout-main">
+    <main data-screen-zoom="off" class="checkout-main">
 
         <!-- Returns to customer account -->
         <a class="back-button"
@@ -149,57 +151,21 @@
 
         <!-- Checkout sections -->
         <div class="checkout-layout">
-
-            <!-- Left side contains scanning and cart -->
-            <div>
-
-                <!-- Scan products -->
-                <section class="checkout-card">
-
-                    <h2 data-i18n="scanProducts">
-                        Scan Products
-                    </h2>
-
-                    <p data-i18n="scanDesc">
-                        Place your items on the RFID reader
-                    </p>
-
-                    <!-- RFID scanning controls -->
-                    <div class="scan-actions">
-
-                        <!-- Reads RFID tag -->
-                        <button id="rfid-scan"
-                                class="primary-button"
-                                type="button"
-                                data-i18n="scanRFID">
-                            Scan RFID
-                        </button>
-
-                        <!-- Starts or stops automatic scanning -->
-                        <button id="rfid-auto"
-                                class="secondary-button"
-                                type="button"
-                                data-i18n="autoScan">
-                            Auto Scan
-                        </button>
-
+            <nav class="checkout-steps" aria-label="Self-checkout">
+                <button type="button" aria-controls="checkout-cart" aria-current="step" data-i18n="shoppingCart">Shopping Cart</button>
+                <button type="button" aria-controls="checkout-payment" data-i18n="orderSummary">Order Summary</button>
+                <button type="button" aria-controls="receipt-panel" data-i18n="purchaseReceipt" hidden>Purchase Receipt</button>
+            </nav>
+            <div class="checkout-panels">
+                <!-- Shopping cart and RFID scanning -->
+                <section class="checkout-card" id="checkout-cart">
+                    <h2 tabindex="-1" data-i18n="shoppingCart">Shopping Cart</h2>
+                    <div class="checkout-cart-actions">
+                        <button id="rfid-scan" class="secondary-button" type="button" data-i18n="scanRFID">Scan RFID</button>
+                        <button id="rfid-auto" class="secondary-button" type="button" data-i18n="autoScan">Auto Scan</button>
+                        <button class="primary-button" type="button" aria-controls="checkout-payment"
+                                data-open-checkout="checkout-payment" data-i18n="viewOrderSummary">View Order Summary</button>
                     </div>
-
-
-                </section>
-
-
-                <!-- Shopping cart -->
-                <section class="cart-inline-1 checkout-card"
-                        >
-
-                    <h2 data-i18n="shoppingCart">
-                        Shopping Cart
-                    </h2>
-
-                    <p data-i18n="cartDesc">
-                        Review the products added to your cart
-                    </p>
 
                     <!-- Shopping cart table -->
                     <div class="cart-table-wrapper">
@@ -217,7 +183,7 @@
                             </thead>
 
                             <!-- JavaScript adds cart products here -->
-                            <tbody id="cart-items"></tbody>
+                            <tbody id="cart-items" data-page-size="3" data-narrow-page-size="2"></tbody>
 
                         </table>
 
@@ -225,22 +191,14 @@
 
                 </section>
 
-            </div>
-
-
-            <!-- Right side contains totals and payment -->
-            <div>
-
                 <!-- Order summary -->
-                <section class="checkout-card">
+                <section class="checkout-card" id="checkout-payment" hidden>
 
-                    <h2 data-i18n="orderSummary">
-                        Order Summary
-                    </h2>
-
-                    <p data-i18n="summaryDesc">
-                        Review your total before paying
-                    </p>
+                    <div class="checkout-summary-heading">
+                        <h2 tabindex="-1" data-i18n="orderSummary">Order Summary</h2>
+                        <button class="secondary-button" type="button" aria-controls="checkout-cart"
+                                data-open-checkout="checkout-cart" data-i18n="backToCart">Back to Cart</button>
+                    </div>
 
                     <!-- Shopping cart totals -->
                     <div class="checkout-totals">
@@ -274,36 +232,38 @@
                             <strong id="cart-total">$0.00</strong>
                         </div>
 
-                    </div>
+                        <button type="button" class="secondary-button" id="open-checkout-loyalty"
+                                aria-haspopup="dialog" data-i18n="loyaltyStep">Loyalty Points</button>
+                        <dialog class="checkout-loyalty" id="checkout-loyalty" aria-labelledby="checkout-loyalty-title">
+                            <h2 id="checkout-loyalty-title" data-i18n="loyaltyStep">Loyalty Points</h2>
+                            <div class="checkout-field">
+                                <label for="membership-number"
+                                       data-i18n="membershipNumber">
+                                    Membership Number (optional)
+                                </label>
+                                <input id="membership-number"
+                                       name="membership_number"
+                                       type="text"
+                                       placeholder="Enter membership number"
+                                       data-i18n-placeholder="membershipPlaceholder">
+                            </div>
+                            <div class="checkout-field">
+                                <label for="points-input" id="points-label">Use loyalty points</label>
+                                <p id="points-help" aria-live="polite"></p>
+                                <div class="checkout-points-controls">
+                                    <input id="points-input" type="number" min="0" step="1" value="0" disabled>
+                                    <button id="apply-points" type="button" class="secondary-button" disabled>Apply points</button>
+                                </div>
+                            </div>
+                            <form method="dialog">
+                                <button class="secondary-button" data-i18n="closeLoyalty">Close</button>
+                            </form>
+                        </dialog>
 
+                    </div>
 
                     <!-- Checkout form -->
                     <form id="checkout-form">
-
-                        <!-- Optional customer membership number -->
-                        <div class="checkout-field">
-
-                            <label for="membership-number"
-                                   data-i18n="membershipNumber">
-                                Membership Number (optional)
-                            </label>
-
-                            <input id="membership-number"
-                                   name="membership_number"
-                                   type="text"
-                                   placeholder="Enter membership number"
-                                   data-i18n-placeholder="membershipPlaceholder">
-
-                        </div>
-
-
-                        <!-- Select payment method -->
-                        <div class="checkout-field">
-                            <label for="points-input" id="points-label">Use loyalty points</label>
-                            <p id="points-help" aria-live="polite"></p>
-                            <input id="points-input" type="number" min="0" step="1" value="0" disabled>
-                            <button id="apply-points" type="button" class="secondary-button" disabled>Apply points</button>
-                        </div>
 
                         <div class="checkout-field">
 
@@ -366,7 +326,7 @@
 
 
                 <!-- Receipt displayed after purchase -->
-                <section id="receipt-panel"
+                <section id="receipt-panel" tabindex="-1"
                          class="checkout-card"
                          hidden>
 
@@ -409,6 +369,8 @@
 <template id="receipt-document">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
 </template>
 
 </body>

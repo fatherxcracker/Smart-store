@@ -302,3 +302,21 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media screen and (min-width: 950px) {
+    .screen-fit .user-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: start;
+        gap: 12px;
+    }
+
+    .screen-fit .user-column { display: contents; }
+}
+
+@media screen {
+    .screen-fit .user-form { padding: 14px; }
+    .screen-fit .user-form :is(input, select) {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+    }
+}

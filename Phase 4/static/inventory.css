@@ -1,7 +1,7 @@
 :root {
     font-family: system-ui, sans-serif;
-    color: #172b34;
-    background: #f3f6f7;
+    color: light-dark(#172b34, #eef3fb);
+    background: light-dark(#f3f6f7, #0f1521);
 }
 
 body {
@@ -15,7 +15,7 @@ main {
 }
 
 .eyebrow {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     font-size: .72rem;
     font-weight: 800;
     letter-spacing: .14em;
@@ -31,14 +31,14 @@ header > p {
 }
 
 a {
-    color: #176356;
+    color: light-dark(#176356, #a6e6c6);
 }
 
 .table-wrapper {
     margin-top: 28px;
     overflow-x: auto;
-    background: white;
-    border: 1px solid #dce5e7;
+    background: light-dark(white, #171f2d);
+    border: 1px solid light-dark(#dce5e7, #303d51);
     border-radius: 12px;
 }
 
@@ -51,18 +51,18 @@ table {
 caption {
     padding: 18px;
     text-align: left;
-    color: #52646b;
+    color: light-dark(#52646b, #b3bfd2);
 }
 
 th,
 td {
     padding: 16px;
-    border-top: 1px solid #e5ebed;
+    border-top: 1px solid light-dark(#e5ebed, #303d51);
     white-space: nowrap;
 }
 
 thead {
-    background: #eaf1f1;
+    background: light-dark(#eaf1f1, #222d3e);
     font-size: 0.85rem;
 }
 
@@ -77,16 +77,16 @@ tbody th {
 
 .stock {
     display: inline-block;
-    background: #e2f3e9;
-    color: #215739;
+    background: light-dark(#e2f3e9, #1b382f);
+    color: light-dark(#215739, #a6e6c6);
     padding: 4px 10px;
     border-radius: 6px;
     font-weight: 700;
 }
 
 .stock.empty {
-    color: #8a2727;
-    background: #fde8e8;
+    color: light-dark(#8a2727, #ffb8bd);
+    background: light-dark(#fde8e8, #382129);
 }
 
 .empty-message {
@@ -100,8 +100,8 @@ tbody th {
     gap: 12px;
     max-width: 540px;
     padding: 24px;
-    background: white;
-    border: 1px solid #dce5e7;
+    background: light-dark(white, #171f2d);
+    border: 1px solid light-dark(#dce5e7, #303d51);
     border-radius: 12px;
 }
 
@@ -113,7 +113,7 @@ tbody th {
     width: 100%;
     box-sizing: border-box;
     padding: 12px;
-    border: 1px solid #9aadb3;
+    border: 1px solid light-dark(#9aadb3, #b3bfd2);
     border-radius: 6px;
     font: inherit;
     margin-bottom: 8px;
@@ -121,7 +121,7 @@ tbody th {
 
 .product-form button {
     padding: 12px 18px;
-    background: #176356;
+    background: light-dark(#176356, #a6e6c6);
     color: white;
     border: none;
     border-radius: 6px;
@@ -132,8 +132,8 @@ tbody th {
 
 .form-error {
     padding: 14px;
-    background: #fde8e8;
-    color: #8a2727;
+    background: light-dark(#fde8e8, #382129);
+    color: light-dark(#8a2727, #ffb8bd);
     border-radius: 6px;
 }
 
@@ -143,9 +143,9 @@ tbody th {
 }
 
 .delete-button {
-    background: #fde8e8;
-    color: #8a2727;
-    border: 1px solid #e6bcbc;
+    background: light-dark(#fde8e8, #382129);
+    color: light-dark(#8a2727, #ffb8bd);
+    border: 1px solid light-dark(#e6bcbc, #6d3c47);
     border-radius: 6px;
     padding: 6px 12px;
     font: inherit;
@@ -166,9 +166,9 @@ tbody th {
 .product-form .read-tag-button {
     justify-self: start;
     margin-top: -4px;
-    background: #e8f1ef;
-    color: #1f5f52;
-    border: 1px solid #b9d7cf;
+    background: light-dark(#e8f1ef, #1b382f);
+    color: light-dark(#1f5f52, #a6e6c6);
+    border: 1px solid light-dark(#b9d7cf, #40695e);
 }
 
 .tag-status {
@@ -180,9 +180,9 @@ tbody th {
     display: none;
 }
 
-.tag-status.success { color: #215739; }
-.tag-status.warning { color: #8a5a00; }
-.tag-status.error { color: #a12b2b; }
+.tag-status.success { color: light-dark(#215739, #a6e6c6); }
+.tag-status.warning { color: light-dark(#8a5a00, #f9d487); }
+.tag-status.error { color: light-dark(#a12b2b, #ffb8bd); }
 
 /* Links to the other parts of the store */
 .store-links {
@@ -197,10 +197,10 @@ tbody th {
 :root {
     --blue: #1769ff;
     --blue-hover: #0954db;
-    --background: #f6f8fc;
-    --text: #171b26;
-    --muted: #737e91;
-    --border: #e5eaf2;
+    --background: light-dark(#f6f8fc, #0f1521);
+    --text: light-dark(#171b26, #eef3fb);
+    --muted: light-dark(#737e91, #b3bfd2);
+    --border: light-dark(#e5eaf2, #303d51);
 
     font-family: 'Inter', Arial, sans-serif;
     color: var(--text);
@@ -226,14 +226,14 @@ body {
 }
 
 .topbar .nav-link {
-    color: #566176;
+    color: light-dark(#566176, #b3bfd2);
     text-decoration: none;
     font-size: 14px;
 }
 
 .topbar .nav-link:hover,
 .topbar .nav-link.active {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
 }
 
 /* Main inventory page */
@@ -280,7 +280,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 12px 18px;
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
@@ -291,7 +291,7 @@ body {
 
 .inventory-button:hover {
     border-color: var(--blue);
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
 }
 
 .inventory-button.primary {
@@ -307,7 +307,7 @@ body {
 
 /* White card around the inventory table */
 .inventory-card {
-    background: white;
+    background: light-dark(white, #171f2d);
     border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
@@ -342,7 +342,7 @@ body {
 }
 
 .inventory-card thead {
-    background: #f0f4fa;
+    background: light-dark(#f0f4fa, #222d3e);
 }
 
 .inventory-card th,
@@ -354,23 +354,23 @@ body {
 }
 
 .inventory-card thead th {
-    color: #526079;
+    color: light-dark(#526079, #b3bfd2);
     font-size: 11px;
     font-weight: 800;
 }
 
 /* Stock quantities */
 .stock {
-    background: #eaf2ff;
-    color: #154da5;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
     padding: 5px 10px;
     border-radius: 7px;
     font-weight: 700;
 }
 
 .stock.empty {
-    background: #fde8e8;
-    color: #a32929;
+    background: light-dark(#fde8e8, #382129);
+    color: light-dark(#a32929, #ffb8bd);
 }
 
 /* Edit and Delete actions */
@@ -379,7 +379,7 @@ body {
 }
 
 .edit-link {
-    color: var(--blue);
+    color: light-dark(var(--blue), #92bcff);
     font-weight: 700;
     text-decoration: none;
 }
@@ -389,9 +389,9 @@ body {
 }
 
 .delete-button {
-    background: #fff0f0;
-    color: #a32929;
-    border: 1px solid #f4d4d4;
+    background: light-dark(#fff0f0, #382129);
+    color: light-dark(#a32929, #ffb8bd);
+    border: 1px solid light-dark(#f4d4d4, #6d3c47);
     border-radius: 7px;
     padding: 8px 12px;
     font-weight: 600;
@@ -400,8 +400,8 @@ body {
 /* Success notifications */
 .inventory-success {
     padding: 14px 18px;
-    background: #e8f6ee;
-    color: #215739;
+    background: light-dark(#e8f6ee, #1b382f);
+    color: light-dark(#215739, #a6e6c6);
     border-radius: 9px;
     margin-bottom: 20px;
 }
@@ -414,9 +414,9 @@ body {
 }
 
 .product-form input {
-    border: 1px solid #dce3ed;
+    border: 1px solid light-dark(#dce3ed, #303d51);
     border-radius: 8px;
-    background: #fbfcfe;
+    background: light-dark(#fbfcfe, #131b28);
 }
 
 .product-form input:focus {
@@ -436,9 +436,9 @@ body {
 
 /* RFID button remains a secondary action */
 .product-form .read-tag-button {
-    background: #eaf2ff !important;
-    color: #154da5 !important;
-    border: 1px solid #cbdfff !important;
+    background: light-dark(#eaf2ff, #203552) !important;
+    color: light-dark(#154da5, #a7ccff) !important;
+    border: 1px solid light-dark(#cbdfff, #34547c) !important;
 }
 
 /* Responsive layout */

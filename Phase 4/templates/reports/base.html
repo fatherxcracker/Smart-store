@@ -9,8 +9,13 @@
     {% if active == 'purchases' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
+    {% elif active in ('dashboard', 'inventory', 'sales', 'customers', 'monitoring', 'sensors') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='nav_shell.css') }}">
     {% endif %}
     <script src="{{ url_for('reports.static', filename='js/reports.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    {% include '_theme.html' %}
 </head>
 <body{% if active == 'purchases' %} class="purchase-report"{% endif %} data-shell="{{ url_for('reports.index') if report_customer and report_customer.is_admin else '' }}" data-section="{{ active }}" data-live="{{ 'off' if no_refresh else 'on' }}">
 {% if active == 'purchases' %}
@@ -54,6 +59,7 @@
 {% endif %}
 {% if period %}
 <form class="filters" method="get">
+{% block filter_state %}{% endblock %}
 <label>From <input type="date" name="start" value="{{ period.start }}" required></label>
 <label>Through <input type="date" name="end" value="{{ period.end }}" required></label>
 {% if active=='sales' %}<label>Top / bottom <input type="number" name="limit" min="1" max="50" value="{{ limit }}" required></label>{% endif %}
@@ -71,7 +77,8 @@
 {% block filters %}{% endblock %}
 {% if period or active == 'inventory' %}<p id="report-export-status" class="note" role="status"></p>{% endif %}
 {% if not no_refresh %}<p id="refresh-status" role="status">Live report · refreshes every 5 seconds</p>{% endif %}
-<div id="report-content"{% if period %} data-export-context="{{ period.start }} – {{ period.end }}"{% elif active == 'inventory' and category %} data-export-context="{{ category }}"{% endif %}>{% block content %}{% endblock %}</div>
+{% block report_views %}{% endblock %}
+<div id="report-content"{% if active not in ('purchases', 'dashboard', 'inventory', 'sales', 'customers', 'monitoring', 'sensors') %} data-screen-sections{% endif %}{% if period %} data-export-context="{{ period.start }} – {{ period.end }}"{% elif active == 'inventory' and category %} data-export-context="{{ category }}"{% endif %}>{% block content %}{% endblock %}</div>
 </main>
 <footer>Smart Store · Phase 4 · {{ report_customer.name if report_customer else '' }}</footer>
 </body></html>

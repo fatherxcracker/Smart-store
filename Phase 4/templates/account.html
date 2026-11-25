@@ -25,6 +25,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='account_v2.css') }}">
     <script src="{{ url_for('static', filename='nav_shell.js') }}" defer></script>
     <script src="{{ url_for('static', filename='account_v2.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    {% include '_theme.html' %}
 </head>
 
 <body class="customer-account">
@@ -203,50 +206,57 @@
                     <!-- JavaScript sends the details to Flask -->
                     <form id="register-form">
 
-                        <!-- Customer's full name -->
-                        <label for="register-name" data-i18n="fullName">
-                            Full name
-                        </label>
+                        <div class="register-fields">
+                            <div class="register-field">
+                                <!-- Customer's full name -->
+                                <label for="register-name" data-i18n="fullName">
+                                    Full name
+                                </label>
 
-                        <input id="register-name"
-                               name="name"
-                               autocomplete="name"
-                               required>
+                                <input id="register-name"
+                                       name="name"
+                                       autocomplete="name"
+                                       required>
+                            </div>
+                            <div class="register-field">
+                                <!-- Customer's email -->
+                                <label for="register-email" data-i18n="email">
+                                    Email address
+                                </label>
 
-                        <!-- Customer's email -->
-                        <label for="register-email" data-i18n="email">
-                            Email address
-                        </label>
+                                <input id="register-email"
+                                       name="email"
+                                       type="email"
+                                       autocomplete="email"
+                                       required>
+                            </div>
+                            <div class="register-field">
+                                <!-- Customer creates a password -->
+                                <label for="register-password"
+                                       data-i18n="password">
+                                    Password
+                                </label>
 
-                        <input id="register-email"
-                               name="email"
-                               type="email"
-                               autocomplete="email"
-                               required>
+                                <!-- minlength=6 requires at least 6 characters -->
+                                <input id="register-password"
+                                       name="password"
+                                       type="password"
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       required>
+                            </div>
+                            <div class="register-field">
+                                <!-- Phone number is optional -->
+                                <label for="register-phone" data-i18n="phone">
+                                    Phone (optional)
+                                </label>
 
-                        <!-- Customer creates a password -->
-                        <label for="register-password"
-                               data-i18n="password">
-                            Password
-                        </label>
-
-                        <!-- minlength=6 requires at least 6 characters -->
-                        <input id="register-password"
-                               name="password"
-                               type="password"
-                               minlength="6"
-                               autocomplete="new-password"
-                               required>
-
-                        <!-- Phone number is optional -->
-                        <label for="register-phone" data-i18n="phone">
-                            Phone (optional)
-                        </label>
-
-                        <input id="register-phone"
-                               name="phone"
-                               type="tel"
-                               autocomplete="tel">
+                                <input id="register-phone"
+                                       name="phone"
+                                       type="tel"
+                                       autocomplete="tel">
+                            </div>
+                        </div>
 
                         <!-- Submits the registration form -->
                         <button class="primary-button"
@@ -380,9 +390,18 @@
 
                     <!-- JavaScript adds purchase records here -->
                     <!-- Flask gets the purchases from the database -->
-                    <div id="purchase-history"></div>
+                    <div id="purchase-history" data-page-size="3" data-narrow-page-size="2"></div>
 
                 </div>
+
+                <dialog id="history-receipt" aria-labelledby="history-receipt-title">
+                    <h2 id="history-receipt-title"></h2>
+                    <div id="history-receipt-items"></div>
+                    <p id="history-receipt-discount" hidden></p>
+                    <form method="dialog">
+                        <button class="ss-btn" data-i18n="closeReceipt">Close receipt</button>
+                    </form>
+                </dialog>
             </div>
         </section>
 

@@ -334,6 +334,12 @@ def style_css():
     return send_from_directory(BASE_DIR, "style.css")
 
 
+@app.route("/screen-fit.css")
+@app.route("/screen-fit.js")
+def screen_fit_asset():
+    return send_from_directory(BASE_DIR, request.path.lstrip("/"))
+
+
 @app.route("/script.js")
 def script_js():
     return send_from_directory(BASE_DIR, "script.js")

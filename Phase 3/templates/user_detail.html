@@ -24,6 +24,8 @@
 
     <!-- User management styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='users_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -152,7 +154,7 @@
             {% endfor %}
         {% endwith %}
 
-        <div class="user-grid">
+        <div class="user-grid" data-screen-sections>
 
             <!-- Profile -->
             <form method="post" action="{{ url_for('update_user', customer_id=user.id) }}" class="user-form admin-form">

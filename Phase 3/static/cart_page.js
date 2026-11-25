@@ -18,25 +18,25 @@
             smartShopping: "SMART SHOPPING",
             checkoutTitle: "Self-checkout",
             checkoutDesc: "Scan your products and complete your purchase",
-            scanProducts: "Scan Products",
-            scanDesc: "Place your items on the RFID reader",
             scanRFID: "Scan RFID",
             autoScan: "Auto Scan",
             addProduct: "Add Product",
             shoppingCart: "Shopping Cart",
-            cartDesc: "Review the products added to your cart",
             product: "Product",
             quantity: "Quantity",
             price: "Price",
             total: "Total",
             actions: "Actions",
             orderSummary: "Order Summary",
-            summaryDesc: "Review your total before paying",
+            viewOrderSummary: "View Order Summary",
+            backToCart: "Back to Cart",
             subtotal: "Subtotal",
             gst: "GST (5%)",
             qst: "QST (9.975%)",
             membershipNumber: "Membership Number (optional)",
             membershipPlaceholder: "Enter membership number",
+            loyaltyStep: "Loyalty Points",
+            closeLoyalty: "Close",
             paymentMethod: "Payment Method",
             selectPayment: "Select payment method",
             creditCard: "Credit Card",
@@ -59,25 +59,25 @@
             smartShopping: "MAGASINAGE INTELLIGENT",
             checkoutTitle: "Caisse libre-service",
             checkoutDesc: "Numérisez vos produits et terminez votre achat",
-            scanProducts: "Numériser les produits",
-            scanDesc: "Placez vos articles sur le lecteur RFID",
             scanRFID: "Numériser RFID",
             autoScan: "Numérisation automatique",
             addProduct: "Ajouter un produit",
             shoppingCart: "Panier",
-            cartDesc: "Vérifiez les produits ajoutés à votre panier",
             product: "Produit",
             quantity: "Quantité",
             price: "Prix",
             total: "Total",
             actions: "Actions",
             orderSummary: "Résumé de la commande",
-            summaryDesc: "Vérifiez le total avant de payer",
+            viewOrderSummary: "Voir le résumé de la commande",
+            backToCart: "Retour au panier",
             subtotal: "Sous-total",
             gst: "TPS (5 %)",
             qst: "TVQ (9,975 %)",
             membershipNumber: "Numéro de membre (facultatif)",
             membershipPlaceholder: "Entrez votre numéro de membre",
+            loyaltyStep: "Points de fidélité",
+            closeLoyalty: "Fermer",
             paymentMethod: "Mode de paiement",
             selectPayment: "Sélectionnez un mode de paiement",
             creditCard: "Carte de crédit",
@@ -245,3 +245,37 @@
     // Start checkout translation and navigation
     changeStoreLanguage(storeLanguage);
     checkStoreLogin();
+
+const checkoutSteps = document.querySelectorAll(".checkout-steps button");
+const receiptStep = document.querySelector('.checkout-steps [aria-controls="receipt-panel"]');
+
+function openCheckoutPanel(panelId) {
+    for (const step of checkoutSteps) {
+        const id = step.getAttribute("aria-controls");
+        const active = id === panelId;
+        document.getElementById(id).hidden = !active;
+        if (active) step.setAttribute("aria-current", "step");
+        else step.removeAttribute("aria-current");
+    }
+}
+
+function hideCheckoutReceipt() {
+    receiptStep.hidden = true;
+    if (receiptStep.hasAttribute("aria-current")) openCheckoutPanel("checkout-cart");
+}
+
+for (const step of checkoutSteps) {
+    step.addEventListener("click", () => openCheckoutPanel(step.getAttribute("aria-controls")));
+}
+
+for (const button of document.querySelectorAll("[data-open-checkout]")) {
+    button.addEventListener("click", () => {
+        const panelId = button.dataset.openCheckout;
+        openCheckoutPanel(panelId);
+        document.getElementById(panelId).querySelector("h2").focus({ preventScroll: true });
+    });
+}
+
+document.getElementById("open-checkout-loyalty").addEventListener("click", () => {
+    document.getElementById("checkout-loyalty").showModal();
+});

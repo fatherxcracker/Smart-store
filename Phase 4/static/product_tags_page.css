@@ -32,14 +32,14 @@
     display: inline-block;
     padding: 5px 10px;
     border-radius: 7px;
-    background: #eaf2ff;
-    color: #154da5;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
     font-weight: 700;
 }
 
 .tag-badge.sold {
-    background: #f0f4fa;
-    color: #526079;
+    background: light-dark(#f0f4fa, #222d3e);
+    color: light-dark(#526079, #b3bfd2);
 }
 
 /* Reset / remove buttons for tags */
@@ -59,9 +59,9 @@
 }
 
 .tag-action {
-    border: 1px solid #c9d8f5;
-    background: #eaf2ff;
-    color: #154da5;
+    border: 1px solid light-dark(#c9d8f5, #34547c);
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
     border-radius: 7px;
     padding: 6px 11px;
     font: inherit;
@@ -75,13 +75,13 @@
 }
 
 .tag-action.remove {
-    border-color: #f2c9c9;
-    background: #fff1f1;
-    color: #a12b2b;
+    border-color: light-dark(#f2c9c9, #6d3c47);
+    background: light-dark(#fff1f1, #382129);
+    color: light-dark(#a12b2b, #ffb8bd);
 }
 
 .tag-action.remove:hover {
-    border-color: #a12b2b;
+    border-color: light-dark(#a12b2b, #ffb8bd);
 }
 
 .tags-reset-all {
@@ -97,7 +97,7 @@
     list-style: none;
     margin: 12px 0 0;
     padding: 0;
-    border: 1px solid var(--line, #e3e7ee);
+    border: 1px solid var(--line, light-dark(#e3e7ee, #303d51));
     border-radius: 8px;
 }
 
@@ -106,7 +106,7 @@
     justify-content: space-between;
     gap: 12px;
     padding: 9px 12px;
-    border-top: 1px solid var(--line, #e3e7ee);
+    border-top: 1px solid var(--line, light-dark(#e3e7ee, #303d51));
 }
 
 .bulk-tag-list li:first-child {
@@ -122,4 +122,29 @@
     text-decoration: none;
     font-size: .9em;
     white-space: nowrap;
+}
+
+@media screen and (min-width: 601px) {
+    .screen-fit .tags-content {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        gap: 12px;
+        max-width: none;
+        margin-top: 14px;
+    }
+
+    .screen-fit .tags-content > :is(.tags-form, .inventory-card) {
+        max-width: none;
+        margin: 0;
+    }
+
+    .screen-fit .tags-content > .inventory-card {
+        grid-column: 1 / -1;
+    }
+}
+
+@media screen {
+    .screen-fit .tags-form { padding: 16px; }
+    .screen-fit .tags-form :is(input, .form-description) { margin-bottom: 10px; }
 }

@@ -1,21 +1,34 @@
 {% extends 'reports/base.html' %}
+{% set views = {'sales': 'Sales & activity', 'stock': 'Low stock', 'fridges': 'Refrigeration', 'sensor': 'Sensor', 'notifications': 'Notifications'} %}
+{% set requested_view = request.args.get('view') %}
+{% set selected_view = requested_view if requested_view in views else 'sales' %}
+
+{% block report_views %}
+    {% with view_label = 'Store overview pages' %}
+        {% include 'reports/_views.html' %}
+    {% endwith %}
+{% endblock %}
+
 {% block content %}
 <script src="{{ url_for('reports.static', filename='js/widgets.js') }}"></script>
 <script src="{{ url_for('reports.static', filename='js/dashboard.js') }}" defer></script>
 <p id="dash-status" class="note" role="status">Loading…</p>
+<div{% if selected_view != 'sales' %} data-off-screen-page{% endif %}>
 <div class="metrics">
 <article><span>Sales today (incl. tax)</span><strong id="k-sales">--</strong></article>
 <article><span>Orders today</span><strong id="k-orders">--</strong></article>
 <article><span>Customers today</span><strong id="k-customers">--</strong></article>
 <article><span>Low-stock products</span><strong id="k-low">--</strong></article>
 </div>
-<div class="columns">
 <section class="panel"><h2>Sales, last 7 days</h2><p class="note" id="week-note"></p>
 <figure class="chart" id="week-chart" data-x="date" data-y="total" data-money="true" data-empty="No sales yet this week." aria-label="Sales in the last 7 days"></figure></section>
-<section class="panel"><h2>Low stock</h2><ul class="plain" id="low-list"><li>Loading…</li></ul><p class="note"><a href="{{ url_for('reports.index') }}#inventory-report" target="_top">Open the inventory report</a> to change each category's limit.</p></section>
 </div>
+<section class="panel"{% if selected_view != 'stock' %} data-off-screen-page{% endif %}><h2>Low stock</h2><ul class="plain" id="low-list"><li>Loading…</li></ul><p class="note"><a href="{{ url_for('reports.index') }}#inventory-report" target="_top">Open the inventory report</a> to change each category's limit.</p></section>
+<div{% if selected_view != 'fridges' %} data-off-screen-page{% endif %}>
 <h2 class="section-title">Refrigerators</h2>
 <div class="metrics" id="fridge-tiles"></div>
+</div>
+<div{% if selected_view != 'sensor' %} data-off-screen-page{% endif %}>
 <h2 class="section-title">Minew MSP01 sensor</h2>
 <div class="metrics sensor-tiles">
 <article><span>Temperature</span><strong id="d-temp">--</strong><small id="d-updated"></small></article>
@@ -24,5 +37,6 @@
 <article><span>Motion</span><strong id="d-motion">--</strong><small id="d-motion-note"></small></article>
 <article><span>Sensor status</span><strong><span id="d-status" class="pill">--</span></strong></article>
 </div>
-<section class="panel"><h2>Recent notifications <a class="more" href="{{ url_for('reports.index') }}#notifications" target="_top">See all</a></h2><ul class="plain" id="notes"><li>Loading…</li></ul></section>
+</div>
+<section class="panel"{% if selected_view != 'notifications' %} data-off-screen-page{% endif %}><h2>Recent notifications <a class="more" href="{{ url_for('reports.index') }}#notifications" target="_top">See all</a></h2><ul class="plain" id="notes"><li>Loading…</li></ul></section>
 {% endblock %}

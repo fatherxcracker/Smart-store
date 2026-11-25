@@ -52,6 +52,7 @@ async function downloadReportPng(event) {
             logging: false,
             windowWidth: Math.max(window.innerWidth, 960),
             onclone(doc, snapshot) {
+                snapshot.closest(".screen-fit")?.style.removeProperty("--screen-scale");
                 snapshot.classList.add("report-png-snapshot");
                 const title = doc.createElement("h1");
                 title.textContent = document.querySelector("main h1").textContent;
@@ -214,10 +215,11 @@ async function refreshReport() {
             const page = new DOMParser().parseFromString(await response.text(), "text/html");
             const content = page.getElementById("report-content");
             if (!content) throw new Error();
-            // Keep focus and the reader's position while a form or the price-history disclosure is in use.
+            // Keep the current results in place while the reader uses the report controls.
             const report = document.getElementById("report-content");
-            if (!document.activeElement?.closest?.("#report-content :is(form, details)") &&
-                !report.querySelector(".price-history[open]")) {
+            if (!document.activeElement?.closest?.("#report-content :is(form, details, .screen-pager), #report-content + .screen-pager") &&
+                !report.querySelector(".price-history[open], [data-screen-page-active]") &&
+                !report.nextElementSibling?.matches(".screen-pager[data-screen-page-active]")) {
                 report.replaceChildren(...content.childNodes);
                 drawCharts();
             }

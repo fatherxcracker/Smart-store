@@ -1,15 +1,25 @@
 {% extends 'reports/base.html' %}
+{% set views = {'stock': 'Available Stock', 'limits': 'Low-Stock Limits'} %}
+{% set selected_view = 'limits' if request.args.get('view') == 'limits' else 'stock' %}
+
+{% block report_views %}
+    {% with view_label = 'Inventory report pages' %}
+        {% include 'reports/_views.html' %}
+    {% endwith %}
+{% endblock %}
 {% block filters %}
-<form method="get" class="filters"><label>Category <select name="category"><option value="">All categories</option>{% for value in data.categories %}<option {% if value==category %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label><button>Apply filter</button>
+<form method="get" class="filters"><input type="hidden" name="view" value="{{ selected_view }}"><label>Category <select name="category"><option value="">All categories</option>{% for value in data.categories %}<option {% if value==category %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label><button>Apply filter</button>
 {% include 'reports/_export.html' %}</form>
 {% if saved %}<p class="banner ok" role="status">{{ saved }}</p>{% endif %}{% if error %}<p class="banner bad" role="alert">{{ error }}</p>{% endif %}
 {% endblock %}
 {% block content %}
+<div{% if selected_view != 'stock' %} data-off-screen-page{% endif %}>
 <div class="metrics"><article><span>Active products</span><strong>{{ data.products|length }}</strong></article><article><span>Units in stock</span><strong>{{ data.units }}</strong></article><article><span>Low stock products</span><strong>{{ data.low_count }}</strong></article><article><span>Moderate stock products</span><strong>{{ data.moderate_count }}</strong></article></div>
-<section class="panel"><h2>Available stock</h2><p class="note">Every unit is one RFID-tagged item. <span class="badge low">low</span> below the category limit · <span class="badge moderate">moderate</span> below twice the limit · <span class="badge good">good</span> otherwise. Change each category's limit in the section below.</p>
+<section class="panel"><h2>Available stock</h2><p class="note">Every unit is one RFID-tagged item. <span class="badge low">low</span> below the category limit · <span class="badge moderate">moderate</span> below twice the limit · <span class="badge good">good</span> otherwise. Use Low-Stock Limits to change a category's threshold.</p>
 <div class="table-wrap"><table><thead><tr><th>Product</th><th>ID</th><th>Category</th><th>Available</th><th></th><th>Last restocked</th><th>Level</th></tr></thead><tbody>
 {% for p in data.products %}<tr><td>{{ p.name }}</td><td>{{ p.id }}</td><td>{{ p.category }}</td><td>{{ p.in_stock }}</td><td class="barcell"><span class="bar {{ p.stock_level }}" style="width: {{ p.bar }}%"></span></td><td>{{ p.last_received_at|report_time or 'Never' }}</td><td><span class="badge {{ p.stock_level }}">{{ p.stock_level }}</span></td></tr>{% else %}<tr><td colspan="7">No products in this category.</td></tr>{% endfor %}
 </tbody></table></div></section>
-<section class="panel"><h2>Low-stock limit per category</h2><p class="note">A product is <strong>low</strong> when fewer units than the limit remain. The checkout then sends a low-stock notification. Default: {{ data.default_limit }} units.</p>
-<div class="limits">{% for cat, limit in data.limits.items() %}<form method="post" action="{{ url_for('reports.save_low_stock_limit') }}"><input type="hidden" name="category" value="{{ cat }}"><label>{{ cat }}<span><input type="number" name="low_stock" min="0" max="100000" value="{{ limit }}" required><button>Save</button></span></label></form>{% else %}<p>No categories yet.</p>{% endfor %}</div></section>
+</div>
+<section class="panel"{% if selected_view != 'limits' %} data-off-screen-page{% endif %}><h2>Low-stock limit per category</h2><p class="note">A product is <strong>low</strong> when fewer units than the limit remain. The checkout then sends a low-stock notification. Default: {{ data.default_limit }} units.</p>
+<div class="limits" data-page-list="6" data-narrow-page-size="4">{% for cat, limit in data.limits.items() %}<form method="post" action="{{ url_for('reports.save_low_stock_limit') }}"><input type="hidden" name="category" value="{{ cat }}"><input type="hidden" name="report_category" value="{{ category }}"><label>{{ cat }}<span><input type="number" name="low_stock" min="0" max="100000" value="{{ limit }}" required><button>Save</button></span></label></form>{% else %}<p>No categories yet.</p>{% endfor %}</div></section>
 {% endblock %}

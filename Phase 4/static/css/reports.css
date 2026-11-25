@@ -1,13 +1,13 @@
 /* Phase 4 pages: dashboard, reports, fridges, sensor. */
 :root{
-  --bg:#f6f8fc; --surface:#ffffff; --surface-2:#f0f3f9; --text:#171b26; --muted:#737e91; --line:#e5eaf2; --line-2:#edf0f6;
-  --accent:#1769ff; --accent-hover:#0954db; --accent-soft:#e8f0ff; --link:#1769ff; --chart:#1769ff; --focus:#1769ff; --black:#101218;
-  --good-fg:#14683f; --good-bg:#e1f5ea; --mod-fg:#8a5a00; --mod-bg:#fff1d0; --low-fg:#b3261e; --low-bg:#fde8e6;
+  --bg:light-dark(#f6f8fc, #0f1521); --surface:light-dark(#ffffff, #171f2d); --surface-2:light-dark(#f0f3f9, #222d3e); --text:light-dark(#171b26, #eef3fb); --muted:light-dark(#737e91, #b3bfd2); --line:light-dark(#e5eaf2, #303d51); --line-2:light-dark(#edf0f6, #303d51);
+  --accent:#1769ff; --accent-hover:#0954db; --accent-soft:light-dark(#e8f0ff, #203552); --link:light-dark(#1769ff, #92bcff); --chart:light-dark(#1769ff, #92bcff); --focus:light-dark(#1769ff, #92bcff); --black:#101218;
+  --good-fg:light-dark(#14683f, #a6e6c6); --good-bg:light-dark(#e1f5ea, #1b382f); --mod-fg:light-dark(#8a5a00, #f9d487); --mod-bg:light-dark(#fff1d0, #463419); --low-fg:light-dark(#b3261e, #ffb8bd); --low-bg:light-dark(#fde8e6, #382129);
   --good-bar:#2fa56a; --mod-bar:#e5a823; --low-bar:#e0534a;
-  font-family:Inter,system-ui,sans-serif;color:var(--text);background:var(--bg);font-synthesis:none;color-scheme:light
+  font-family:Inter,system-ui,sans-serif;color:var(--text);background:var(--bg);font-synthesis:none
 }
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}
-a{color:var(--link);text-underline-offset:4px}
+a{color:light-dark(var(--link), #92bcff);text-underline-offset:4px}
 header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:90px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line)}
 header nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:.82rem;font-weight:600}header nav a{color:var(--muted);text-decoration:none}header nav a:hover{color:var(--accent)}
 .brand{font-weight:800;letter-spacing:.05em;text-decoration:none;white-space:nowrap;color:var(--text)}
@@ -81,7 +81,7 @@ code{background:var(--surface-2);padding:2px 6px;border-radius:4px}
 .chart{margin:0;min-height:220px}.chart svg{display:block;width:100%;height:260px}
 .chart text{font:12px system-ui;fill:var(--muted)}
 .chart polyline{fill:none;stroke:var(--chart);stroke-width:2.5}.chart circle{fill:var(--chart)}.chart line{stroke:var(--line)}
-.price-history summary{cursor:pointer;color:var(--link);font-weight:600}
+.price-history summary{cursor:pointer;color:light-dark(var(--link), #92bcff);font-weight:600}
 .price-history .table-wrap{margin-top:12px}
 .empty-chart{color:var(--muted);font-size:.9rem;padding:40px 0;text-align:center}
 .stack{display:flex;flex-direction:column;gap:8px;font-size:.85rem;margin:8px 0}
@@ -96,9 +96,9 @@ input[type=range]{padding:0;border:none;width:100%}
 @media(prefers-reduced-motion:reduce){.fan-icon.spinning .fan-blades{animation-duration:4s}}
 footer{padding:24px;text-align:center;color:var(--muted);font-size:.8rem}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-@media(max-width:800px){.columns,.fridge-grid{grid-template-columns:minmax(0,1fr);gap:0}}
+@media(max-width:800px){.columns{grid-template-columns:minmax(0,1fr);gap:0}}
 @media(max-width:700px){header{align-items:start;flex-direction:column;padding:20px}header nav{gap:14px}main{padding:24px 16px}.panel,.metrics article{padding:18px}.filters label{width:100%}.filters input,.filters select{width:100%}}
-@media print{header nav,.tabs,.filters,#refresh-status,footer{display:none}body{background:#fff;color:#000}.panel,.metrics article{break-inside:avoid;border-color:#bbb}.table-wrap{overflow:visible}main{max-width:none;padding:0}.date-list{max-height:none;overflow:visible}th,td{white-space:normal}.receipt{break-inside:avoid}}
+@media print{header nav,.tabs,.filters,#refresh-status,footer{display:none}body{background:light-dark(#fff, #171f2d);color:#000}.panel,.metrics article{break-inside:avoid;border-color:#bbb}.table-wrap{overflow:visible}main{max-width:none;padding:0}.date-list{max-height:none;overflow:visible}th,td{white-space:normal}.receipt{break-inside:avoid}}
 
 /* Embedded inside the admin dashboard: the dashboard supplies the header, menu and footer. */
 html.embedded header,html.embedded footer,html.embedded .tabs,html.embedded .eyebrow,html.embedded main>h1{display:none}
@@ -113,6 +113,39 @@ html.embedded body{background:var(--bg)}
 .purchase-report .report-actions a{text-decoration:none}
 .purchase-report:has(.ss-side:not([hidden])) .customer-report-back{display:none}
 .purchase-report .filters{border-radius:16px}
+
+@media screen {
+  main.screen-fit,html.embedded main.screen-fit{padding-block:14px}
+  .screen-fit h1{margin-block:6px 12px}
+  .screen-fit h2{margin-bottom:8px}
+  .screen-fit .section-title{margin-block:12px 8px}
+  .screen-fit .filters,.screen-fit .panel,.screen-fit .metrics article{padding:12px}
+  .screen-fit .filters,.screen-fit .panel,.screen-fit .metrics{margin-bottom:10px}
+  .screen-fit .columns,.screen-fit .metrics,.screen-fit .fridge-grid{gap:10px}
+  .screen-fit .metrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr))}
+  .screen-fit .metrics strong{margin-top:4px;font-size:1.5rem}
+  .screen-fit .note,.screen-fit #refresh-status{margin-block:5px}
+  .screen-fit .chart{min-height:0}
+  .screen-fit .chart svg{height:clamp(120px,23dvh,210px)}
+  .screen-fit th,.screen-fit td{padding:6px 8px;min-width:0}
+  .screen-fit li{margin-block:4px}
+  .screen-fit ul.plain li{padding-block:4px}
+  .screen-fit .report-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .screen-fit .date-list{max-height:none;overflow:visible;padding-left:18px;columns:2}
+  body:has(main.screen-fit) > footer{padding-block:8px}
+}
+@media screen and (max-width:600px){
+  .screen-fit .report-pair{display:block}
+  .screen-fit .filters label{width:auto;flex:1 1 125px}
+  html.embedded main.screen-fit:has(.fridge-grid:not([data-off-screen-page])){padding:12px}
+  .screen-fit .fridge-grid > .fridge{min-width:0;padding:8px}
+  .screen-fit .fridge-grid .metrics.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+  .screen-fit .fridge-grid .metrics article{padding:5px;overflow-wrap:anywhere}
+  .screen-fit .fridge-grid .metrics strong{font-size:1.15rem}
+  .screen-fit .fridge-grid h2 .pill{margin:4px 0 0}
+  .screen-fit .fridge-grid .inline{flex-wrap:wrap}
+  .screen-fit .fridge-grid .inline input{min-width:48px}
+}
 @media (min-width:481px) and (max-width:900px){
     .purchase-report .filters label{flex:0 0 calc(50% - 7px);min-width:0}
     .purchase-report .filters input,.purchase-report .filters select{width:100%}
@@ -122,4 +155,37 @@ html.embedded .purchase-report .report-actions,html.embedded .purchase-report .c
 @media print{
     body.purchase-report.ss-layout,.purchase-report{padding:0}
     .purchase-report .ss-top,.purchase-report .ss-side,.purchase-report .report-actions{display:none}
+}
+
+.report-views {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.report-views a { text-decoration: none; }
+
+.report-views a[aria-current="page"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+@media print {
+    .report-views { display: none; }
+}
+
+.sensor-history-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.sensor-history-grid > .panel { min-width: 0; }
+
+@media screen and (max-width: 600px) {
+    html.embedded main.screen-fit:has(.sensor-history-grid:not([data-off-screen-page])) { padding: 12px; }
+    .screen-fit .sensor-history-grid > .panel { padding: 8px; }
+    .sensor-history-grid th, .sensor-history-grid td { overflow-wrap: anywhere; }
 }

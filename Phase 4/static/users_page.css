@@ -17,8 +17,8 @@
 .user-stat {
     min-width: 110px;
     padding: 14px 18px;
-    background: white;
-    border: 1px solid #e5eaf2;
+    background: light-dark(white, #171f2d);
+    border: 1px solid light-dark(#e5eaf2, #303d51);
     border-radius: 12px;
     box-shadow: 0 12px 35px rgba(18, 33, 60, .05);
 }
@@ -26,12 +26,12 @@
 .user-stat strong {
     display: block;
     font-size: 22px;
-    color: #171b26;
+    color: light-dark(#171b26, #eef3fb);
 }
 
 .user-stat span {
     font-size: 12px;
-    color: #737e91;
+    color: light-dark(#737e91, #b3bfd2);
 }
 
 /* Search bar */
@@ -49,9 +49,9 @@
 .user-search input {
     flex: 1;
     padding: 12px 14px;
-    border: 1px solid #dce3ed;
+    border: 1px solid light-dark(#dce3ed, #303d51);
     border-radius: 8px;
-    background: white;
+    background: light-dark(white, #171f2d);
     font: inherit;
     font-size: 13px;
 }
@@ -69,7 +69,7 @@
 }
 
 .user-search a {
-    color: #566176;
+    color: light-dark(#566176, #b3bfd2);
     font-size: 13px;
     font-weight: 600;
 }
@@ -83,9 +83,9 @@
     display: inline-block;
     cursor: pointer;
     padding: 11px 16px;
-    background: #eaf2ff;
-    color: #154da5;
-    border: 1px solid #cbdfff;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
+    border: 1px solid light-dark(#cbdfff, #34547c);
     border-radius: 8px;
     font-weight: 700;
     font-size: 13px;
@@ -144,8 +144,8 @@
     display: flex;
     flex-direction: column;
     padding: 26px;
-    background: white;
-    border: 1px solid #e5eaf2;
+    background: light-dark(white, #171f2d);
+    border: 1px solid light-dark(#e5eaf2, #303d51);
     border-radius: 14px;
     box-shadow: 0 12px 35px rgba(18, 33, 60, .05);
 }
@@ -154,11 +154,11 @@
 .card-title h2 {
     margin: 0 0 8px;
     font-size: 18px;
-    color: #171b26;
+    color: light-dark(#171b26, #eef3fb);
 }
 
 .user-form .form-description {
-    color: #737e91;
+    color: light-dark(#737e91, #b3bfd2);
     font-size: 12px;
     margin: 0 0 16px;
 }
@@ -168,7 +168,7 @@
     font-size: 12px;
     font-weight: 700;
     margin-bottom: 8px;
-    color: #171b26;
+    color: light-dark(#171b26, #eef3fb);
 }
 
 .user-form input,
@@ -176,10 +176,10 @@
     width: 100%;
     padding: 11px 13px;
     margin-bottom: 16px;
-    border: 1px solid #dce3ed;
+    border: 1px solid light-dark(#dce3ed, #303d51);
     border-radius: 8px;
-    background: #fbfcfe;
-    color: #171b26;
+    background: light-dark(#fbfcfe, #131b28);
+    color: light-dark(#171b26, #eef3fb);
     font: inherit;
     font-size: 13px;
 }
@@ -188,7 +188,7 @@
 .user-form select:focus {
     outline: none;
     border-color: #1769ff;
-    background: white;
+    background: light-dark(white, #171f2d);
     box-shadow: 0 0 0 3px rgba(23, 105, 255, .08);
 }
 
@@ -225,19 +225,19 @@
 }
 
 .secondary-action {
-    background: #eaf2ff;
-    color: #154da5;
-    border: 1px solid #cbdfff;
+    background: light-dark(#eaf2ff, #203552);
+    color: light-dark(#154da5, #a7ccff);
+    border: 1px solid light-dark(#cbdfff, #34547c);
 }
 
 .danger-action {
-    background: #fff1f1;
-    color: #a12b2b;
-    border: 1px solid #f2c9c9;
+    background: light-dark(#fff1f1, #382129);
+    color: light-dark(#a12b2b, #ffb8bd);
+    border: 1px solid light-dark(#f2c9c9, #6d3c47);
 }
 
 .danger-action:hover {
-    border-color: #a12b2b;
+    border-color: light-dark(#a12b2b, #ffb8bd);
 }
 
 /* Badges next to names */
@@ -253,13 +253,13 @@
 }
 
 .role-badge.admin {
-    background: #e8f6ee;
-    color: #1d6b3f;
+    background: light-dark(#e8f6ee, #1b382f);
+    color: light-dark(#1d6b3f, #a6e6c6);
 }
 
 .role-badge.you {
-    background: #eef1f6;
-    color: #566176;
+    background: light-dark(#eef1f6, #222d3e);
+    color: light-dark(#566176, #b3bfd2);
 }
 
 .mono {
@@ -276,7 +276,7 @@
     border: 0;
     background: none;
     padding: 0;
-    color: #1769ff;
+    color: light-dark(#1769ff, #92bcff);
     font-weight: 600;
     cursor: pointer;
     text-decoration: underline;
@@ -284,15 +284,15 @@
 }
 
 .receipt-row > td {
-    background: #f8faff;
+    background: light-dark(#f8faff, #131b28);
 }
 
 .receipt-preview {
     max-width: 520px;
     margin: 4px auto 8px;
     padding: 20px;
-    background: white;
-    border: 1px solid #e5eaf2;
+    background: light-dark(white, #171f2d);
+    border: 1px solid light-dark(#e5eaf2, #303d51);
     border-radius: 10px;
 }
 
@@ -300,5 +300,23 @@
     .user-grid,
     .form-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (min-width: 950px) {
+    .screen-fit .user-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: start;
+        gap: 12px;
+    }
+
+    .screen-fit .user-column { display: contents; }
+}
+
+@media screen {
+    .screen-fit .user-form { padding: 14px; }
+    .screen-fit .user-form :is(input, select) {
+        padding: 8px 10px;
+        margin-bottom: 8px;
     }
 }

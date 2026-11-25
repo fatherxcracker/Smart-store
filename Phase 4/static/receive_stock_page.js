@@ -19,6 +19,8 @@
             receiveStockTitle: "Receive Stock",
             receiveStockDesc: "Record a new delivery and update product quantities",
             deliveryDetails: "Delivery Details",
+            rfidStep: "RFID Tags",
+            continueToTags: "Continue to RFID Tags",
             formDescription: "Enter the information for the received stock",
             product: "Product",
             selectProduct: "Select a product",
@@ -50,6 +52,8 @@
             receiveStockTitle: "Réceptionner du stock",
             receiveStockDesc: "Enregistrez une nouvelle livraison et mettez à jour les quantités",
             deliveryDetails: "Détails de la livraison",
+            rfidStep: "Étiquettes RFID",
+            continueToTags: "Continuer vers les étiquettes RFID",
             formDescription: "Entrez les informations du stock reçu",
             product: "Produit",
             selectProduct: "Sélectionnez un produit",
@@ -201,3 +205,57 @@
     // Start stock translation and navigation
     changeStoreLanguage(storeLanguage);
     checkStoreLogin();
+
+const receiveForm = document.getElementById("receive-stock-form");
+if (receiveForm) {
+    const steps = document.querySelector(".receive-steps");
+    const stepButtons = steps.querySelectorAll("button");
+    const details = document.getElementById("receive-details");
+    const tags = document.getElementById("receive-tags");
+    const next = receiveForm.querySelector("[data-receive-next]");
+    let activeStep;
+    let handlingInvalid = false;
+
+    function showStep(step, focus = false) {
+        activeStep = step;
+        details.hidden = step !== details;
+        tags.hidden = step !== tags;
+        for (const button of stepButtons) {
+            if (button.getAttribute("aria-controls") === step.id) button.setAttribute("aria-current", "step");
+            else button.removeAttribute("aria-current");
+        }
+        if (focus) step.querySelector("h2").focus({ preventScroll: true });
+    }
+
+    function openTags() {
+        for (const field of details.querySelectorAll("[required]")) {
+            if (!field.reportValidity()) return;
+        }
+        showStep(tags, true);
+    }
+
+    for (const button of stepButtons) {
+        button.addEventListener("click", () => {
+            if (button.getAttribute("aria-controls") === tags.id) openTags();
+            else showStep(details, true);
+        });
+    }
+    next.addEventListener("click", openTags);
+    receiveForm.addEventListener("invalid", event => {
+        if (handlingInvalid) return;
+        handlingInvalid = true;
+        const step = event.target.closest("[data-receive-step]");
+        if (step && step !== activeStep) showStep(step);
+        queueMicrotask(() => { handlingInvalid = false; });
+    }, true);
+    receiveForm.addEventListener("submit", event => {
+        if (activeStep === tags) return;
+        event.preventDefault();
+        openTags();
+    });
+
+    const validDetails = [...details.querySelectorAll("[required]")].every(field => field.validity.valid);
+    showStep(receiveForm.hasAttribute("data-receive-error") && validDetails ? tags : details);
+    steps.hidden = false;
+    next.hidden = false;
+}

@@ -580,8 +580,8 @@ body .app > .topbar [hidden] {
 
 /* Allows history to scroll */
 #purchase-history {
-    max-height: 390px;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
 }
 
 /* Styles expanded receipt details */

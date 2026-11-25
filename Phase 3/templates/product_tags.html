@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='inventory.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='receive_stock_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='product_tags_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
+    <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
 </head>
 <body data-home-url="{{ url_for('home') }}">
 <!-- Contains whole website -->
@@ -110,7 +112,7 @@
             <p class="form-error" role="alert">{{ error }}</p>
         {% endif %}
 
-        <div class="tags-content">
+        <div class="tags-content" data-screen-sections>
             <!-- Sends the assigned tag to Flask -->
             <form method="post" class="product-form tags-form">
                 <h2 data-i18n="assignTitle">Add a Tagged Item</h2>

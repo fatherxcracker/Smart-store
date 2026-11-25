@@ -1,5 +1,5 @@
 /* Account page redesign: same look as the admin dashboard (blue/black store style). */
-:root { --surface:#fff; --surface-2:#f0f3f9; --line:#e5eaf2; --soft:#e8f0ff; }
+:root { --surface:light-dark(#fff, #171f2d); --surface-2:light-dark(#f0f3f9, #222d3e); --line:light-dark(#e5eaf2, #303d51); --soft:light-dark(#e8f0ff, #203552); }
 
 
 
@@ -47,7 +47,7 @@
 .ring-in small { color:var(--muted); font-size:.72rem; margin-top:4px; }
 .points-worth { margin:0 0 6px; color:var(--muted); }
 .points-worth strong { font-size:1.4rem; color:var(--text); margin-left:4px; }
-.points-next { margin:0; color:var(--blue); font-weight:600; font-size:.85rem; line-height:1.4; }
+.points-next { margin:0; color:light-dark(var(--blue), #92bcff); font-weight:600; font-size:.85rem; line-height:1.4; }
 .points-desc { margin:0; color:var(--muted); font-size:.82rem; line-height:1.5; }
 
 /* Purchase statistics and profile */
@@ -62,7 +62,7 @@ body.customer-account:has(.ss-side:not([hidden])) #account-nav { display:none; }
 .customer-account #account-nav { display:flex; gap:6px; }
 .customer-account #account-nav[hidden] { display:none; }
 .customer-account #account-nav .ss-btn { white-space:nowrap; }
-.customer-account #account-nav .active { border-color:var(--blue); color:var(--blue); }
+.customer-account #account-nav .active { border-color:var(--blue); color:light-dark(var(--blue), #92bcff); }
 #login-form { scroll-margin-top:76px; }
 .main { display:block; padding-top:12px; }
 .login-container, .dashboard-container, .page { margin-inline:auto; }
@@ -77,4 +77,188 @@ body.customer-account:has(.ss-side:not([hidden])) #account-nav { display:none; }
 @media (max-width:900px) {
     .hero-grid { grid-template-columns:1fr; }
     .stat-grid { grid-template-columns:1fr 1fr; }
+}
+
+@media screen {
+    .customer-account .app:has(:is(#login-page, #register-page, #dashboard-page, #history-page, #profile-page):not([hidden])) {
+        min-height: 0;
+    }
+
+    body.customer-account #dashboard-page .customer-content,
+    body.customer-account #history-page .customer-content,
+    body.customer-account #profile-page .customer-content {
+        padding-block: 16px;
+    }
+
+    #dashboard-page .customer-heading,
+    #history-page .customer-heading,
+    #profile-page .customer-heading {
+        margin-bottom: 14px;
+    }
+
+    body.customer-account :is(#dashboard-page, #history-page, #profile-page) .customer-heading h1 {
+        font-size: clamp(1.9rem, 4vw, 2.4rem);
+    }
+
+    #history-page .customer-heading p { font-size: .95rem; }
+    #history-page .stat-grid { gap: 10px; margin-bottom: 12px; }
+    #history-page .stat { padding: 12px 14px; }
+    #history-page .stat span { font-size: .875rem; }
+    #history-page .stat strong { margin-top: 5px; }
+
+    #history-page :is(.history-header, .history-row) {
+        min-width: 0;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, .75fr) minmax(0, .75fr) minmax(0, 1fr);
+        padding: 10px 14px;
+        overflow-wrap: anywhere;
+    }
+
+    #history-page .history-header { font-size: .8rem; }
+    #history-page .history-row { font-size: .95rem; }
+    #history-page .history-row button { padding: 6px; font-size: .875rem; }
+
+    #profile-page .profile-card {
+        padding: clamp(18px, 4vw, 32px);
+    }
+
+    #profile-page .profile-card :is(.card-label, .field-label) { font-size: .95rem; }
+    #profile-page .profile-card strong { font-size: clamp(1.15rem, 2.6vw, 1.5rem); }
+
+    #history-receipt {
+        width: min(560px, calc(100% - 24px));
+        max-height: calc(100dvh - 24px);
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        color: var(--text);
+        background: var(--surface);
+    }
+
+    #history-receipt::backdrop { background: rgb(16 18 24 / 35%); }
+    #history-receipt h2 { margin-top: 0; }
+    #history-receipt ul { padding-inline-start: 20px; }
+    #history-receipt li { margin-block: 6px; }
+}
+
+@media screen and (max-width: 600px) {
+    #history-page .stat { padding: 8px 10px; }
+    #history-page .stat strong { font-size: 1.2rem; }
+    #history-page :is(.history-header, .history-row) { gap: 5px; padding: 7px 8px; }
+    #history-page .history-row { font-size: .83rem; }
+    #history-page .history-row button { font-size: .75rem; }
+}
+
+@media screen and (min-width: 450px) and (max-width: 600px) and (max-height: 650px) {
+    #history-page .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media screen {
+    :is(#login-page, #register-page) .login-container {
+        max-width: 520px;
+        padding-inline: 8px;
+    }
+
+    :is(#login-page, #register-page) .login-heading { margin-bottom: 14px; }
+    :is(#login-page, #register-page) .login-heading h1 { font-size: clamp(2rem, 4vw, 2.65rem); }
+    :is(#login-page, #register-page) .login-heading p { max-width: 420px; font-size: 1rem; }
+    :is(#login-page, #register-page) .login-card { padding: 20px clamp(16px, 4vw, 32px); }
+    :is(#login-page, #register-page) .login-card h2 { font-size: 1.65rem; }
+    :is(#login-page, #register-page) .login-card :is(.subtitle, label, .switch-text) { font-size: .95rem; }
+    :is(#login-page, #register-page) .login-card .subtitle { margin-bottom: 14px; }
+    :is(#login-page, #register-page) .login-card input { font-size: 1rem; margin-bottom: 12px; }
+    :is(#login-page, #register-page) .login-card .primary-button { font-size: 1rem; }
+    :is(#login-page, #register-page) .login-divider { margin-block: 12px; }
+    #login-page .login-footnote { display: none; }
+
+    #dashboard-page .customer-heading p { font-size: 1rem; }
+    #dashboard-page .mc-brand { font-size: 1.12rem; }
+    #dashboard-page .mc-number { font-size: clamp(1.5rem, 3vw, 1.9rem); }
+    #dashboard-page .mc-bottom small { font-size: .8rem; }
+    #dashboard-page .mc-bottom strong { font-size: 1.05rem; }
+    #dashboard-page .points-card .card-label,
+    #dashboard-page .points-card p { font-size: .95rem; }
+    #dashboard-page .points-card .points-worth strong { font-size: 1.55rem; }
+}
+
+@media screen and (min-width: 750px) and (max-height: 690px) {
+    :is(#login-page, #register-page) .login-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 28px;
+        max-width: 920px;
+    }
+
+    :is(#login-page, #register-page) .login-heading {
+        text-align: start;
+        margin: 0;
+    }
+
+    :is(#login-page, #register-page) .login-heading p { margin-inline: 0; }
+}
+
+@media screen and (max-width: 900px) {
+    #dashboard-page .hero-grid { gap: 10px; margin-bottom: 8px; }
+    #dashboard-page :is(.member-card, .points-card) { padding: 14px; gap: 10px; }
+    #dashboard-page .member-card { min-height: 0; }
+    #dashboard-page .points-row { gap: 12px; }
+    #dashboard-page .ring { width: 94px; height: 94px; }
+    #dashboard-page .ring-in { width: 74px; height: 74px; }
+}
+
+@media screen and (max-width: 600px) {
+    :is(#login-page, #register-page) .login-heading h1 { margin-block: 6px; }
+    :is(#login-page, #register-page) .login-heading p { line-height: 1.35; }
+    :is(#login-page, #register-page) .login-card { padding-block: 14px; }
+    :is(#login-page, #register-page) .login-card input { margin-bottom: 9px; }
+}
+
+@media screen and (max-width: 600px) and (max-height: 650px) {
+    :is(#login-page, #register-page) .login-heading .eyebrow,
+    :is(#login-page, #register-page) .login-card .subtitle { display: none; }
+    :is(#login-page, #register-page) .login-heading { margin-bottom: 8px; }
+    :is(#login-page, #register-page) .login-divider { margin-block: 8px; }
+    :is(#login-page, #register-page) .switch-text { margin-top: 8px; }
+    .customer-account .app:has(:is(#login-page, #register-page):not([hidden])) > footer,
+    .customer-account .app:has(#dashboard-page:not([hidden])) > footer {
+        min-height: 0;
+        padding-block: 8px;
+    }
+}
+
+@media screen and (min-width: 375px) and (max-width: 600px) and (max-height: 650px) {
+    #dashboard-page .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #dashboard-page .mc-number { font-size: 1.35rem; overflow-wrap: anywhere; }
+    #dashboard-page .mc-bottom { gap: 8px; }
+    body.customer-account #dashboard-page .customer-content { padding-block: 9px; }
+    #dashboard-page .customer-heading { margin-bottom: 8px; }
+    #dashboard-page .points-row { gap: 7px; }
+    #dashboard-page .points-card p { line-height: 1.35; }
+    #dashboard-page .ring { width: 64px; height: 64px; }
+    #dashboard-page .ring-in { width: 50px; height: 50px; }
+    #dashboard-page .ring-in b { font-size: 1.55rem; }
+}
+
+@media screen {
+    #register-page .register-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px 14px;
+    }
+
+    #register-page .register-field label {
+        display: block;
+    }
+
+    #register-page .register-field input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #register-page .switch-text { margin-top: 12px; }
+}
+
+@media screen and (max-width: 360px) {
+    #register-page .register-fields { column-gap: 8px; }
+    #register-page .register-field input { padding-inline: 8px; }
 }

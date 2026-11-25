@@ -1,0 +1,5 @@
+<nav class="report-views" aria-label="{{ view_label }}">
+    {% for view, label in views.items() %}
+    <a class="ss-btn" href="?{{ dict(request.args, view=view) | urlencode }}"{% if view == selected_view %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</nav>
