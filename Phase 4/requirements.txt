@@ -6,5 +6,7 @@ openpyxl==3.1.5
 # Phase 2: fridge monitoring (MQTT broker + motor driver)
 paho-mqtt==2.1.0
 gpiozero==2.0.1
+# GPIO backend for gpiozero on Raspberry Pi 5 (fan PWM)
+lgpio>=0.2.2
 # Phase 4: Minew MSP01 Bluetooth scan (only used when MSP01_BLE=1)
 bleak>=0.22

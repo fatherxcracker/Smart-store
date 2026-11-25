@@ -20,32 +20,45 @@ import random
 import threading
 
 MINEW_SERVICE_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"
-FRAME_INFO = 0xA1  # Minew "info" frame carrying battery + temperature/humidity
+FRAME_TYPE = 0xA1  # every Minew sensor frame starts with 0xA1
+
+# Byte 1 says which slot/frame this is. The MSP01 rotates through them, so one
+# advertisement carries only some of the values (the dashboard keeps the newest
+# value of each field). Layouts follow reelyActive's advlib-ble-services (minew.js)
+# and were checked against our sensor (C3:00:00:45:5D:A6).
+FRAME_TEMP_HUMIDITY = 0x01  # bytes 3-4 temperature, 5-6 humidity (signed 8.8)
+FRAME_ACCELERATION = 0x03   # x/y/z acceleration (not stored)
+FRAME_INFO = 0x08           # device name "MSP01" (only battery is used)
+FRAME_PIR = 0x11            # bit 0 of byte 4 = motion detected
+FRAME_LIGHT = 0x19          # bytes 3-4 photoresistor reading, unsigned 16-bit big-endian (raw, not calibrated lux)
 
 
 def _fixed_8_8(high, low):
-    """Minew writes temperature/humidity as signed int8 + 1/256 fraction."""
-    value = int.from_bytes([high], "big", signed=True)
-    return round(value + low / 256.0 * (1 if value >= 0 else -1), 2)
+    """Minew writes temperature/humidity as signed int8 + unsigned 1/256 fraction."""
+    return round(int.from_bytes([high], "big", signed=True) + low / 256.0, 2)
 
 
 def decode_service_data(data: bytes):
-    """Decode Minew service data. Returns a dict (maybe empty) with the fields
-    that could be read: battery, temperature, humidity.
+    """Decode one Minew service-data frame. Returns a dict (maybe empty) with the
+    fields this frame carries: battery plus temperature/humidity, motion or light.
 
-    Layout used (Minew info frame for temperature/humidity sensors):
-        byte 0 frame type 0xA1 | 1 product model | 2 battery % |
-        bytes 3-4 temperature (int8 + 1/256) | bytes 5-6 humidity (int8 + 1/256)
+    Common layout: byte 0 = 0xA1 | byte 1 = frame type | byte 2 = battery %
+    followed by the frame's values and the sensor's MAC address (6 bytes, reversed).
     """
-    if not data or data[0] != FRAME_INFO or len(data) < 3:
+    if not data or len(data) < 3 or data[0] != FRAME_TYPE:
         return {}
+    frame = data[1]
     result = {"battery": int(data[2])}
-    if len(data) >= 7:
+    if frame == FRAME_TEMP_HUMIDITY and len(data) >= 7:
         temperature, humidity = _fixed_8_8(data[3], data[4]), _fixed_8_8(data[5], data[6])
         if -40 <= temperature <= 100:
             result["temperature"] = temperature
         if 0 <= humidity <= 100:
             result["humidity"] = humidity
+    elif frame == FRAME_PIR and len(data) >= 5:
+        result["motion"] = data[4] & 0x01
+    elif frame == FRAME_LIGHT and len(data) >= 5:
+        result["light"] = int.from_bytes(data[3:5], "big")
     return result
 
 

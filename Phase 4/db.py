@@ -112,6 +112,9 @@ def init_db(seed=True):
     if seed and conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0:
         with open(SEED_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())
+    alert_columns = {row["name"] for row in conn.execute("PRAGMA table_info(fridge_alerts)")}
+    if "recipient" not in alert_columns:
+        conn.execute("ALTER TABLE fridge_alerts ADD COLUMN recipient TEXT")
     tag_columns = {row["name"] for row in conn.execute("PRAGMA table_info(product_tags)")}
     if "reception_id" not in tag_columns:
         conn.execute("ALTER TABLE product_tags ADD COLUMN reception_id INTEGER REFERENCES receptions(id)")
