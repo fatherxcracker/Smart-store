@@ -30,10 +30,10 @@
 <a href="#sensor" data-section="sensor" data-src="{{ url_for('sensors.page') }}">MSP01 sensor</a>
 <p class="side-group">Store</p>
 <a href="#products" data-section="products" data-src="{{ url_for('inventory') }}">Products &amp; stock</a>
+<a href="#users" data-section="users" data-src="{{ url_for('manage_users') }}">Manage Users</a>
 <p class="side-foot">Signed in as {{ report_customer.name if report_customer else '' }}</p>
 </aside>
 <div hidden>
-<a href="#users" data-section="users" data-src="{{ url_for('manage_users') }}">Users</a>
 <a href="#notifications" data-section="notifications" data-src="{{ url_for('reports.notifications_page') }}">Notifications</a>
 <a href="#purchases" data-section="purchases" data-src="{{ url_for('home') }}?page=history#history">Purchase history</a>
 <a href="#myreports" data-section="myreports" data-src="{{ url_for('reports.purchase_report') }}">My purchase reports</a>

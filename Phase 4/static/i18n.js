@@ -19,6 +19,7 @@
         // admin dashboard shell
         "Admin dashboard": "Tableau de bord administrateur", "ADMIN DASHBOARD": "TABLEAU DE BORD ADMINISTRATEUR", "MY ACCOUNT": "MON COMPTE",
         "Overview": "Aperçu", "Store overview": "Aperçu du magasin", "Live monitoring": "Surveillance en direct", "Products & stock": "Produits et stock", "Users": "Utilisateurs",
+        "Manage Users": "Gérer les utilisateurs",
         "Notifications": "Notifications", "Log Out": "Déconnexion",
         "My account": "Mon compte", "Membership & points": "Carte de membre et points", "Purchase history": "Historique d'achats",
         "Self-checkout": "Caisse libre-service",

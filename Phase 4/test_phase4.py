@@ -372,7 +372,8 @@ class ReportFeatureTests(Phase4Base):
                        b'data-section="users"', b'data-section="products"', b'data-section="sales"'):
             self.assertIn(marker, page, marker)
         menu = page.split(b'<aside class="side"', 1)[1].split(b'</aside>', 1)[0]
-        self.assertEqual(menu.count(b'data-section='), 8)
+        self.assertEqual(menu.count(b'data-section='), 9)
+        self.assertIn(b'data-section="users" data-src="/admin/users">Manage Users</a>', menu)
         self.assertIn(b'data-section="sensor"', menu)
         self.assertIn(b'data-section="fridges"', menu)
         self.assertEqual(self.client.get("/reports/notifications").status_code, 200)

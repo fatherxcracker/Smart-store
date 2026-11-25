@@ -4,10 +4,10 @@
     var TEXT = {
         en: { account: "MY ACCOUNT", overview: "Overview", history: "Purchase history", reports: "My purchase reports",
               profile: "My profile", checkout: "Self-checkout", admin: "Administration", dashboard: "Admin dashboard",
-              products: "Products & stock", users: "Users", logout: "Log Out", signIn: "Sign in" },
+              products: "Products & stock", users: "Manage Users", logout: "Log Out", signIn: "Sign in" },
         fr: { account: "MON COMPTE", overview: "Aperçu", history: "Historique d'achats", reports: "Mes rapports d'achats",
               profile: "Mon profil", checkout: "Caisse libre-service", admin: "Administration", dashboard: "Tableau de bord administrateur",
-              products: "Produits et stock", users: "Utilisateurs", logout: "Déconnexion", signIn: "Se connecter" }
+              products: "Produits et stock", users: "Gérer les utilisateurs", logout: "Déconnexion", signIn: "Se connecter" }
     };
     function lang() { try { return localStorage.getItem("smartstore-language") === "fr" ? "fr" : "en"; } catch (e) { return "en"; } }
     function tr(key) { return TEXT[lang()][key] || TEXT.en[key]; }
