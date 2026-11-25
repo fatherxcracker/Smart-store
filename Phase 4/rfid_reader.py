@@ -88,6 +88,15 @@ def find_port():
     """The serial (CDC) port of the reader, or raise RFIDError."""
     if PORT.lower() != "auto":
         return PORT
+    # Prefer the CF600 itself (USB ID 0483:5750). Other USB-serial devices,
+    # e.g. an ESP32 plugged in for flashing, can take /dev/ttyUSB0 first.
+    try:
+        from serial.tools import list_ports
+        for p in list_ports.comports():
+            if (p.vid, p.pid) == (0x0483, 0x5750):
+                return p.device
+    except Exception:
+        pass
     import glob
     candidates = sorted(glob.glob("/dev/ttyACM*")) + sorted(glob.glob("/dev/ttyUSB*"))
     if not candidates:

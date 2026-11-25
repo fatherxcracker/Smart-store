@@ -70,7 +70,7 @@ def create_app(config=None):
     @app.before_request
     def protect_inventory_management():
         protected = {"add_product", "edit_product", "delete_product", "receive_stock", "reception_history", "manage_product_tags", "notifications_log",
-                     "reset_product_tags", "remove_product_tag", "reset_all_tags",
+                     "reset_product_tags", "remove_product_tag", "reset_all_tags", "assign_product_tags_bulk", "read_all_rfid_tags",
                      "manage_users", "create_user", "user_detail", "update_user", "set_user_points",
                      "reset_user_password", "set_user_admin", "delete_user"}
         if request.endpoint in protected:
@@ -610,6 +610,72 @@ def create_app(config=None):
 
 
     # RFID reader
+
+    def _classify_tags(epcs, product_id):
+        """Sort scanned EPCs for one product: which can be assigned, and why
+        the others can't. Duplicates are dropped (first one kept)."""
+        unique = list(dict.fromkeys(e.strip().upper() for e in epcs if e and e.strip()))
+        in_stock = db.find_by_epcs(unique)      # tags on unsold items
+        sold = db.find_sold_tags(unique)        # tags sold before: can be reused
+        tags = []
+        for epc in unique:
+            if len(epc) > 24 or any(c not in "0123456789ABCDEF" for c in epc):
+                tags.append({"epc": epc, "status": "invalid", "assignable": False})
+            elif epc in in_stock:
+                owner = in_stock[epc]
+                same = owner["id"] == product_id
+                tags.append({"epc": epc, "status": "this_product" if same else "other_product",
+                             "product": owner["name"], "assignable": False})
+            elif epc in sold:
+                tags.append({"epc": epc, "status": "sold", "product": sold[epc]["name"],
+                             "receipt_number": sold[epc]["receipt_number"], "assignable": True})
+            else:
+                tags.append({"epc": epc, "status": "new", "assignable": True})
+        return tags
+
+    # Reads every tag on the reader at once (CDC mode) for "Assign several tags"
+    @app.get("/api/rfid/read-all")
+    def read_all_rfid_tags():
+        try:
+            product_id = int(request.args.get("product_id", ""))
+        except ValueError:
+            return jsonify(success=False, message="Unknown product."), 400
+        if not db.get_product(product_id):
+            return jsonify(success=False, message="Unknown product."), 404
+        try:
+            epcs = rfid_reader.read_tags()
+        except rfid_reader.RFIDError as error:
+            return jsonify(success=False, message=str(error)), 503
+        if not epcs:
+            return jsonify(success=False, message="No RFID tags detected. Put the items on the reader and try again."), 404
+        tags = _classify_tags(epcs, product_id)
+        return jsonify(success=True, tags=tags, assignable=sum(t["assignable"] for t in tags))
+
+    # Assign several scanned tags to one product: one delivery, one item per tag
+    @app.post("/products/<int:product_id>/tags/bulk")
+    def assign_product_tags_bulk(product_id):
+        product = db.get_product(product_id)
+        if not product:
+            abort(404)
+        lang = request.form.get("language", "en")
+        # Check again on the server: tags may have changed since the scan
+        tags = _classify_tags(request.form.getlist("epcs"), product_id)
+        assign = [t["epc"] for t in tags if t["assignable"]]
+        skipped = [t for t in tags if not t["assignable"]]
+        if assign:
+            try:
+                db.receive_stock(product_id, epcs=assign, note="Tags added on Manage tags (bulk scan)")
+                flash(notify("tags_added_bulk", lang, count=len(assign), name=product["name"],
+                             in_stock=db.get_product(product_id)["in_stock"])["message"], "success")
+            except db.DatabaseError as exc:
+                flash(str(exc), "error")
+        if skipped:
+            reasons = {"this_product": "already on this product", "other_product": "already on {product}",
+                       "invalid": "not a valid EPC"}
+            flash("Skipped: " + "; ".join(f"{t['epc']} ({reasons[t['status']].format(**t)})" for t in skipped), "error")
+        if not tags:
+            flash("No tags to assign. Scan the tags first.", "error")
+        return redirect(url_for("manage_product_tags", product_id=product_id))
 
     # Reads RFID tags for inventory products
 

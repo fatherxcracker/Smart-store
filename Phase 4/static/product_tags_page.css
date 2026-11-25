@@ -87,3 +87,39 @@
 .tags-reset-all {
     margin-top: 12px;
 }
+
+/* "Add several tagged items": one row per scanned tag */
+.bulk-tags-form {
+    margin-top: 28px;
+}
+
+.bulk-tag-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    border: 1px solid var(--line, #e3e7ee);
+    border-radius: 8px;
+}
+
+.bulk-tag-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    border-top: 1px solid var(--line, #e3e7ee);
+}
+
+.bulk-tag-list li:first-child {
+    border-top: 0;
+}
+
+.bulk-tag-list li.skip {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+
+.bulk-tag-list .bulk-reason {
+    text-decoration: none;
+    font-size: .9em;
+    white-space: nowrap;
+}

@@ -10,15 +10,37 @@ async function loadSensor() {
     } catch (error) { console.error("Sensor:", error); }
 }
 
+// The sensor reports about once a second, so hours of history are thousands of
+// points (the chart looked like a barcode). Average them into ~60 time buckets.
+const CHART_POINTS = 60;
+
+function smooth(rows, field, hours) {
+    const bucketMs = Math.max(60000, hours * 3600000 / CHART_POINTS);  // at least 1 minute
+    const buckets = new Map();
+    for (const row of rows) {
+        if (row[field] === null || row[field] === undefined) continue;
+        const time = Date.parse(row.recorded_at.replace(" ", "T") + "Z");
+        const key = Math.floor(time / bucketMs);
+        const bucket = buckets.get(key) || { recorded_at: row.recorded_at, sum: 0, count: 0 };
+        bucket.sum += Number(row[field]);
+        bucket.count += 1;
+        buckets.set(key, bucket);
+    }
+    return [...buckets.values()].map(b => ({
+        recorded_at: b.recorded_at,
+        [field]: Math.round(b.sum / b.count * 100) / 100,
+    }));
+}
+
 async function loadHistory() {
     try {
         const hours = $("range").value;
         const response = await fetch(`/sensors/api/history?hours=${hours}`, { credentials: "same-origin", cache: "no-store" });
         if (!response.ok) throw new Error();
         const rows = await response.json();
-        window.setChart($("c-temp"), rows.filter(r => r.temperature !== null));
-        window.setChart($("c-hum"), rows.filter(r => r.humidity !== null));
-        window.setChart($("c-light"), rows.filter(r => r.light !== null));
+        window.setChart($("c-temp"), smooth(rows, "temperature", hours));
+        window.setChart($("c-hum"), smooth(rows, "humidity", hours));
+        window.setChart($("c-light"), smooth(rows, "light", hours));
         const body = $("motion-rows");
         body.replaceChildren();
         const motion = rows.filter(r => r.motion === 1).slice(-10).reverse();

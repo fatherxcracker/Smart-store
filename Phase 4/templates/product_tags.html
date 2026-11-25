@@ -134,6 +134,19 @@
                 <button type="submit" class="save-button" data-i18n="assignTag">Add item to stock</button>
             </form>
 
+            <!-- Several items at once: scan every tag on the reader (CDC mode), then assign the new ones -->
+            <form method="post" class="product-form tags-form bulk-tags-form" id="bulk-tags-form"
+                  action="{{ url_for('assign_product_tags_bulk', product_id=product.id) }}"
+                  data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
+                <h2 data-i18n="bulkTitle">Add Several Tagged Items</h2>
+                <p class="form-description" data-i18n="bulkDescription">Put all the new items on the reader and scan. Tags already on an item in stock are skipped, and each tag is only added once.</p>
+                <input type="hidden" name="language" value="en">
+                <button id="read-all-tags" type="button" data-i18n="scanAll">Scan all tags on reader</button>
+                <p id="bulk-status" class="tag-status" role="status" aria-live="polite"></p>
+                <ul id="bulk-tag-list" class="bulk-tag-list" hidden></ul>
+                <button id="bulk-assign" type="submit" class="save-button" hidden></button>
+            </form>
+
             <!-- Lists the tags already assigned to this product -->
             <section class="inventory-card" aria-labelledby="assigned-tags-title">
                 <div class="inventory-card-heading">
@@ -212,5 +225,6 @@
 <script src="{{ url_for('static', filename='tag_reset.js') }}"></script>
 <script src="{{ url_for('static', filename='rfid_keyboard.js') }}"></script>
 <script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
+<script src="{{ url_for('static', filename='rfid_bulk_tags.js') }}"></script>
 </body>
 </html>
