@@ -23,10 +23,10 @@ readTagButton.addEventListener("click", async () => {
             // already on an item in stock (never registered twice)
             tagStatus.classList.add("error");
         }
-        tagStatus.textContent = result.message;
+        tagStatus.textContent = window.rfidMessageForLanguage(result.message);
     } catch {
         tagStatus.classList.add("error");
-        tagStatus.textContent = "Cannot reach the server.";
+        tagStatus.textContent = window.rfidMessageForLanguage("Cannot reach the server.");
     } finally {
         readTagButton.disabled = false;
         readTagButton.textContent = readTagLabel;

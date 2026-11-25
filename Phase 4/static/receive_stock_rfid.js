@@ -61,7 +61,7 @@
                 const result = await response.json();
                 if (!response.ok || !result.success) {
                     // No tags, or the reader isn't connected in CDC mode
-                    setStatus(result.message || "Could not read tags.", "error");
+                    setStatus(window.rfidMessageForLanguage(result.message || "Could not read tags."), "error");
                     return;
                 }
                 const current = tags();

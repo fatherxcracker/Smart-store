@@ -23,7 +23,7 @@ from email.mime.text import MIMEText
 from email.utils import parseaddr
 from datetime import datetime
 
-from flask import Flask, request, jsonify, Response, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 
@@ -340,6 +340,11 @@ def screen_fit_asset():
     return send_from_directory(BASE_DIR, request.path.lstrip("/"))
 
 
+@app.route("/language_labels.js")
+def language_labels():
+    return send_from_directory(BASE_DIR, "language_labels.js")
+
+
 @app.route("/script.js")
 def script_js():
     return send_from_directory(BASE_DIR, "script.js")
@@ -497,24 +502,9 @@ def alert_confirm():
     action = "yes" if request.args.get("action", "") == "yes" else "no"
 
     row = handle_alert_response(token, action, source="email link")
-    if row is None:
-        return Response(
-            "<h1>This alert link isn't valid or has expired.</h1>",
-            mimetype="text/html"
-        ), 404
-
-    fridge_id = row["fridge_id"]
-    if action == "yes":
-        html = (
-            f"<h1>Fan turned on</h1>"
-            f"<p>The fan is now running for Refrigerator {fridge_id}. You can close this tab.</p>"
-        )
-    else:
-        html = (
-            f"<h1>No action taken</h1>"
-            f"<p>The fan was left off for Refrigerator {fridge_id}. You can close this tab.</p>"
-        )
-    return Response(html, mimetype="text/html")
+    status = 404 if row is None else 200
+    return render_template("alert_confirmation.html", fridge_id=row["fridge_id"] if row else None,
+                           action=action), status
 
 
 # ---------------------------------------------------------------------------

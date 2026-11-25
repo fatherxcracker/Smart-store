@@ -22,6 +22,7 @@
         defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body>
@@ -43,7 +44,7 @@
 
         <!-- Buttons on the right side of the top bar -->
         <div class="top-actions">
-            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}">Reports</a>{% endif %}
+            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}" data-fr="Rapports">Reports</a>{% endif %}
 
             <!-- These buttons show when customer logs in -->
             <!-- hidden: they are not shown at first -->

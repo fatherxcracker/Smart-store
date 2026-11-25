@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Name shown in browser tab -->
-    <title>Receive Stock | Smart Store</title>
+    <title data-fr="Réceptionner du stock | Smart Store" data-en="Receive Stock | Smart Store">Receive Stock | Smart Store</title>
 
     <!-- Connects customer account CSS for same navigation -->
     <link rel="stylesheet"
@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
     {% include '_theme.html' %}
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -146,7 +147,7 @@
         <!-- Check if products exist in inventory -->
         {% if products %}
 
-            <nav class="receive-steps" aria-label="Receive Stock steps" hidden>
+            <nav class="receive-steps" aria-label="Receive Stock steps" data-fr-aria-label="Étapes de réception du stock" hidden>
                 <button type="button" class="ss-btn" aria-controls="receive-details" data-i18n="deliveryDetails">Delivery Details</button>
                 <button type="button" class="ss-btn" aria-controls="receive-tags" data-i18n="rfidStep">RFID Tags</button>
             </nav>

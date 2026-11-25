@@ -57,10 +57,10 @@
                 const result = await response.json();
                 if (!response.ok || !result.success) {
                     // 0 tags, more than one tag, or the reader isn't connected in CDC mode
-                    setStatus(result.message || "Could not read tag.", "error");
+                    setStatus(window.rfidMessageForLanguage(result.message || "Could not read tag."), "error");
                 } else if (result.in_use_by) {
                     // Tag already on an unsold item in stock: never count it twice
-                    setStatus(result.message, "error");
+                    setStatus(window.rfidMessageForLanguage(result.message), "error");
                 } else if (tags().includes(result.epc)) {
                     setStatus(text.inList(result.epc), "warning");
                 } else {

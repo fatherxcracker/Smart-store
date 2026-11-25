@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='cart_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -49,7 +50,7 @@
 
         <!-- Buttons on the right side of top bar -->
         <div class="top-actions">
-            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}">Reports</a>{% endif %}
+            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}" data-fr="Rapports">Reports</a>{% endif %}
 
             <!-- These buttons show when customer logs in -->
             <nav id="account-nav" hidden>
@@ -151,7 +152,7 @@
 
         <!-- Checkout sections -->
         <div class="checkout-layout">
-            <nav class="checkout-steps" aria-label="Self-checkout">
+            <nav class="checkout-steps" aria-label="Self-checkout" data-fr-aria-label="Caisse libre-service">
                 <button type="button" aria-controls="checkout-cart" aria-current="step" data-i18n="shoppingCart">Shopping Cart</button>
                 <button type="button" aria-controls="checkout-payment" data-i18n="orderSummary">Order Summary</button>
                 <button type="button" aria-controls="receipt-panel" data-i18n="purchaseReceipt" hidden>Purchase Receipt</button>

@@ -65,7 +65,7 @@
 {% if active=='sales' %}<label>Top / bottom <input type="number" name="limit" min="1" max="50" value="{{ limit }}" required></label>{% endif %}
 {% if active=='purchases' %}
 <label>Search item <input name="q" value="{{ request.args.get('q','') }}" placeholder="Product name"></label>
-<label>Product / price history <select name="product_id"><option value="">All my products</option>{% for p in data.products %}<option value="{{ p.id }}" {% if request.args.get('product_id')==p.id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></label>
+<label>Product / price history <select name="product_id"><option value="">All my products</option>{% for p in data.products %}<option value="{{ p.id }}" {% if request.args.get('product_id')==p.id|string %}selected{% endif %} translate="no">{{ p.name }}</option>{% endfor %}</select></label>
 {% endif %}
 <button type="submit">Apply filters</button>
 <button type="submit" form="reset-report-filters" class="ghost">Reset</button>

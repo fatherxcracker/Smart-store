@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Name shown in browser tab -->
-    <title>Add Product | Smart Store</title>
+    <title data-fr="Ajouter un produit | Smart Store" data-en="Add Product | Smart Store">Add Product | Smart Store</title>
 
     <!-- Connects customer account CSS for same navigation -->
     <link rel="stylesheet"
@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='add_product_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">

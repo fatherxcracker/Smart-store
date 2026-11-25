@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Name shown in browser tab -->
-    <title>Inventory | Smart Store</title>
+    <title data-fr="Inventaire | Smart Store" data-en="Inventory | Smart Store">Inventory | Smart Store</title>
 
     <!-- Connects customer account CSS for same navigation -->
     <link rel="stylesheet"
@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
     {% include '_theme.html' %}
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -48,7 +49,7 @@
 
         <!-- Buttons on the right side of top bar -->
         <div class="top-actions">
-            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}">Reports</a>{% endif %}
+            {% if config.get('PHASE4_ENABLED') %}<a class="nav-link" href="{{ url_for('reports.index') }}" data-fr="Rapports">Reports</a>{% endif %}
 
             <!-- These buttons show when customer logs in -->
             <nav id="account-nav" hidden>
@@ -204,7 +205,7 @@
                             <th data-i18n="category">Category</th>
                             <th data-i18n="price">Price</th>
                             <th>UPC</th>
-                            {% if is_admin %}<th>RFID tags</th>{% endif %}
+                            {% if is_admin %}<th data-i18n="rfidTags">RFID tags</th>{% endif %}
                             <th data-i18n="producer">Producer</th>
                             <th data-i18n="inStock">In Stock</th>
                             {% if is_admin %}<th data-i18n="actions">Actions</th>{% endif %}
@@ -226,7 +227,7 @@
                                 </td>
 
                                 <!-- Product category -->
-                                <td>{{ product.category }}</td>
+                                <td data-fr="{{ categories.get(product.category, product.category) }}">{{ product.category }}</td>
 
                                 <!-- Product price -->
                                 <td>
@@ -237,7 +238,7 @@
                                 <td>{% if is_admin %}<a class="inventory-tag-link" href="{{ url_for('manage_product_tags', product_id=product.id) }}">{{ product.upc }}</a>{% else %}{{ product.upc or '—' }}{% endif %}</td>
 
                                 <!-- RFID tag -->
-                                {% if is_admin %}<td><a class="inventory-tag-link" href="{{ url_for('manage_product_tags', product_id=product.id) }}">Manage tags</a></td>{% endif %}
+                                {% if is_admin %}<td><a class="inventory-tag-link" href="{{ url_for('manage_product_tags', product_id=product.id) }}" data-i18n="manageTags">Manage tags</a></td>{% endif %}
 
                                 <!-- Producer company -->
                                 <td>{{ product.producer or '—' }}</td>

@@ -1,3 +1,40 @@
+const fridgeMessagesFr = {
+    "Waiting for data": "En attente de données",
+    "Warning": "Avertissement",
+    "Normal": "Normal",
+    "ON": "MARCHE",
+    "OFF": "ARRÊT",
+    "Turn OFF": "Éteindre",
+    "Turn ON": "Allumer",
+    "Enter a valid temperature threshold first.": "Entrez d’abord un seuil de température valide.",
+    "Could not save threshold.": "Impossible d’enregistrer le seuil.",
+    "Could not change fan state.": "Impossible de modifier l’état du ventilateur.",
+    "Could not set fan speed.": "Impossible de régler la vitesse du ventilateur.",
+    "Could not reach the server. Is app.py running?": "Impossible de joindre le serveur. Est-ce que app.py est en cours d’exécution?",
+    "No active alerts.": "Aucune alerte active.",
+    "Unknown fridge id.": "Identifiant de réfrigérateur inconnu.",
+    "threshold must be a number.": "Le seuil doit être un nombre.",
+    "duty_cycle must be an integer from 0 to 100.": "Le rapport cyclique doit être un nombre entier de 0 à 100.",
+    "duty_cycle must be between 0 and 100.": "Le rapport cyclique doit être compris entre 0 et 100.",
+    "Fan turned OFF manually from the dashboard.": "Le ventilateur a été éteint manuellement depuis le tableau de bord."
+};
+
+const isFrench = () => document.documentElement.lang === "fr";
+const localized = text => isFrench() ? fridgeMessagesFr[text] ?? text : text;
+const dutyLabel = value => isFrench() ? `${value} % de rapport cyclique` : `${value}% duty cycle`;
+
+function localizedAlert(text) {
+    if (!isFrench()) return text;
+    return localized(text)
+        .replace(/^Refrigerator (\d+) threshold set to (.+)C\.$/, "Seuil du r\u00e9frig\u00e9rateur $1 r\u00e9gl\u00e9 \u00e0 $2 \u00b0C.")
+        .replace(/^Fan duty cycle set to (\d+)%\.$/, "Rapport cyclique du ventilateur r\u00e9gl\u00e9 \u00e0 $1 %.")
+        .replace(/^Fan turned ON manually at (\d+)% duty cycle\.$/, "Ventilateur allum\u00e9 manuellement \u00e0 $1 %.")
+        .replace(/^Temperature alert: Refrigerator (\d+) is (.+)C \(threshold (.+)C\)\. Email sent - waiting for a response\.$/, "Alerte : le r\u00e9frig\u00e9rateur $1 est \u00e0 $2 \u00b0C (seuil : $3 \u00b0C). Courriel envoy\u00e9, en attente d'une r\u00e9ponse.")
+        .replace(/^Temperature alert: Refrigerator (\d+) is (.+)C, but the alert email could not be sent \(check \.env SMTP settings\)\.$/, "Alerte : le r\u00e9frig\u00e9rateur $1 est \u00e0 $2 \u00b0C. Le courriel n'a pas pu \u00eatre envoy\u00e9 (v\u00e9rifiez les param\u00e8tres SMTP).")
+        .replace(/^User replied YES \((.+)\) - fan turned ON at (\d+)% \(Refrigerator (\d+) was (.+)C\)\.$/, "R\u00e9ponse OUI ($1) : ventilateur allum\u00e9 \u00e0 $2 % (r\u00e9frig\u00e9rateur $3 : $4 \u00b0C).")
+        .replace(/^User replied NO \((.+)\) - no action taken for Refrigerator (\d+) \((.+)C\)\.$/, "R\u00e9ponse NON ($1) : aucune action pour le r\u00e9frig\u00e9rateur $2 ($3 \u00b0C).");
+}
+
 /*
   Smart Fridge Dashboard
   Talks to the Flask backend (app.py) for live readings, thresholds,
@@ -76,13 +113,13 @@ async function refreshReadings() {
 
             if (statusEl) {
                 if (reading.temperature === null) {
-                    statusEl.textContent = "Waiting for data";
+                    statusEl.textContent = localized("Waiting for data");
                     statusEl.classList.remove("warning");
                 } else if (reading.status === "warning") {
-                    statusEl.textContent = "Warning";
+                    statusEl.textContent = localized("Warning");
                     statusEl.classList.add("warning");
                 } else {
-                    statusEl.textContent = "Normal";
+                    statusEl.textContent = localized("Normal");
                     statusEl.classList.remove("warning");
                 }
             }
@@ -120,7 +157,7 @@ async function saveThreshold(fridgeId) {
     const value = parseFloat(input.value);
 
     if (Number.isNaN(value)) {
-        alert("Enter a valid temperature threshold first.");
+        alert(localized("Enter a valid temperature threshold first."));
         return;
     }
 
@@ -136,10 +173,10 @@ async function saveThreshold(fridgeId) {
         if (data.success) {
             refreshReadings();
         } else {
-            alert(data.message || "Could not save threshold.");
+            alert(localized(data.message || "Could not save threshold."));
         }
     } catch (err) {
-        alert("Could not reach the server. Is app.py running?");
+        alert(localized("Could not reach the server. Is app.py running?"));
     }
 }
 
@@ -162,10 +199,10 @@ function applyFanUi(status) {
         return;
     }
 
-    fanStatusEl.textContent = fanIsOn ? "ON" : "OFF";
+    fanStatusEl.textContent = localized(fanIsOn ? "ON" : "OFF");
     fanStatusEl.classList.toggle("running", fanIsOn);
     fanIconEl.classList.toggle("spinning", fanIsOn);
-    powerButton.textContent = fanIsOn ? "Turn OFF" : "Turn ON";
+    powerButton.textContent = localized(fanIsOn ? "Turn OFF" : "Turn ON");
 
     // Allow changing the duty cycle when the fan is running.
     slider.disabled = !fanIsOn;
@@ -179,7 +216,7 @@ function applyFanUi(status) {
     const dutyCycle = fanIsOn ? Number(slider.value) : 0;
 
     rpmDisplay.textContent = dutyCycle + "%";
-    speedValue.textContent = slider.value + "% duty cycle";
+    speedValue.textContent = dutyLabel(slider.value);
 }
 
 
@@ -194,13 +231,13 @@ async function toggleFan() {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.message || "Could not change fan state.");
+            alert(localized(data.message || "Could not change fan state."));
             return;
         }
 
         applyFanUi(data);
     } catch (err) {
-        alert("Could not reach the server. Is app.py running?");
+        alert(localized("Could not reach the server. Is app.py running?"));
     }
 }
 
@@ -217,7 +254,7 @@ function updateFanSpeed() {
 
     // Show 0% when the fan is OFF.
     rpmDisplay.textContent = (fanIsOn ? dutyCycle : 0) + "%";
-    speedValue.textContent = dutyCycle + "% duty cycle";
+    speedValue.textContent = dutyLabel(dutyCycle);
 }
 
 
@@ -238,13 +275,13 @@ async function saveFanSpeed() {
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-            alert(data.message || "Could not set fan speed.");
+            alert(localized(data.message || "Could not set fan speed."));
             return;
         }
 
         applyFanUi(data);
     } catch (err) {
-        alert("Could not reach the server. Is app.py running?");
+        alert(localized("Could not reach the server. Is app.py running?"));
     }
 }
 
@@ -273,7 +310,7 @@ async function refreshNotifications() {
         const container = document.getElementById("notifications");
 
         if (!items.length) {
-            container.textContent = "No active alerts.";
+            container.textContent = localized("No active alerts.");
             return;
         }
 
@@ -285,9 +322,9 @@ async function refreshNotifications() {
             div.className =
                 item.level === "warning" ? "alert" : "note " + item.level;
 
-            const time = new Date(item.created_at).toLocaleTimeString();
+            const time = new Date(item.created_at).toLocaleTimeString(isFrench() ? "fr-CA" : "en-CA");
 
-            div.textContent = `[${time}] ${item.message}`;
+            div.textContent = `[${time}] ${localizedAlert(item.message)}`;
 
             container.appendChild(div);
         });
@@ -298,6 +335,12 @@ async function refreshNotifications() {
 
 
 // initialization: Start the Dashboard
+
+document.addEventListener("smartstore-language", () => {
+    refreshReadings();
+    loadFanStatus();
+    refreshNotifications();
+});
 
 loadThresholds();
 refreshReadings();

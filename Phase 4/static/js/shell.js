@@ -3,6 +3,7 @@
     "use strict";
     var frame = document.getElementById("stage");
     var links = Array.prototype.slice.call(document.querySelectorAll("a[data-section][data-src]"));
+    links.forEach(function (link) { link.dataset.englishTitle = link.textContent.trim(); });
     function current() {
         var name = location.hash.slice(1) || "account";
         return links.filter(function (a) { return a.dataset.section === name; })[0] ||
@@ -16,8 +17,8 @@
             frame.setAttribute("data-path", target);
             frame.src = link.dataset.src;
         }
-        var title = link.textContent.trim();
-        document.title = title + " | Smart Store";
+        document.documentElement.setAttribute("data-en-title", link.dataset.englishTitle + " | Smart Store");
+        document.title = window.t(link.dataset.englishTitle) + " | Smart Store";
     }
     window.addEventListener("hashchange", show);
     // The page inside the frame can be changed by its own links and forms (filters, saving a limit).
@@ -39,16 +40,6 @@
         }
         try { // keep the frame's language in step (store pages are translated by their own scripts)
             frame.contentDocument.documentElement.lang = document.documentElement.lang;
-        } catch (e) { /* ignore */ }
-    });
-    // Language: Phase 4 pages follow the shared setting live; store pages need a reload to pick it up.
-    var ready = false;
-    frame.addEventListener("load", function () { ready = true; });
-    document.addEventListener("smartstore-language", function () {
-        if (!ready) return;
-        try {
-            var path = frame.contentWindow.location.pathname;
-            if (path.indexOf("/reports") !== 0 && path.indexOf("/monitoring") !== 0 && path.indexOf("/sensors") !== 0) frame.contentWindow.location.reload();
         } catch (e) { /* ignore */ }
     });
     document.getElementById("logout").addEventListener("click", function () {

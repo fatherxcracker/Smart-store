@@ -3,75 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Fridge Dashboard</title>
+  <title data-fr="Tableau de bord des réfrigérateurs">Smart Fridge Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="screen-fit.css">
   <script src="screen-fit.js" defer></script>
+  <script src='language_labels.js' defer></script>
 </head>
 <body>
 
   <header>
     <div>
-      <h1 class="brand"><svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><line x1="3.3" y1="7" x2="20.7" y2="17"/><line x1="3.3" y1="17" x2="20.7" y2="7"/><polyline points="9.5 3.5 12 6 14.5 3.5"/><polyline points="9.5 20.5 12 18 14.5 20.5"/></svg>Smart Fridge Monitor</h1>
-      <p>Store Refrigeration Monitoring System</p>
+      <h1 class="brand"><svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><line x1="3.3" y1="7" x2="20.7" y2="17"/><line x1="3.3" y1="17" x2="20.7" y2="7"/><polyline points="9.5 3.5 12 6 14.5 3.5"/><polyline points="9.5 20.5 12 18 14.5 20.5"/></svg><span data-fr="Surveillance des réfrigérateurs">Smart Fridge Monitor</span></h1>
+      <p data-fr="Surveillance de la réfrigération du magasin">Store Refrigeration Monitoring System</p>
     </div>
-  </header>
+  <div class="language-choice" role="group" aria-label="Language" data-fr-aria-label="Langue">
+          <button type="button" data-language-choice="en" lang="en">EN</button>
+          <button type="button" data-language-choice="fr" lang="fr">FR</button>
+        </div>
+    </header>
 
   <main>
     <div class="dashboard-sections" data-screen-sections>
 
       <!-- Refrigerator 1 -->
       <article class="fridge-card" id="fridge1">
-        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg>Refrigerator 1</h2>
+        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg><span data-fr="Réfrigérateur 1">Refrigerator 1</span></h2>
         <p class="status" id="status1">Normal</p>
 
         <div class="gauges">
           <div class="gauge" id="tempGauge1">
             <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>
             <span id="temp1">--°C</span>
-            <small>Temperature</small>
+            <small data-fr="Température">Temperature</small>
           </div>
 
           <div class="gauge humidity" id="humidityGauge1">
             <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7s-6 6.6-6 11.1a6 6 0 0 0 12 0C18 9.3 12 2.7 12 2.7z"/></svg>
             <span id="humidity1">--%</span>
-            <small>Humidity</small>
+            <small data-fr="Humidité">Humidity</small>
           </div>
         </div>
 
-        <label for="threshold1">Temperature Threshold (°C)</label>
+        <label for="threshold1" data-fr="Seuil de température (°C)">Temperature Threshold (°C)</label>
         <div class="setting">
           <input type="number" id="threshold1"
                  min="0" max="40" step="0.5">
           <!-- JavaScript uses the fridge number to save its temperature limit -->
-          <button data-save-threshold="1">Save</button>
+          <button data-save-threshold="1" data-fr="Enregistrer">Save</button>
         </div>
       </article>
 
       <!-- Refrigerator 2 -->
       <article class="fridge-card" id="fridge2">
-        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg>Refrigerator 2</h2>
+        <h2 class="fridge-title"><svg class="fridge-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="8" y1="5" x2="8" y2="7"/><line x1="8" y1="12" x2="8" y2="16"/></svg><span data-fr="Réfrigérateur 2">Refrigerator 2</span></h2>
         <p class="status" id="status2">Normal</p>
 
         <div class="gauges">
           <div class="gauge" id="tempGauge2">
             <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>
             <span id="temp2">--°C</span>
-            <small>Temperature</small>
+            <small data-fr="Température">Temperature</small>
           </div>
 
           <div class="gauge humidity" id="humidityGauge2">
             <svg class="gauge-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7s-6 6.6-6 11.1a6 6 0 0 0 12 0C18 9.3 12 2.7 12 2.7z"/></svg>
             <span id="humidity2">--%</span>
-            <small>Humidity</small>
+            <small data-fr="Humidité">Humidity</small>
           </div>
         </div>
 
-        <label for="threshold2">Temperature Threshold (°C)</label>
+        <label for="threshold2" data-fr="Seuil de température (°C)">Temperature Threshold (°C)</label>
         <div class="setting">
           <input type="number" id="threshold2"
                  min="0" max="40" step="0.5">
-          <button data-save-threshold="2">Save</button>
+          <button data-save-threshold="2" data-fr="Enregistrer">Save</button>
         </div>
       </article>
 
@@ -79,13 +84,13 @@
     <section class="panel fan-panel">
 
       <div class="fan-header">
-        <h2>Fan Control</h2>
+        <h2 data-fr="Commande du ventilateur">Fan Control</h2>
         <span id="fanStatus" class="fan-status">OFF</span>
       </div>
 
       <!-- Fan icon and duty-cycle display -->
       <div class="fan-display">
-        <svg id="fanIcon" class="fan-icon" viewBox="0 0 100 100" role="img" aria-label="Fan">
+        <svg id="fanIcon" class="fan-icon" viewBox="0 0 100 100" role="img" aria-label="Fan" data-fr-aria-label="Ventilateur">
           <circle cx="50" cy="50" r="46" class="fan-ring"/>
           <g class="fan-blades">
             <path d="M50 50 C 40 30, 45 12, 58 10 C 68 9, 70 24, 50 50 Z"/>
@@ -97,15 +102,15 @@
 
         <h1>
           <span id="rpmDisplay">0%</span>
-          <small>Duty Cycle</small>
+          <small data-fr="Rapport cyclique">Duty Cycle</small>
         </h1>
 
-        <p>PWM Fan Speed Control</p>
+        <p data-fr="Commande de vitesse du ventilateur (PWM)">PWM Fan Speed Control</p>
       </div>
 
       <!-- Power button -->
       <div class="fan-power">
-        <label>Fan Power</label>
+        <label data-fr="Alimentation du ventilateur">Fan Power</label>
         <button id="powerButton">
           Turn ON
         </button>
@@ -114,7 +119,7 @@
       <!-- PWM Duty-Cycle Slider -->
       <div class="fan-speed">
         <div class="speed-header">
-          <label for="fanSlider">Speed Control</label>
+          <label for="fanSlider" data-fr="Réglage de la vitesse">Speed Control</label>
           <span id="speedValue">40% duty cycle</span>
         </div>
 
@@ -131,8 +136,8 @@
         >
 
         <div class="speed-labels">
-          <span>0% (OFF)</span>
-          <span>100% (FULL)</span>
+          <span data-fr="0 % (ARRÊT)">0% (OFF)</span>
+          <span data-fr="100 % (MAXIMUM)">100% (FULL)</span>
         </div>
       </div>
 
@@ -140,7 +145,7 @@
 
     <!-- Alerts -->
     <section class="panel">
-      <h2>System Notifications</h2>
+      <h2 data-fr="Notifications du système">System Notifications</h2>
       <div id="notifications" aria-live="polite">
         No active alerts.
       </div>
@@ -148,7 +153,7 @@
     </div>
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
 

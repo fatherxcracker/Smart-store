@@ -172,7 +172,7 @@ def create_app(config=None):
 
                 # Show success notification
                 flash(
-                    notify("product_added", name=name)["message"],
+                    notify("product_added", _language(), name=name)["message"],
                     "success",
                 )
 
@@ -182,7 +182,7 @@ def create_app(config=None):
             except db.DatabaseError as exc:
 
                 # Show error if adding fails
-                error = notify_error(str(exc))["message"]
+                error = notify_error(str(exc), _language())["message"]
 
         # Display the add product form
         return render_template(
@@ -235,7 +235,7 @@ def create_app(config=None):
 
                 # Show success notification
                 flash(
-                    notify("product_updated", name=name)["message"],
+                    notify("product_updated", _language(), name=name)["message"],
                     "success",
                 )
 
@@ -244,7 +244,7 @@ def create_app(config=None):
             except db.DatabaseError as exc:
 
                 # Show error if update fails
-                error = notify_error(str(exc))["message"]
+                error = notify_error(str(exc), _language())["message"]
 
         # Display the edit form
         return render_template(
@@ -274,7 +274,7 @@ def create_app(config=None):
             # Show success message
             flash(
                 notify(
-                    "product_deleted",
+                    "product_deleted", _language(),
                     name=product["name"],
                 )["message"],
                 "success",
@@ -283,7 +283,7 @@ def create_app(config=None):
         except db.DatabaseError as exc:
 
             # Show error if deletion fails
-            flash(notify_error(str(exc))["message"], "error")
+            flash(notify_error(str(exc), _language())["message"], "error")
 
         return redirect(url_for("inventory"))
 
@@ -298,11 +298,11 @@ def create_app(config=None):
             try:
                 # A new tag = one more tagged item in stock (recorded as a delivery of 1)
                 db.register_product_tag(product_id, request.form.get("epc", ""))
-                flash(notify("tag_added", name=product["name"],
+                flash(notify("tag_added", _language(), name=product["name"],
                              in_stock=db.get_product(product_id)["in_stock"])["message"], "success")
                 return redirect(url_for("manage_product_tags", product_id=product_id))
             except db.DatabaseError as exc:
-                error = str(exc)
+                error = notify_error(str(exc), _language(), save=False)["message"]
         return render_template("product_tags.html", product=product, tags=db.get_product_tags(product_id), error=error)
 
     # Reset / remove RFID tags (admin buttons instead of SQL commands)
@@ -556,7 +556,7 @@ def create_app(config=None):
                 # Show success message
                 flash(
                     notify(
-                        "stock_received",
+                        "stock_received", _language(),
                         quantity=len(epcs),
                         name=product["name"],
                         in_stock=in_stock,
@@ -569,7 +569,7 @@ def create_app(config=None):
             except db.DatabaseError as exc:
 
                 # Show error if receiving stock fails
-                error = notify_error(str(exc))["message"]
+                error = notify_error(str(exc), _language())["message"]
 
         # Display receive stock form
         return render_template(

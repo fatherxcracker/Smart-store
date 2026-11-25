@@ -11,6 +11,7 @@
         en: {
             dashboard: "Dashboard",
             history: "Purchase History",
+            rfidEpcs: "RFID EPCs",
             checkoutLink: "Self-checkout",
             inventoryLink: "Inventory",
             logout: "Log Out",
@@ -33,6 +34,7 @@
         fr: {
             dashboard: "Tableau de bord",
             history: "Historique des achats",
+            rfidEpcs: "Codes EPC RFID",
             checkoutLink: "Caisse libre-service",
             inventoryLink: "Inventaire",
             logout: "Déconnexion",

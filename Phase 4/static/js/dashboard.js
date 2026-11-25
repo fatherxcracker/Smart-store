@@ -1,6 +1,9 @@
 "use strict";
 
+let dashboardData;
+
 function renderDashboard(d) {
+    dashboardData = d;
     setText("k-sales", money(d.today.total));
     setText("k-orders", d.today.orders);
     setText("k-customers", d.today.customers);
@@ -47,7 +50,7 @@ function renderDashboard(d) {
     if (!d.notifications.length) notes.append(el("li", "", "No notifications yet."));
     for (const n of d.notifications) {
         const item = el("li", "note-" + n.level);
-        item.append(el("span", "pill " + (n.level === "error" || n.level === "warning" ? "low" : "good"), n.level), document.createTextNode(" " + n.message));
+        item.append(el("span", "pill " + (n.level === "error" || n.level === "warning" ? "low" : "good"), n.level), document.createTextNode(" " + (document.documentElement.lang === "fr" ? n.message_fr || n.message : n.message)));
         notes.append(item);
     }
     setText("dash-status", `Updated ${new Date().toLocaleTimeString()} · refreshes every 5 seconds`);
@@ -65,4 +68,5 @@ async function loadDashboard() {
     }
     setTimeout(loadDashboard, 5000);
 }
+document.addEventListener("smartstore-language", () => { if (dashboardData) renderDashboard(dashboardData); });
 loadDashboard();

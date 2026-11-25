@@ -11,6 +11,7 @@ const pointsInput = document.getElementById("points-input");
 const applyPointsButton = document.getElementById("apply-points");
 const receiptPanel = document.getElementById("receipt-panel");
 const receiptFrame = document.getElementById("receipt-frame");
+let receiptTranslations = null;
 const rfidButton = document.getElementById("rfid-scan");
 const rfidAuto = document.getElementById("rfid-auto");
 const rfidSection = document.querySelector(".rfid-scanner");
@@ -155,6 +156,49 @@ let autoScanEnabled = false;
 let busy = false;
 let currentCart = null;
 let checkoutUncertain = false;
+const cartMessagesFr = {
+    "Log in to redeem your points.": "Connectez-vous pour utiliser vos points.",
+    "Points must be a non-negative whole number.": "Les points doivent être un nombre entier positif ou nul.",
+    "Choose points within your balance and purchase subtotal.": "Choisissez un nombre de points selon votre solde et le sous-total.",
+    "Points discount updated.": "Rabais de points mis à jour.",
+    "Send between 1 and 100 EPC readings.": "Envoyez entre 1 et 100 lectures EPC.",
+    "Each EPC must be text.": "Chaque code EPC doit être du texte.",
+    "An EPC must contain at most 24 hexadecimal characters.": "Un code EPC doit contenir au plus 24 caractères hexadécimaux.",
+    "No RFID tags detected. Place the items on the reader.": "Aucune étiquette RFID détectée. Placez les articles sur le lecteur.",
+    "These RFID tags have already been read. Cart unchanged.": "Ces étiquettes RFID ont déjà été lues. Le panier est inchangé.",
+    "RFID limit reached. Reset the cart to start a new session.": "Limite RFID atteinte. Videz le panier pour commencer une nouvelle session.",
+    "The cart can contain at most 40 different products.": "Le panier peut contenir au plus 40 produits différents.",
+    "Send RFID codes as JSON.": "Envoyez les codes RFID au format JSON.",
+    "This product is not in your cart.": "Ce produit n'est pas dans votre panier.",
+    "Item removed from your cart.": "Article retiré du panier.",
+    "Your cart has been reset.": "Votre panier a été vidé.",
+    "Send checkout details as JSON.": "Envoyez les détails de paiement au format JSON.",
+    "Choose Credit Card, Debit Card, or Cash.": "Choisissez le crédit, le débit ou l'argent comptant.",
+    "Membership number must be text.": "Le numéro de membre doit être du texte.",
+    "Choose English or French.": "Choisissez l'anglais ou le français.",
+    "Your cart is empty.": "Votre panier est vide.",
+    "Reload the cart before checking out.": "Rechargez le panier avant de payer.",
+    "Membership not found. Check the number or leave it blank for guest checkout.": "Carte de membre introuvable. Vérifiez le numéro ou laissez le champ vide pour un achat sans compte.",
+    "You can only redeem points from your logged-in account.": "Vous pouvez seulement utiliser les points du compte auquel vous êtes connecté.",
+    "Checkout completed successfully.": "Achat terminé avec succès."
+};
+
+function localizedCartMessage(text) {
+    if (typeof text !== "string") return text?.[cartLanguage] ?? "";
+    if (cartLanguage !== "fr") return text;
+    if (Object.hasOwn(cartMessagesFr, text)) return cartMessagesFr[text];
+    return (window.rfidMessageForLanguage?.(text) ?? text)
+        .replace(/^(\d+) RFID item\(s\) added to your cart\./, "$1 article(s) RFID ajout\u00e9(s) au panier.")
+        .replace(" Ignored: ", " Ignor\u00e9 : ")
+        .replace("Already sold: ", "D\u00e9j\u00e0 vendu : ")
+        .replace(/ \(receipt ([^)]+)\)/g, " (re\u00e7u $1)")
+        .replace("Please ask an employee to re-tag the item.", "Demandez \u00e0 un employ\u00e9 de r\u00e9attribuer l'\u00e9tiquette.")
+        .replace("Unknown RFID tag(s): ", "\u00c9tiquette(s) RFID inconnue(s) : ")
+        .replace("Please ask an employee.", "Veuillez demander \u00e0 un employ\u00e9.")
+        .replace(/^Not enough stock for (.+)\.$/, "Stock insuffisant pour $1.");
+}
+
+let lastMessage = "";
 let lastMessageKey = null;
 let lastMessageLevel = "success";
 
@@ -162,7 +206,8 @@ let lastMessageLevel = "success";
 // Show a message above the shopping cart
 function showMessage(text, level = "success", key = null) {
 
-    cartMessage.textContent = key ? cartText(key) : text;
+    lastMessage = text;
+    cartMessage.textContent = key ? cartText(key) : localizedCartMessage(text);
 
     cartMessage.dataset.level = level;
 
@@ -470,7 +515,7 @@ async function updateCart(url, method, body = null, messageKey = null) {
 
 
 // Display the receipt HTML returned by Flask
-function displayReceipt(html) {
+function displayReceipt(html, open = true) {
 
     // Display the receipt in the iframe
     // Build a separate receipt page using the settings from the HTML template
@@ -487,11 +532,11 @@ function displayReceipt(html) {
         new XMLSerializer().serializeToString(receiptDocument.doctype) +
         receiptDocument.documentElement.outerHTML;
 
-    // Show receipt panel
-    receiptStep.hidden = false;
-    openCheckoutPanel("receipt-panel");
-
-    receiptPanel.focus({ preventScroll: true });
+    if (open) {
+        receiptStep.hidden = false;
+        openCheckoutPanel("receipt-panel");
+        receiptPanel.focus({ preventScroll: true });
+    }
 }
 
 
@@ -767,16 +812,17 @@ checkoutForm.addEventListener("submit", async event => {
 
     // Show checkout result
     showMessage(
-        notes.map(note => note.message).join("\n") ||
-        result.message ||
-        cartText("checkoutSuccess"),
+        notes.length ? Object.fromEntries(["en", "fr"].map(locale => [
+            locale, notes.map(note => note["message_" + locale] ?? note.message).join("\n")
+        ])) : result.message || cartText("checkoutSuccess"),
         hasWarning ? "warning" : "success"
     );
 
     setBusy(false);
 
     // Display the receipt returned by Flask
-    displayReceipt(result.receipt_html);
+    receiptTranslations = result.receipt_html_by_language;
+    displayReceipt(receiptTranslations?.[cartLanguage] ?? result.receipt_html);
 });
 
 
@@ -786,6 +832,10 @@ window.addEventListener("smartstore-language-change", event => {
     // Get the newly selected language
     cartLanguage =
         event.detail?.language === "fr" ? "fr" : "en";
+
+    if (receiptTranslations && !receiptStep.hidden) {
+        displayReceipt(receiptTranslations[cartLanguage], false);
+    }
 
     // Translate cart rows and totals
     if (currentCart) {
@@ -797,15 +847,7 @@ window.addEventListener("smartstore-language-change", event => {
         refreshControls();
     }
 
-    // Translate the last message if it has a translation key
-    if (lastMessageKey) {
-
-        showMessage(
-            cartText(lastMessageKey),
-            lastMessageLevel,
-            lastMessageKey
-        );
-    }
+    if (lastMessage) showMessage(lastMessage, lastMessageLevel, lastMessageKey);
 });
 
 

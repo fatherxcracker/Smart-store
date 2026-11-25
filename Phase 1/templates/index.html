@@ -3,37 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Store | Add Customer</title>
+    <title data-fr="Smart Store | Ajouter un client">Smart Store | Add Customer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+  <script src='{{ url_for("static", filename="language_labels.js") }}' defer></script>
 </head>
 <body>
 
     <div class="page" data-fit-screen>
         <header>
             <h1>Smart Store</h1>
-            <p class="subtitle">Customer Registration</p>
-        </header>
+            <p class="subtitle" data-fr="Inscription des clients">Customer Registration</p>
+        <div class="language-choice" role="group" aria-label="Language" data-fr-aria-label="Langue">
+          <button type="button" data-language-choice="en" lang="en">EN</button>
+          <button type="button" data-language-choice="fr" lang="fr">FR</button>
+        </div>
+    </header>
 
         <main class="layout">
             <!-- Form card -->
             <section class="card">
-                <h2>Add New Customer</h2>
+                <h2 data-fr="Ajouter un client">Add New Customer</h2>
                 <form id="customer-form">
-                    <label for="full_name">Full Name</label>
+                    <label for="full_name" data-fr="Nom complet">Full Name</label>
                     <input type="text" id="full_name" name="full_name" placeholder="John Doe" required>
 
-                    <label for="address">Address</label>
-                    <input type="text" id="address" name="address" placeholder="123 Maple Street, Montreal, QC" required>
+                    <label for="address" data-fr="Adresse">Address</label>
+                    <input type="text" id="address" name="address" placeholder="123 Maple Street, Montreal, QC" data-fr-placeholder="123, rue Maple, Montréal (QC)" required>
 
-                    <label for="phone">Telephone Number</label>
+                    <label for="phone" data-fr="Numéro de téléphone">Telephone Number</label>
                     <input type="tel" id="phone" name="phone" placeholder="514-555-0199" required>
 
-                    <label for="email">Email Address</label>
+                    <label for="email" data-fr="Adresse courriel">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="john.doe@email.com" required>
 
-                    <button type="submit" id="submit-btn">Add Customer</button>
+                    <button type="submit" id="submit-btn" data-fr="Ajouter le client">Add Customer</button>
                 </form>
 
                 <!-- Notification banner -->
@@ -42,28 +47,28 @@
                 <!-- Simulated LED / buzzer indicators, mirrors the real hardware state -->
                 <div class="hardware-panel">
                     <div class="indicator" id="blue-led">
-                        <span class="dot blue"></span> Blue LED
+                        <span class="dot blue"></span> <span data-fr="DEL bleue">Blue LED</span>
                     </div>
                     <div class="indicator" id="red-led">
-                        <span class="dot red"></span> Red LED
+                        <span class="dot red"></span> <span data-fr="DEL rouge">Red LED</span>
                     </div>
                     <div class="indicator" id="buzzer-indicator">
-                        <span class="dot yellow"></span> Buzzer
+                        <span class="dot yellow"></span> <span data-fr="Avertisseur sonore">Buzzer</span>
                     </div>
                 </div>
             </section>
 
             <!-- Data presentation card -->
             <section class="card">
-                <h2>Customers</h2>
+                <h2 data-fr="Clients">Customers</h2>
                 <table id="customers-table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Address</th>
-                            <th>Phone</th>
-                            <th>Email</th>
+                            <th data-fr="Nom">Name</th>
+                            <th data-fr="Adresse">Address</th>
+                            <th data-fr="Téléphone">Phone</th>
+                            <th data-fr="Courriel">Email</th>
                         </tr>
                     </thead>
                     <tbody id="customers-body">
@@ -85,6 +90,6 @@
         </tr>
     </template>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </body>
 </html>

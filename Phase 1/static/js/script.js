@@ -1,3 +1,19 @@
+const messagesFr = {
+    "All fields are required.": "Tous les champs sont obligatoires.",
+    "Customer added successfully!": "Client ajouté avec succès!",
+    "That email address is already registered.": "Cette adresse courriel est déjà inscrite.",
+    "Something went wrong. Please try again.": "Une erreur est survenue. Veuillez réessayer.",
+    "Could not reach the server. Is app.py running?": "Impossible de joindre le serveur. Est-ce que app.py est en cours d’exécution?"
+};
+let lastNotification = "";
+
+function renderNotification() {
+    notification.textContent = document.documentElement.lang === "fr"
+        ? messagesFr[lastNotification] ?? lastNotification : lastNotification;
+}
+
+document.addEventListener("smartstore-language", renderNotification);
+
 const form = document.getElementById("customer-form");
 const submitBtn = document.getElementById("submit-btn");
 const notification = document.getElementById("notification");
@@ -22,7 +38,8 @@ function clearIndicatorsSoon() {
 }
 
 function showNotification(message, isSuccess) {
-    notification.textContent = message;
+    lastNotification = message;
+    renderNotification();
     notification.classList.remove("hidden", "success", "error");
     notification.classList.add(isSuccess ? "success" : "error");
 }

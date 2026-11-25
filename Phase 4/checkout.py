@@ -122,7 +122,10 @@ def complete_checkout():
     # to private profile fields. Only the signed-in owner sees their details.
     receipt = result["receipt"]
     # Never fall back to HTML built from the full internal customer profile.
-    receipt_html = "<p>Purchase saved. Receipt display is temporarily unavailable.</p>"
+    receipt_html_by_language = {
+        "en": "<p>Purchase saved. Receipt display is temporarily unavailable.</p>",
+        "fr": "<p>Achat enregistré. L'affichage du reçu est temporairement indisponible.</p>",
+    }
     if receipt:
         receipt = dict(receipt)
         customer = receipt.get("customer")
@@ -131,16 +134,20 @@ def complete_checkout():
             receipt["customer"] = {key: customer[key] for key in fields}
         receipt.pop("checkout_key", None)
         receipt.pop("customer_id", None)
-        try:
-            receipt_html = receipts.build_receipt_html(receipt, language)
-        except Exception:
-            receipt_html = "<p>Purchase saved. Receipt display is temporarily unavailable.</p>"
+        for locale in receipt_html_by_language:
+            try:
+                receipt_html_by_language[locale] = receipts.build_receipt_html(receipt, locale)
+            except Exception:
+                # Keep the localized fallback without failing the saved purchase.
+                pass
 
     # Email delivery notifications must not disclose the address at a kiosk.
     notes = []
     for note in result["notifications"]:
         if note.get("event") == "receipt_emailed":
-            note = {"success": True, "level": "success", "message": "Receipt emailed." if language == "en" else "Reçu envoyé par courriel."}
+            note = {"success": True, "level": "success", "message_en": "Receipt emailed.",
+                    "message_fr": "Reçu envoyé par courriel."}
+            note["message"] = note["message_" + language]
         notes.append(note)
 
     return jsonify({
@@ -149,6 +156,7 @@ def complete_checkout():
         "cart": build_cart({}),
         "purchase_id": result["purchase_id"],
         "receipt": receipt,
-        "receipt_html": receipt_html,
+        "receipt_html": receipt_html_by_language[language],
+        "receipt_html_by_language": receipt_html_by_language,
         "notifications": notes,
     })

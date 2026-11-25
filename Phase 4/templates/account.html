@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
     {% include '_theme.html' %}
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body class="customer-account">
@@ -40,7 +41,7 @@
     <!-- Top bar of website -->
     <header class="ss-top">
         <a class="ss-logo" href="{{ url_for('home') }}" aria-label="Smart Store">SMART<br>STORE</a>
-        <nav id="account-nav" aria-label="Account" hidden>
+        <nav id="account-nav" aria-label="Account" data-fr-aria-label="Compte" hidden>
             <button class="ss-btn nav-link" type="button" data-page="history" data-ss="history">Purchase history</button>
             <a class="ss-btn" href="{{ url_for('reports.purchase_report') }}" data-ss="reports">My purchase reports</a>
             <button class="ss-btn nav-link" type="button" data-page="profile" data-v2="navProfile">My profile</button>
@@ -305,7 +306,7 @@
 
                 <div class="hero-grid">
                     <!-- Membership card -->
-                    <div class="member-card" aria-label="Membership card">
+                    <div class="member-card" aria-label="Membership card" data-fr-aria-label="Carte de membre">
                         <span class="mc-brand">Smart Store</span>
                         <div class="mc-number" id="membership-number">---</div>
                         <div class="mc-bottom">

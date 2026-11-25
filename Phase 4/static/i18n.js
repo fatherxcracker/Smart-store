@@ -8,6 +8,43 @@
     var KEY = "smartstore-language";
 
     var FR = {
+        // Report page navigation and labels
+        "Spending overview": "Aperçu des dépenses",
+        "Price history": "Historique des prix",
+        "Purchased items": "Articles achetés",
+        "Receipts": "Reçus",
+        "Purchase report pages": "Pages du rapport des achats",
+        "Store overview pages": "Pages de l’aperçu du magasin",
+        "Sales & activity": "Ventes et activité",
+        "Refrigeration": "Réfrigération",
+        "Sensor": "Capteur",
+        "Available Stock": "Stock disponible",
+        "Low-Stock Limits": "Seuils de stock faible",
+        "Inventory report pages": "Pages du rapport d’inventaire",
+        "Sales Overview": "Aperçu des ventes",
+        "Product Rankings": "Classement des produits",
+        "Sold Items by Product": "Articles vendus par produit",
+        "Daily Sales": "Ventes quotidiennes",
+        "Sales report pages": "Pages du rapport des ventes",
+        "Activity Overview": "Aperçu de l’activité",
+        "Busiest & Quietest Days": "Jours les plus et les moins achalandés",
+        "Daily Activity": "Activité quotidienne",
+        "Customer activity pages": "Pages de l’activité des clients",
+        "Fridges": "Réfrigérateurs",
+        "Fan Control": "Commande du ventilateur",
+        "Alerts": "Alertes",
+        "Fridges and fan pages": "Pages des réfrigérateurs et du ventilateur",
+        "Sensor Overview": "Aperçu du capteur",
+        "Temperature & Humidity": "Température et humidité",
+        "Light & Motion": "Lumière et mouvement",
+        "Sensor pages": "Pages du capteur",
+        "Language": "Langue",
+        "Request failed": "Échec de la requête",
+        "Last reading time unavailable.": "Heure du dernier relevé indisponible.",
+        "Choose a product in the filters above to see how its price changed over time.": "Choisissez un produit dans les filtres ci-dessus pour voir comment son prix a évolué.",
+        "otherwise. Use Low-Stock Limits to change a category's threshold.": "sinon. Utilisez la page Seuils de stock faible pour modifier le seuil d’une catégorie.",
+        "(deleted)": "(supprimé)",
+        "Latest reading": "Dernier relevé",
         // fan driver mode
         "Simulation mode": "Mode simulation", "Hardware control": "Commande matérielle",
         "Fan controls are simulated. No physical fan is controlled.": "Les commandes du ventilateur sont simulées. Aucun ventilateur physique n'est commandé.",
@@ -188,6 +225,13 @@
 
     // Texts with numbers or names inside: [pattern, replacement]
     var RULES = [
+        [/^when fewer units than the limit remain\. The checkout then sends a low-stock notification\. Default: (\d+) units\.$/, "lorsqu'il reste moins d'unit\u00e9s que le seuil. La caisse envoie alors un avis de stock faible. Par d\u00e9faut : $1 unit\u00e9s."],
+        [/^Subtotal (.+) \u00b7 Points discount (.+) \u00b7 GST (.+) \u00b7 QST (.+)$/, "Sous-total $1 \u00b7 Rabais de points $2 \u00b7 TPS $3 \u00b7 TVQ $4"],
+        [/^Points used (\d+) \u00b7 Points earned (\d+)$/, "Points utilis\u00e9s $1 \u00b7 Points gagn\u00e9s $2"],
+        [/^(.+) \u00d7 (\d+) \u00b7 (.+) each \u00b7 (.+)$/, "$1 \u00d7 $2 \u00b7 $3 chacun \u00b7 $4"],
+        [/^(.+) \u00b7 (cash|credit|debit|card)$/, function (m, date, method) { return date + " \u00b7 " + translate(method); }],
+        [/^(.+) \(deleted\)$/, "$1 (supprim\u00e9)"],
+
         [/^Last reading: (.+)$/, "Dernier relevé : $1"],
         [/^Signed in as (.*)$/, "Connecté en tant que $1"],
         [/^Dates include the whole selected day in (.+)\. Maximum period: 366 days\.$/, "Les dates incluent toute la journée sélectionnée (fuseau : $1). Période maximale : 366 jours."],
@@ -234,7 +278,7 @@
         if (!trimmed) return text;
         var lead = text.slice(0, text.indexOf(trimmed)), tail = text.slice(text.indexOf(trimmed) + trimmed.length);
         if (trimmed.indexOf("Simulation: ") === 0) return lead + "Simulation : " + translate(trimmed.slice("Simulation: ".length)) + tail;
-        var found = FR[trimmed];
+        var found = Object.hasOwn(FR, trimmed) ? FR[trimmed] : undefined;
         if (found === undefined) {
             for (var i = 0; i < RULES.length; i++) {
                 if (RULES[i][0].test(trimmed)) { found = trimmed.replace(RULES[i][0], RULES[i][1]); break; }
@@ -259,7 +303,9 @@
     function walk(root, force) {
         var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode: function (n) {
-                var p = n.parentNode && n.parentNode.nodeName;
+                var p = n.parentElement;
+                if (p?.closest('[translate="no"]')) return NodeFilter.FILTER_REJECT;
+                p = p?.nodeName;
                 return p === "SCRIPT" || p === "STYLE" || p === "NOSCRIPT" ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
             }
         });
@@ -292,6 +338,11 @@
         walk(document.body, true);
         attributes(document.body);
         title();
+        for (const link of document.querySelectorAll("[data-report-download]")) {
+            const url = new URL(link.href);
+            url.searchParams.set("lang", lang);
+            link.href = url.href;
+        }
         var en = document.getElementById("lang-en"), fr = document.getElementById("lang-fr");
         if (en && fr) {
             en.setAttribute("aria-pressed", lang === "en"); fr.setAttribute("aria-pressed", lang === "fr");

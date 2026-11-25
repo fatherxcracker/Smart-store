@@ -52,7 +52,7 @@
             const result = await response.json();
             if (!result.success) {
                 status.classList.add("error");
-                status.textContent = result.message;
+                status.textContent = window.rfidMessageForLanguage(result.message);
                 return;
             }
             for (const tag of result.tags) {

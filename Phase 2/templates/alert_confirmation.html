@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-fr="Confirmation de l’alerte">Alert confirmation</title>
+  <link rel="stylesheet" href="{{ url_for('style_css') }}">
+  <script src="{{ url_for('language_labels') }}" defer></script>
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('index') }}" data-fr="Retour au tableau de bord">Back to dashboard</a>
+    <div class="language-choice" role="group" aria-label="Language" data-fr-aria-label="Langue">
+      <button type="button" data-language-choice="en" lang="en">EN</button>
+      <button type="button" data-language-choice="fr" lang="fr">FR</button>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+    {% if fridge_id is none %}
+      <h1 data-fr="Ce lien d’alerte est invalide ou a expiré.">This alert link isn't valid or has expired.</h1>
+    {% elif action == 'yes' %}
+      <h1 data-fr="Ventilateur allumé">Fan turned on</h1>
+      <p data-fr="Le ventilateur du réfrigérateur {{ fridge_id }} fonctionne maintenant. Vous pouvez fermer cet onglet.">The fan is now running for Refrigerator {{ fridge_id }}. You can close this tab.</p>
+    {% else %}
+      <h1 data-fr="Aucune action effectuée">No action taken</h1>
+      <p data-fr="Le ventilateur du réfrigérateur {{ fridge_id }} est resté éteint. Vous pouvez fermer cet onglet.">The fan was left off for Refrigerator {{ fridge_id }}. You can close this tab.</p>
+    {% endif %}
+    </section>
+  </main>
+</body>
+</html>

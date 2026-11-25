@@ -29,5 +29,5 @@ def generate(conn, app):
                           for p in low[:8]]},
         "fridges": fridges,
         "sensor": sensors.latest(),
-        "notifications": [{"level": n["level"], "message": n["message_en"], "created_at": n["created_at"]} for n in notes],
+        "notifications": [{"level": n["level"], "message": n["message_en"], "message_fr": n["message_fr"], "created_at": n["created_at"]} for n in notes],
     }

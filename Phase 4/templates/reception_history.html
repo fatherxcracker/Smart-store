@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Name shown in browser tab -->
-    <title>Reception History | Smart Store</title>
+    <title data-fr="Historique des réceptions | Smart Store" data-en="Reception History | Smart Store">Reception History | Smart Store</title>
 
     <!-- Connects customer account CSS for same navigation -->
     <link rel="stylesheet"
@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
     {% include '_theme.html' %}
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 
 <body data-home-url="{{ url_for('home') }}">
@@ -208,7 +209,7 @@
                                 Reception Date
                             </th>
 
-                            <th>RFID EPCs</th>
+                            <th data-i18n="rfidEpcs">RFID EPCs</th>
                             <th data-i18n="note">
                                 Note
                             </th>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RFID Tags | Smart Store</title>
+    <title data-fr="Étiquettes RFID | Smart Store" data-en="RFID Tags | Smart Store">RFID Tags | Smart Store</title>
     <!-- Connects the shared website styles and tag page styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='inventory.css') }}">
@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='product_tags_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='screen-fit.css') }}">
     <script src="{{ url_for('static', filename='screen-fit.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='language_labels.js') }}" defer></script>
 </head>
 <body data-home-url="{{ url_for('home') }}">
 <!-- Contains whole website -->

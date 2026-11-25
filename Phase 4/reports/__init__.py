@@ -84,7 +84,7 @@ def inventory_report():
         data = inventory.generate(conn, category)
     fmt = request.args.get("format")
     if fmt in exports.FORMATS:
-        return exports.inventory_export(fmt, data, lambda v: report_time(v) if v else "Never")
+        return exports.inventory_export(fmt, data, lambda v: report_time(v) if v else "Never", request.args.get("lang"))
     return render_template("reports/inventory.html", data=data, category=category, title="Inventory report", active="inventory",
                            saved=request.args.get("saved", ""), error=request.args.get("error", ""))
 
@@ -125,11 +125,12 @@ def filtered_report(kind, title, active):
             data = purchases.generate(conn, period, session["customer_id"], request.args.get("q", "").strip(), product_id)
     fmt = request.args.get("format")
     if fmt in exports.FORMATS:
+        language = request.args.get("lang")
         if kind == "sales":
-            return exports.sales_export(fmt, data, period, request.args.get("table", "products"))
+            return exports.sales_export(fmt, data, period, request.args.get("table", "products"), language)
         if kind == "customers":
-            return exports.customers_export(fmt, data, period)
-        return exports.purchases_export(fmt, data, report_time, period)
+            return exports.customers_export(fmt, data, period, language)
+        return exports.purchases_export(fmt, data, report_time, period, language)
     return render_template(f"reports/{kind}.html", data=data, period=period, limit=limit,
                            title=title, active=active, timezone=current_app.config["REPORT_TIMEZONE"])
 
