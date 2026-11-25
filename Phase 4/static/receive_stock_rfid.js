@@ -1,7 +1,8 @@
 // Receive stock: every item received gets its own RFID tag.
-// The reader works in CDC (USB serial) mode: "Read one RFID tag" asks the
-// server to read the reader, which must have exactly ONE tag on it, so each
-// click adds one item. The quantity received is the number of tags.
+// The reader works in CDC (USB serial) mode: "Read RFID tags" reads every tag
+// on the reader at once and adds the new ones to the delivery list. Tags
+// already in the list or already on an item in stock are skipped, so no tag is
+// counted twice. The quantity received is the number of tags.
 
 (() => {
     const readButton = document.getElementById("receive-read-tag");
@@ -14,9 +15,12 @@
 
     const fr = () => document.documentElement.lang === "fr";
     const text = {
-        reading: () => fr() ? "Lecture de l'étiquette..." : "Reading tag...",
-        added: epc => fr() ? `Étiquette ${epc} ajoutée (1 article).` : `Tag ${epc} added (1 item).`,
-        inList: epc => fr() ? `L'étiquette ${epc} est déjà dans cette livraison.` : `Tag ${epc} is already in this delivery.`,
+        reading: () => fr() ? "Lecture des étiquettes..." : "Reading tags...",
+        added: n => fr() ? `${n} étiquette(s) ajoutée(s) (${n} article(s)).` : `${n} tag(s) added (${n} item(s)).`,
+        nothingNew: () => fr() ? "Aucune nouvelle étiquette à ajouter." : "No new tags to add.",
+        inList: n => fr() ? `${n} déjà dans cette livraison` : `${n} already in this delivery`,
+        inStock: list => fr() ? `déjà en stock : ${list}` : `already on items in stock: ${list}`,
+        invalidTag: n => fr() ? `${n} EPC invalide(s)` : `${n} invalid EPC(s)`,
         noServer: () => fr() ? "Impossible de joindre le serveur." : "Cannot reach the server.",
         duplicate: epc => fr() ? `L'étiquette ${epc} est inscrite deux fois.` : `Tag ${epc} is listed twice.`,
         invalid: epc => fr() ? `EPC invalide : ${epc} (hexadécimal, 24 caractères max).` : `Invalid EPC: ${epc} (hexadecimal, max 24 characters).`,
@@ -53,21 +57,32 @@
             readButton.disabled = true;
             setStatus(text.reading());
             try {
-                const response = await fetch("/api/rfid/read");
+                const response = await fetch("/api/rfid/read-all", { credentials: "same-origin" });
                 const result = await response.json();
                 if (!response.ok || !result.success) {
-                    // 0 tags, more than one tag, or the reader isn't connected in CDC mode
-                    setStatus(result.message || "Could not read tag.", "error");
-                } else if (result.in_use_by) {
-                    // Tag already on an unsold item in stock: never count it twice
-                    setStatus(result.message, "error");
-                } else if (tags().includes(result.epc)) {
-                    setStatus(text.inList(result.epc), "warning");
-                } else {
-                    field.value = [...tags(), result.epc].join("\n");
-                    update();
-                    setStatus(text.added(result.epc), "success");
+                    // No tags, or the reader isn't connected in CDC mode
+                    setStatus(result.message || "Could not read tags.", "error");
+                    return;
                 }
+                const current = tags();
+                const added = [], alreadyListed = [], inStock = [], invalid = [];
+                for (const tag of result.tags) {
+                    if (tag.status === "invalid") invalid.push(tag.epc);
+                    else if (!tag.assignable) inStock.push(`${tag.epc} (${tag.product})`);  // never count twice
+                    else if (current.includes(tag.epc) || added.includes(tag.epc)) alreadyListed.push(tag.epc);
+                    else added.push(tag.epc);
+                }
+                if (added.length) {
+                    field.value = [...current, ...added].join("\n");
+                    update();
+                }
+                const notes = [];
+                if (alreadyListed.length) notes.push(text.inList(alreadyListed.length));
+                if (inStock.length) notes.push(text.inStock(inStock.join(", ")));
+                if (invalid.length) notes.push(text.invalidTag(invalid.length));
+                const head = added.length ? text.added(added.length) : text.nothingNew();
+                setStatus(notes.length ? `${head} ${fr() ? "Ignorées" : "Skipped"}: ${notes.join("; ")}.` : head,
+                          added.length ? (notes.length ? "warning" : "success") : (inStock.length || invalid.length ? "error" : "warning"));
             } catch {
                 setStatus(text.noServer(), "error");
             } finally {

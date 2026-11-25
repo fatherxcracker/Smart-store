@@ -114,37 +114,34 @@
         {% endif %}
 
         <div class="tags-content">
-            <!-- Sends the assigned tag to Flask -->
-            <form method="post" class="product-form tags-form">
-                <h2 data-i18n="assignTitle">Add a Tagged Item</h2>
-                <p class="form-description" data-i18n="assignDescription">Put ONE new item on the reader and read its tag. Adding a tag adds 1 item to stock (recorded as a delivery of 1).</p>
-                <!-- Shows the product and stock before assigning a tag -->
+            <!-- Main way to add stock: scan every tag on the reader at once (CDC mode), then add the new ones -->
+            <form method="post" class="product-form tags-form bulk-tags-form" id="bulk-tags-form"
+                  action="{{ url_for('assign_product_tags_bulk', product_id=product.id) }}"
+                  data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
+                <h2 data-i18n="bulkTitle">Scan Tagged Items</h2>
+                <p class="form-description" data-i18n="bulkDescription">Put one or more new items on the reader and scan. Each tag adds 1 item to stock. Tags already on an item in stock are skipped, and each tag is only added once.</p>
+                <!-- Shows the product and stock before assigning tags -->
                 <label for="tag-product" data-i18n="product">Product</label>
                 <input id="tag-product" value="{{ product.name }}" readonly>
                 <label for="tag-upc">UPC</label>
                 <input id="tag-upc" value="{{ product.upc or '—' }}" readonly>
                 <label for="tag-stock" data-i18n="availableStock">Available stock</label>
                 <input id="tag-stock" value="{{ product.in_stock }}" readonly>
-
-                <label for="epc" data-i18n="epcLabel">EPC (up to 24 hexadecimal characters)</label>
-                <input id="epc" name="epc" maxlength="24" required autocomplete="off" aria-describedby="epc-help" placeholder="E28011700000020A1B2C3D01">
-                <p id="epc-help" class="form-description" data-i18n="epcHelp">Use only numbers 0–9 and letters A–F.</p>
-                <button id="read-tag" type="button" data-i18n="readTag">Read tag from RFID reader</button>
-                <p id="tag-status" class="tag-status" role="status" aria-live="polite"></p>
-                <button type="submit" class="save-button" data-i18n="assignTag">Add item to stock</button>
-            </form>
-
-            <!-- Several items at once: scan every tag on the reader (CDC mode), then assign the new ones -->
-            <form method="post" class="product-form tags-form bulk-tags-form" id="bulk-tags-form"
-                  action="{{ url_for('assign_product_tags_bulk', product_id=product.id) }}"
-                  data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
-                <h2 data-i18n="bulkTitle">Add Several Tagged Items</h2>
-                <p class="form-description" data-i18n="bulkDescription">Put all the new items on the reader and scan. Tags already on an item in stock are skipped, and each tag is only added once.</p>
                 <input type="hidden" name="language" value="en">
-                <button id="read-all-tags" type="button" data-i18n="scanAll">Scan all tags on reader</button>
+                <button id="read-all-tags" type="button" data-i18n="scanAll">Scan tags on reader</button>
                 <p id="bulk-status" class="tag-status" role="status" aria-live="polite"></p>
                 <ul id="bulk-tag-list" class="bulk-tag-list" hidden></ul>
                 <button id="bulk-assign" type="submit" class="save-button" hidden></button>
+            </form>
+
+            <!-- Backup: type one EPC by hand (e.g. a tag the reader can't see) -->
+            <form method="post" class="product-form tags-form manual-tag-form">
+                <h2 data-i18n="assignTitle">Add a Tag by Hand</h2>
+                <p class="form-description" data-i18n="assignDescription">Type the EPC printed on the tag if it can't be scanned. Adds 1 item to stock.</p>
+                <label for="epc" data-i18n="epcLabel">EPC (up to 24 hexadecimal characters)</label>
+                <input id="epc" name="epc" maxlength="24" required autocomplete="off" aria-describedby="epc-help" placeholder="E28011700000020A1B2C3D01">
+                <p id="epc-help" class="form-description" data-i18n="epcHelp">Use only numbers 0–9 and letters A–F.</p>
+                <button type="submit" class="save-button" data-i18n="assignTag">Add item to stock</button>
             </form>
 
             <!-- Lists the tags already assigned to this product -->
@@ -224,7 +221,6 @@
 <script src="{{ url_for('static', filename='product_tags_page.js') }}"></script>
 <script src="{{ url_for('static', filename='tag_reset.js') }}"></script>
 <script src="{{ url_for('static', filename='rfid_keyboard.js') }}"></script>
-<script src="{{ url_for('static', filename='rfid_tag.js') }}"></script>
 <script src="{{ url_for('static', filename='rfid_bulk_tags.js') }}"></script>
 </body>
 </html>
