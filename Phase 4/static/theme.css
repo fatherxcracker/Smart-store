@@ -18,16 +18,16 @@ html[data-theme="dark"] { color-scheme: dark; }
         min-width: 36px;
         min-height: 36px;
         padding: 5px 10px;
-        border: 1px solid light-dark(#e5eaf2, #303d51);
+        border: 1px solid light-dark(#000, #e5eaf2);
         border-radius: 10px;
-        color: light-dark(#171b26, #eef3fb);
-        background: light-dark(#fff, #171f2d);
+        color: light-dark(#fff, #000);
+        background: light-dark(#000, #fff);
         font: 600 .8rem Inter, system-ui, sans-serif;
         white-space: nowrap;
         cursor: pointer;
     }
 
-    .theme-toggle:hover { background: light-dark(#f0f3f9, #222d3e); }
+    .theme-toggle:hover { background: light-dark(#242424, #f0f3f9); }
     .theme-toggle:focus-visible { outline: 2px solid light-dark(#1769ff, #92bcff); outline-offset: 2px; }
 
     html[data-theme="dark"] body[data-fit-screen] {
